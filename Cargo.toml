@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 # TODO remove dynamic before release
 bevy = { version = "0.6.0", features = ["dynamic"] }
+fastnbt = "1"
+fastanvil="0.24.0"
