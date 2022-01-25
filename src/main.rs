@@ -4,7 +4,6 @@ use bevy::{
 };
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy_fly_camera::FlyCameraPlugin;
-use bevy_flycam::{MovementSettings, PlayerPlugin};
 
 use crate::entity::voxel::VoxelMaterial;
 use crate::level::read_level;
@@ -20,7 +19,6 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(PlayerPlugin)
         .add_plugin(FlyCameraPlugin)
         .add_startup_system(setup)
         .add_startup_system(system::camera::setup.system())

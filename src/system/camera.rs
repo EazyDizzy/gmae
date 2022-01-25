@@ -33,10 +33,9 @@ pub fn cursor_grab(
 ) {
     let window = windows.get_primary_mut().unwrap();
 
-    // TODO fix camera freeze
     if keys.just_pressed(KeyCode::Escape) {
         toggle_grab_cursor(window);
-        query.iter_mut().for_each(|mut camera| camera.enabled = !window.cursor_locked());
+        query.iter_mut().for_each(|mut camera| camera.enabled = !window.cursor_visible());
     }
 }
 
