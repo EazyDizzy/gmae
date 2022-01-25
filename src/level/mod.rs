@@ -16,23 +16,23 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
 
     let mut region = RegionBuffer::new(file);
 
-    region.for_each_chunk(|chunk_x, chunk_z, data| {
-        if chunk_x > 4 || chunk_z > 4 {
+    region.for_each_chunk(|chunk_y, chunk_x, data| {
+        if chunk_y > 4 || chunk_x > 4 {
             return;
         }
         let chunk: JavaChunk = from_bytes(data.as_slice()).unwrap();
 
         for x in 0..16 {
-            for z in 0..16 {
-                let max_height = chunk.surface_height(x, z, HeightMode::Trust);
-                let min_y = chunk.y_range().start;
+            for y in 0..16 {
+                let max_height = chunk.surface_height(x, y, HeightMode::Trust);
+                let min_height = chunk.y_range().start;
 
-                for y in min_y..max_height {
-                    if let Some(block) = chunk.block(x, y, z) {
+                for height in min_height..max_height {
+                    if let Some(block) = chunk.block(x, height, y) {
                         if block.name() != "minecraft:air" {
-                            let voxel_x = (chunk_x * 16) + x;
-                            let voxel_z = (chunk_z * 16) + z;
-                            let mut material = match block.name() {
+                            let voxel_y = (chunk_y * 16) + x;
+                            let voxel_x = (chunk_x * 16) + y;
+                            let material = match block.name() {
                                 "minecraft:bedrock" => { VoxelMaterial::Bedrock }
                                 "minecraft:grass_block" => { VoxelMaterial::Grass }
                                 "minecraft:dirt" => { VoxelMaterial::Dirt }
@@ -46,9 +46,9 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
                             voxels.push(Voxel {
                                 material,
                                 position: Point::new(
-                                    voxel_z as isize,
                                     voxel_x as isize,
-                                    y + 64,
+                                    voxel_y as isize,
+                                    height + 64,
                                 ),
                             });
                         }
