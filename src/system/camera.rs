@@ -1,6 +1,3 @@
-use std::cmp;
-
-use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bevy_fly_camera::FlyCamera;
 
@@ -8,15 +5,16 @@ pub fn setup(mut commands: Commands) {
     commands
         .spawn()
         .insert_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(10.0, 10.0, 10.0),
+            transform: Transform::from_xyz(10.0, 10.0, 15.0),
             ..Default::default()
         })
         // TODO disable "roll" camera rotation
         .insert(FlyCamera {
-            sensitivity: 10.0,
-            pitch: -70.0,
-            yaw: -40.0,
-            key_forward: KeyCode::LShift,
+            sensitivity: 6.0,
+            pitch: -45.0,
+            yaw: 0.0,
+            max_speed: 2.0,
+            key_forward: KeyCode::Space,
             key_backward: KeyCode::Space,
             key_left: KeyCode::A,
             key_right: KeyCode::D,

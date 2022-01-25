@@ -15,7 +15,7 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut region = RegionBuffer::new(file);
 
     region.for_each_chunk(|chunk_y, chunk_x, data| {
-        if chunk_y > 5 || chunk_x > 5 {
+        if chunk_y > 8 || chunk_x > 8 {
             return;
         }
         let chunk: JavaChunk = from_bytes(data.as_slice()).unwrap();
