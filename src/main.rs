@@ -2,9 +2,13 @@ use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     prelude::*,
 };
+use bevy::diagnostic::LogDiagnosticsPlugin;
+use bevy_fly_camera::FlyCameraPlugin;
+use bevy_flycam::{MovementSettings, PlayerPlugin};
 
 use crate::entity::voxel::VoxelMaterial;
 use crate::level::read_level;
+use crate::system::camera::{cursor_grab, initial_grab_cursor};
 use crate::system::light::spawn_light_source;
 
 mod system;
@@ -16,9 +20,12 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(PlayerPlugin)
+        .add_plugin(FlyCameraPlugin)
         .add_startup_system(setup)
         .add_startup_system(system::camera::setup.system())
-        // .add_startup_system(system::light::setup.system())
+        .add_startup_system(initial_grab_cursor)
+        .add_system(cursor_grab)
         .run();
 }
 
@@ -35,26 +42,31 @@ fn setup(
     let grass_material = materials.add(StandardMaterial {
         base_color: TRANSPARENT,
         base_color_texture: Some(asset_server.load("texture/block/grass.png")),
+        reflectance: 0.0,
         ..Default::default()
     });
     let stone_material = materials.add(StandardMaterial {
         base_color: TRANSPARENT,
         base_color_texture: Some(asset_server.load("texture/block/stone.png")),
+        reflectance: 0.0,
         ..Default::default()
     });
     let dirt_material = materials.add(StandardMaterial {
         base_color: TRANSPARENT,
         base_color_texture: Some(asset_server.load("texture/block/dirt.png")),
+        reflectance: 0.2,
         ..Default::default()
     });
     let bedrock_material = materials.add(StandardMaterial {
         base_color: TRANSPARENT,
         base_color_texture: Some(asset_server.load("texture/block/bedrock.png")),
+        reflectance: 0.0,
         ..Default::default()
     });
     let wooden_material = materials.add(StandardMaterial {
         base_color: TRANSPARENT,
         base_color_texture: Some(asset_server.load("texture/block/wooden_planks.png")),
+        reflectance: 0.0,
         ..Default::default()
     });
     let light_material = materials.add(StandardMaterial {
