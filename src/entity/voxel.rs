@@ -8,7 +8,12 @@ pub enum VoxelMaterial {
     Grass,
     Dirt,
     WoodenPlanks,
-    Light,
+    OrangeLight,
+    BlueLight,
+    DirtPath,
+    Glass,
+    Hay,
+    Pumpkin,
 }
 
 #[derive(Debug)]

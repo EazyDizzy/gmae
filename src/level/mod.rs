@@ -30,18 +30,7 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
                         if block.name() != "minecraft:air" {
                             let voxel_y = (chunk_y * 16) + x;
                             let voxel_x = (chunk_x * 16) + y;
-                            let material = match block.name() {
-                                "minecraft:bedrock" => { VoxelMaterial::Bedrock }
-                                "minecraft:grass_block" => { VoxelMaterial::Grass }
-                                "minecraft:dirt" => { VoxelMaterial::Dirt }
-                                "minecraft:stone" => { VoxelMaterial::Stone }
-                                "minecraft:oak_planks" => { VoxelMaterial::WoodenPlanks }
-                                "minecraft:glowstone" => { VoxelMaterial::Light }
-                                &_ => {
-                                    dbg!(block.name());
-                                    VoxelMaterial::Unknown
-                                }
-                            };
+                            let material = match_name_to_material(block.name());
 
                             voxels.push(Voxel {
                                 material,
@@ -59,4 +48,24 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     }).unwrap();
 
     voxels
+}
+
+fn match_name_to_material(name: &str) -> VoxelMaterial {
+    match name {
+        "minecraft:bedrock" => { VoxelMaterial::Bedrock }
+        "minecraft:grass_block" => { VoxelMaterial::Grass }
+        "minecraft:dirt" => { VoxelMaterial::Dirt }
+        "minecraft:stone" => { VoxelMaterial::Stone }
+        "minecraft:oak_planks" => { VoxelMaterial::WoodenPlanks }
+        "minecraft:glowstone" => { VoxelMaterial::OrangeLight }
+        "minecraft:sea_lantern" => { VoxelMaterial::BlueLight }
+        "minecraft:dirt_path" => { VoxelMaterial::DirtPath }
+        "minecraft:glass" => { VoxelMaterial::Glass }
+        "minecraft:hay_block" => { VoxelMaterial::Hay }
+        "minecraft:pumpkin" => { VoxelMaterial::Pumpkin }
+        &_ => {
+            println!("Unknown block name: {}", name);
+            VoxelMaterial::Unknown
+        }
+    }
 }
