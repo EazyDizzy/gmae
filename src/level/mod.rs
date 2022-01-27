@@ -1,3 +1,5 @@
+pub mod render;
+
 use std::fs::File;
 
 use fastanvil::{Chunk, HeightMode, JavaChunk, RegionBuffer};
