@@ -1,12 +1,16 @@
-pub mod render;
-
 use std::fs::File;
 
+use bevy::prelude::*;
 use fastanvil::{Chunk, HeightMode, JavaChunk, RegionBuffer};
+
 use fastnbt::de::from_bytes;
 
 use crate::entity::point::Point;
 use crate::entity::voxel::{Voxel, VoxelMaterial};
+use crate::level::render::material::load_materials;
+use crate::render_world;
+
+pub mod render;
 
 pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut voxels = vec![];
@@ -69,5 +73,15 @@ fn match_name_to_material(name: &str) -> VoxelMaterial {
             println!("Unknown block name: {}", name);
             VoxelMaterial::Unknown
         }
+    }
+}
+
+pub struct LevelPlugin;
+
+impl Plugin for LevelPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_startup_system(load_materials)
+            .add_startup_system(render_world);
     }
 }

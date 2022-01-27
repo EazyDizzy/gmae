@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_fly_camera::FlyCamera;
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, windows: ResMut<Windows>) {
     commands
         .spawn()
         .insert_bundle(PerspectiveCameraBundle {
@@ -22,6 +22,8 @@ pub fn setup(mut commands: Commands) {
             key_down: KeyCode::S,
             ..Default::default()
         });
+
+    initial_grab_cursor(windows);
 }
 
 pub fn cursor_grab(

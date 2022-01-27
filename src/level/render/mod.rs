@@ -1,31 +1,18 @@
-mod material;
-
-use std::str::Bytes;
-
-use bevy::{
-    diagnostic::FrameTimeDiagnosticsPlugin,
-    prelude::*,
-};
-use bevy::asset::HandleId;
-use bevy::diagnostic::LogDiagnosticsPlugin;
-use bevy::utils::Uuid;
-use bevy_fly_camera::FlyCameraPlugin;
+use bevy::prelude::*;
 
 use crate::entity::voxel::VoxelMaterial;
 use crate::level::read_level;
-use crate::level::render::material::{get_material, load_materials};
-use crate::system::camera::{cursor_grab, initial_grab_cursor};
+use crate::level::render::material::get_material;
 use crate::system::light::{spawn_blue_light_source, spawn_orange_light_source};
+
+pub mod material;
 
 pub fn render_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
+    materials: Res<Assets<StandardMaterial>>,
 ) {
     let map = read_level("debug");
-
-    load_materials(&mut materials, &asset_server);
 
     let mesh = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
 
