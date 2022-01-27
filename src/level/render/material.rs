@@ -37,7 +37,7 @@ pub fn get_material(voxel_material: VoxelMaterial, materials: &Res<Assets<Standa
     materials.get_handle(material_id)
 }
 
-pub fn load_materials(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>) {
+pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>) {
     let _ = materials.set(GRASS_MATERIAL_ID, create_material(asset_server.load("texture/block/grass.png")));
     let _ = materials.set(STONE_MATERIAL_ID, create_material(asset_server.load("texture/block/stone.png")));
     let _ = materials.set(DIRT_MATERIAL_ID, create_material(asset_server.load("texture/block/dirt.png")));
