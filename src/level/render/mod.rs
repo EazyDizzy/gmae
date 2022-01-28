@@ -18,7 +18,7 @@ pub fn render_world(
     mut meshes: ResMut<Assets<Mesh>>,
     materials: Res<Assets<StandardMaterial>>,
 ) {
-    let map = read_level("debug");
+    let map = read_level("lvl1");
 
     let now = Instant::now();
     let concatenated_voxels = concatenate_voxels(&map);
@@ -40,7 +40,7 @@ pub fn render_world(
 }
 
 #[derive(Debug)]
-struct XSequence<'a> {
+struct VoxelSequence<'a> {
     start: &'a Voxel,
     end: &'a Voxel,
 }
@@ -71,8 +71,8 @@ fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(Mesh, &Voxel)> {
 
     let mut meshes = vec![];
 
-    for (z, plate) in stats {
-        let z = z.parse::<usize>().unwrap();
+    for (_, plate) in stats {
+        let mut xy_sequences = vec![];
 
         for y in min_y..=max_y {
             if let Some(row) = plate.get(y) {
@@ -99,7 +99,7 @@ fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(Mesh, &Voxel)> {
                         || voxel.material != prev_voxel.material;
                     if is_end_of_sequence {
                         x_sequences.push(
-                            XSequence {
+                            VoxelSequence {
                                 start: start_voxel,
                                 end: prev_voxel,
                             });
@@ -110,24 +110,47 @@ fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(Mesh, &Voxel)> {
                     prev_voxel = voxel;
                 }
                 x_sequences.push(
-                    XSequence {
+                    VoxelSequence {
                         start: start_voxel,
                         end: prev_voxel,
                     });
 
-                for sequence in x_sequences {
-                    let shape = shape::Box {
-                        min_x: 0.0,
-                        max_x: sequence.end.position.x - sequence.start.position.x + 1.0,
-                        min_y: 0.0,
-                        max_y: sequence.end.position.y - sequence.start.position.y + 1.0,
-                        min_z: 0.0,
-                        max_z: sequence.end.position.z - sequence.start.position.z + 1.0,
-                    };
+                let mut sequences_to_append = vec![];
+                if xy_sequences.is_empty() {
+                    sequences_to_append = x_sequences;
+                } else {
+                    let mut prev_row_sequences: Vec<&mut VoxelSequence> = xy_sequences.iter_mut()
+                        .filter(|s: &&mut VoxelSequence| {
+                            s.end.position.y == y as f32 - 1.0
+                        }).collect();
+                    for sequence in x_sequences {
+                        let same_sequence = prev_row_sequences.iter_mut().find(|s| {
+                            s.start.position.x == sequence.start.position.x && s.end.position.x == sequence.end.position.x
+                        });
 
-                    meshes.push((Mesh::from(shape), sequence.start));
+                        if let Some(same) = same_sequence {
+                            same.end = sequence.end;
+                        } else {
+                            sequences_to_append.push(sequence);
+                        }
+                    }
                 }
+
+                xy_sequences.append(&mut sequences_to_append);
             }
+        }
+
+        for sequence in xy_sequences {
+            let shape = shape::Box {
+                min_x: 0.0,
+                max_x: sequence.end.position.x - sequence.start.position.x + 1.0,
+                min_y: 0.0,
+                max_y: sequence.end.position.y - sequence.start.position.y + 1.0,
+                min_z: 0.0,
+                max_z: sequence.end.position.z - sequence.start.position.z + 1.0,
+            };
+
+            meshes.push((Mesh::from(shape), sequence.start));
         }
     }
 
