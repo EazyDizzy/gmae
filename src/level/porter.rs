@@ -9,6 +9,7 @@ use crate::entity::point::Point;
 use crate::entity::voxel::{Voxel, VoxelMaterial};
 use crate::ENABLE_EXTREME_GRAPHIC;
 use crate::level::util::get_rng;
+const EXPORT_DIAPASON: usize = 2;
 
 pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut voxels = vec![];
@@ -20,7 +21,7 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut rng = get_rng();
 
     region.for_each_chunk(|chunk_y, chunk_x, data| {
-        if chunk_y > 8 || chunk_x > 8 {
+        if chunk_y > EXPORT_DIAPASON || chunk_x > EXPORT_DIAPASON {
             return;
         }
         let chunk: JavaChunk = from_bytes(data.as_slice()).unwrap();

@@ -8,7 +8,7 @@ const MESH_UUID: Uuid = Uuid::from_bytes([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 const STANDARD_BLOCK_MESH_ID: HandleId = HandleId::Id(MESH_UUID, 1);
 const GRASS_MESH_ID: HandleId = HandleId::Id(MESH_UUID, 2);
 
-pub fn get_entity_mesh(material: VoxelMaterial, meshes: &Res<Assets<Mesh>>) -> Handle<Mesh> {
+pub fn get_entity_mesh(material: VoxelMaterial, meshes: &ResMut<Assets<Mesh>>) -> Handle<Mesh> {
     match material {
         VoxelMaterial::Grass => {meshes.get_handle(GRASS_MESH_ID)}
         _ => meshes.get_handle(STANDARD_BLOCK_MESH_ID)
@@ -17,6 +17,5 @@ pub fn get_entity_mesh(material: VoxelMaterial, meshes: &Res<Assets<Mesh>>) -> H
 
 pub fn setup(mut meshes: ResMut<Assets<Mesh>>) {
     let _ = meshes.set(STANDARD_BLOCK_MESH_ID, Mesh::from(shape::Cube { size: 1.0 }));
-    // TODO create random mesh
     let _ = meshes.set(GRASS_MESH_ID, Mesh::from(shape::Cube { size: 1.0 }));
 }

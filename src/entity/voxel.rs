@@ -16,7 +16,7 @@ pub enum VoxelMaterial {
     Pumpkin,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Voxel {
     pub position: Point,
     pub material: VoxelMaterial,

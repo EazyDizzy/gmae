@@ -5,7 +5,7 @@ pub fn setup(mut commands: Commands, windows: ResMut<Windows>) {
     commands
         .spawn()
         .insert_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(10.0, 10.0, 35.0),
+            transform: Transform::from_xyz(20.0, -15.0, 30.0),
             ..Default::default()
         })
         // TODO disable "roll" camera rotation
