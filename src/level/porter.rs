@@ -3,9 +3,12 @@ use std::fs::File;
 use fastanvil::{Chunk, HeightMode, JavaChunk, RegionBuffer};
 
 use fastnbt::de::from_bytes;
+use rand::Rng;
 
 use crate::entity::point::Point;
 use crate::entity::voxel::{Voxel, VoxelMaterial};
+use crate::ENABLE_EXTREME_GRAPHIC;
+use crate::level::util::get_rng;
 
 pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut voxels = vec![];
@@ -14,6 +17,7 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
         .expect(&format!("Can't open file {}", lvl_name));
 
     let mut region = RegionBuffer::new(file);
+    let mut rng = get_rng();
 
     region.for_each_chunk(|chunk_y, chunk_x, data| {
         if chunk_y > 8 || chunk_x > 8 {
@@ -32,13 +36,19 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
                             let voxel_y = (chunk_y * 16) + x;
                             let voxel_x = (chunk_x * 16) + y;
                             let material = match_name_to_material(block.name());
+                            let voxel_z = if should_randomize_voxel_z(block.name()) {
+                                let h = height as f32 + 64.0;
+                                *rng.choose(&[h, h - 0.05, h + 0.05, h - 0.1, h + 0.1]).unwrap()
+                            } else {
+                                height as f32 + 64.0
+                            };
 
                             voxels.push(Voxel {
                                 material,
                                 position: Point::new(
                                     voxel_x as isize,
                                     voxel_y as isize,
-                                    height + 64,
+                                    voxel_z,
                                 ),
                             });
                         }
@@ -69,4 +79,8 @@ fn match_name_to_material(name: &str) -> VoxelMaterial {
             VoxelMaterial::Unknown
         }
     }
+}
+
+fn should_randomize_voxel_z(name: &str) -> bool {
+    ENABLE_EXTREME_GRAPHIC && ["minecraft:dirt_path", "minecraft:grass_block"].contains(&name)
 }

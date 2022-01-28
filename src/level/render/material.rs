@@ -8,6 +8,7 @@ use bevy::render::texture::ImageType;
 use bevy::utils::Uuid;
 use image::{codecs, ColorType, DynamicImage, GenericImageView, ImageEncoder, Rgba};
 use rand::{Rng, XorShiftRng};
+use crate::level::util::get_rng;
 
 use crate::VoxelMaterial;
 
@@ -31,10 +32,8 @@ const UNKNOWN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 666);
 
 pub fn get_material(voxel_material: VoxelMaterial, materials: &Res<Assets<StandardMaterial>>) -> Handle<StandardMaterial> {
     if voxel_material == VoxelMaterial::Grass {
-        let mut rng: XorShiftRng = {
-            let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_micros();
-            rand::SeedableRng::from_seed([now, now, now, now])
-        };
+        let mut rng = get_rng();
+
         let material_id = *rng.choose(&[GRASS_MATERIAL_ID, GRASS_MATERIAL2_ID, GRASS_MATERIAL3_ID, GRASS_MATERIAL4_ID]).unwrap();
 
         return materials.get_handle(material_id);

@@ -6,6 +6,7 @@ use crate::render_world;
 
 pub mod render;
 mod porter;
+mod util;
 
 pub struct LevelPlugin;
 

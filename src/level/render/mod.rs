@@ -14,7 +14,7 @@ pub fn render_world(
     meshes: Res<Assets<Mesh>>,
     materials: Res<Assets<StandardMaterial>>,
 ) {
-    let map = read_level("debug");
+    let map = read_level("lvl1");
 
     for voxel in map {
         let pos = voxel.position;

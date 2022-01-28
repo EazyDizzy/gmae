@@ -13,6 +13,7 @@ use crate::system::camera::cursor_grab;
 mod system;
 mod level;
 mod entity;
+const ENABLE_EXTREME_GRAPHIC: bool = false;
 
 fn main() {
     App::new()
@@ -22,6 +23,7 @@ fn main() {
         .add_plugin(FlyCameraPlugin)
         .add_plugin(LevelPlugin)
         .add_startup_system(system::camera::setup.system())
+        .add_startup_system(system::light::setup.system())
         .add_system(cursor_grab)
         .run();
 }

@@ -6,7 +6,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn new(x: isize, y: isize, z: isize) -> Point {
-        Point { x: x as f32, y: y as f32, z: z as f32 }
+    pub fn new(x: isize, y: isize, z: f32) -> Point {
+        Point { x: x as f32, y: y as f32, z }
     }
 }
