@@ -1,15 +1,15 @@
 use std::fs::File;
 
 use fastanvil::{Chunk, HeightMode, JavaChunk, RegionBuffer};
-
 use fastnbt::de::from_bytes;
 use rand::Rng;
 
+use crate::ENABLE_EXTREME_GRAPHIC;
 use crate::entity::point::Point;
 use crate::entity::voxel::{Voxel, VoxelMaterial};
-use crate::ENABLE_EXTREME_GRAPHIC;
 use crate::level::util::get_rng;
-const EXPORT_DIAPASON: usize = 2;
+
+const EXPORT_DIAPASON: usize = 8;
 
 pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut voxels = vec![];
@@ -19,6 +19,7 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
 
     let mut region = RegionBuffer::new(file);
     let mut rng = get_rng();
+    let mut voxel_id = 0;
 
     region.for_each_chunk(|chunk_y, chunk_x, data| {
         if chunk_y > EXPORT_DIAPASON || chunk_x > EXPORT_DIAPASON {
@@ -44,14 +45,16 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
                                 height as f32 + 64.0
                             };
 
-                            voxels.push(Voxel {
-                                material,
-                                position: Point::new(
+                            voxels.push(Voxel::new(
+                                voxel_id,
+                                Point::new(
                                     voxel_x as isize,
                                     voxel_y as isize,
                                     voxel_z,
                                 ),
-                            });
+                                material,
+                            ));
+                            voxel_id += 1;
                         }
                     }
                 }

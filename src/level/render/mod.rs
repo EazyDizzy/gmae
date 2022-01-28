@@ -1,9 +1,8 @@
-use std::cmp;
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
 
 use bevy::prelude::*;
 
-use crate::entity::point::Point;
 use crate::entity::voxel::{Voxel, VoxelMaterial};
 use crate::level::porter::read_level;
 use crate::level::render::material::get_material;
@@ -20,7 +19,12 @@ pub fn render_world(
 ) {
     let map = read_level("debug");
 
+    let now = Instant::now();
     let (concatenated_voxels, not_used_voxels) = concatenate_voxels(&map);
+    let time = now.elapsed().as_millis();
+    println!("concatenate_voxels time {}ms", time);
+    println!("concatenations {}", concatenated_voxels.len());
+    println!("unused voxels {}", not_used_voxels.len());
     for (mesh_form, voxel) in concatenated_voxels {
         let pos = &voxel.position;
         let material = get_material(voxel.material, &materials);
@@ -57,25 +61,24 @@ pub fn render_world(
 
 fn concatenate_voxels(voxels: &Vec<Voxel>) -> (Vec<(Mesh, &Voxel)>, Vec<&Voxel>) {
     let mut stats = HashMap::new();
+    let mut all_voxels = HashSet::new();
 
     for voxel in voxels {
         let z = voxel.position.z.round().to_string();
         if stats.get(&z).is_none() {
             stats.insert(z.clone(), vec![]);
         }
+        all_voxels.insert(voxel.id);
 
         stats.get_mut(&z).unwrap().push(voxel);
     }
 
     let mut meshes = vec![];
-    let mut all_busy_voxels = vec![];
 
     for (_, row) in stats {
-        let mut busy_voxels = vec![];
-
         for voxel in &row {
             let neighbours: Vec<&&Voxel> = row.iter().filter(|b| {
-                if busy_voxels.contains(*b) {
+                if !all_voxels.contains(&b.id) {
                     return false;
                 }
                 if b.material != voxel.material {
@@ -90,27 +93,16 @@ fn concatenate_voxels(voxels: &Vec<Voxel>) -> (Vec<(Mesh, &Voxel)>, Vec<&Voxel>)
 
             if neighbours.len() == 9 {
                 for neighbour in &neighbours {
-                    busy_voxels.push(**neighbour);
+                    all_voxels.remove(&neighbour.id);
                 }
                 meshes.push((Mesh::from(
                     shape::Box::new(3.0, 3.0, 1.0)
-
-                    //     shape::Box {
-                    //     min_x: min_x as f32,
-                    //     max_x: max_x as f32,
-                    //     min_y: min_y as f32,
-                    //     max_y: max_y as f32,
-                    //     min_z: z,
-                    //     max_z: z + 1.0,
-                    // }
                 ), *voxel));
             }
         }
-
-        all_busy_voxels.append(&mut busy_voxels);
     }
 
-    let not_used_voxels: Vec<&Voxel> = voxels.iter().filter(|v| !all_busy_voxels.contains(v)).collect();
+    let not_used_voxels: Vec<&Voxel> = voxels.iter().filter(|v| all_voxels.contains(&v.id)).collect();
 
     (meshes, not_used_voxels)
 }
