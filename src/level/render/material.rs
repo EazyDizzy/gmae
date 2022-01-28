@@ -1,11 +1,22 @@
+use std::collections::HashSet;
+use std::io::{BufWriter};
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use bevy::asset::HandleId;
 use bevy::prelude::*;
+use bevy::render::texture::ImageType;
 use bevy::utils::Uuid;
+use image::{codecs, ColorType, DynamicImage, GenericImageView, ImageEncoder, Rgba};
+use rand::{Rng, XorShiftRng};
 
 use crate::VoxelMaterial;
 
 const MATERIAL_UUID: Uuid = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 const GRASS_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 1);
+const GRASS_MATERIAL2_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10002);
+const GRASS_MATERIAL3_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10003);
+const GRASS_MATERIAL4_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10004);
+
 const STONE_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 2);
 const DIRT_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 3);
 const BEDROCK_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 4);
@@ -19,6 +30,16 @@ const PUMPKIN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 11);
 const UNKNOWN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 666);
 
 pub fn get_material(voxel_material: VoxelMaterial, materials: &Res<Assets<StandardMaterial>>) -> Handle<StandardMaterial> {
+    if voxel_material == VoxelMaterial::Grass {
+        let mut rng: XorShiftRng = {
+            let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_micros();
+            rand::SeedableRng::from_seed([now, now, now, now])
+        };
+        let material_id = *rng.choose(&[GRASS_MATERIAL_ID, GRASS_MATERIAL2_ID, GRASS_MATERIAL3_ID, GRASS_MATERIAL4_ID]).unwrap();
+
+        return materials.get_handle(material_id);
+    }
+
     let material_id = match voxel_material {
         VoxelMaterial::Grass => GRASS_MATERIAL_ID,
         VoxelMaterial::Stone => STONE_MATERIAL_ID,
@@ -37,8 +58,17 @@ pub fn get_material(voxel_material: VoxelMaterial, materials: &Res<Assets<Standa
     materials.get_handle(material_id)
 }
 
-pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>) {
-    let _ = materials.set(GRASS_MATERIAL_ID, create_material(asset_server.load("texture/block/grass.png")));
+pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>, mut images: ResMut<Assets<Image>>) {
+    let img = image::open("./assets/texture/block/grass_0.png").unwrap();
+    let grass_handle = images.set(GRASS_MATERIAL_ID, create_random_texture_from(&img));
+    let grass1_handle = images.set(GRASS_MATERIAL2_ID, create_random_texture_from(&img));
+    let grass2_handle = images.set(GRASS_MATERIAL3_ID, create_random_texture_from(&img));
+    let grass3_handle = images.set(GRASS_MATERIAL4_ID, create_random_texture_from(&img));
+
+    let _ = materials.set(GRASS_MATERIAL_ID, create_material(grass_handle));
+    let _ = materials.set(GRASS_MATERIAL2_ID, create_material(grass1_handle));
+    let _ = materials.set(GRASS_MATERIAL3_ID, create_material(grass2_handle));
+    let _ = materials.set(GRASS_MATERIAL4_ID, create_material(grass3_handle));
     let _ = materials.set(STONE_MATERIAL_ID, create_material(asset_server.load("texture/block/stone.png")));
     let _ = materials.set(DIRT_MATERIAL_ID, create_material(asset_server.load("texture/block/dirt.png")));
     let _ = materials.set(BEDROCK_MATERIAL_ID, create_material(asset_server.load("texture/block/bedrock.png")));
@@ -80,4 +110,34 @@ fn create_material(image: Handle<Image>) -> StandardMaterial {
         metallic: 0.0,
         ..Default::default()
     }
+}
+
+fn create_random_texture_from(texture: &DynamicImage) -> Image {
+    let mut stats: HashSet<Rgba<u8>> = HashSet::default();
+    for (_, _, pixel) in texture.pixels() {
+        stats.insert(pixel);
+    }
+    let unique_pixels: Vec<Rgba<u8>> = stats.into_iter().collect();
+
+    let mut rng: XorShiftRng = {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_micros();
+        rand::SeedableRng::from_seed([now, now, now, now])
+    };
+
+    let mut img_buf = image::ImageBuffer::new(texture.height(), texture.width());
+    for (_, _, pixel) in img_buf.enumerate_pixels_mut() {
+        *pixel = *rng.choose(unique_pixels.as_slice()).unwrap();
+    }
+
+    let mut out = &mut BufWriter::new(Vec::new());
+    codecs::png::PngEncoder::new(&mut out).write_image(
+        img_buf.as_raw(),
+        texture.width(),
+        texture.height(),
+        ColorType::Rgba8,
+    )
+        .expect("Cannot write to memory");
+
+    Image::from_buffer(out.buffer(), ImageType::Extension("png"))
+        .expect("Failed to convert into image")
 }

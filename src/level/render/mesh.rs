@@ -17,5 +17,6 @@ pub fn get_entity_mesh(material: VoxelMaterial, meshes: &Res<Assets<Mesh>>) -> H
 
 pub fn setup(mut meshes: ResMut<Assets<Mesh>>) {
     let _ = meshes.set(STANDARD_BLOCK_MESH_ID, Mesh::from(shape::Cube { size: 1.0 }));
+    // TODO create random mesh
     let _ = meshes.set(GRASS_MESH_ID, Mesh::from(shape::Cube { size: 1.0 }));
 }
