@@ -3,8 +3,8 @@ use std::time::Instant;
 use bevy::prelude::*;
 
 use crate::level::porter::read_level;
-use crate::level::render::material::get_material;
-use crate::level::render::mesh::{concatenate_voxels};
+use crate::level::render::material::concatenate_material;
+use crate::level::render::mesh::concatenate_voxels;
 use crate::system::light::{spawn_blue_light_source, spawn_orange_light_source};
 use crate::VoxelMaterial;
 
@@ -14,7 +14,9 @@ pub mod mesh;
 pub fn render_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    materials: Res<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+    mut images: ResMut<Assets<Image>>,
 ) {
     let map = read_level("debug");
 
@@ -23,10 +25,17 @@ pub fn render_world(
     let time = now.elapsed().as_millis();
     println!("concatenate_voxels time {}ms", time);
     println!("concatenations {}", concatenated_voxels.len());
-    for (mesh_form, voxel) in concatenated_voxels {
+
+    for (shape, voxel) in concatenated_voxels {
         let pos = &voxel.position;
-        let material = get_material(voxel.material, &materials);
-        let mesh = meshes.add(mesh_form);
+        let material = concatenate_material(
+            voxel.material,
+            &mut materials,
+            &mut images,
+            &asset_server,
+            &shape,
+        );
+        let mesh = meshes.add(Mesh::from(shape));
 
         let mut entity_commands = commands.spawn_bundle(PbrBundle {
             mesh,

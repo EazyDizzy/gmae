@@ -30,11 +30,12 @@ struct VoxelSequence<'a> {
     end: &'a Voxel,
 }
 
-pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(Mesh, &Voxel)> {
+pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
     let mut stats = HashMap::new();
 
     let mut min_y = usize::MAX;
     let mut max_y = 0;
+
     for voxel in voxels {
         let z = voxel.position.z.round().to_string();
         if stats.get(&z).is_none() {
@@ -82,7 +83,7 @@ pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(Mesh, &Voxel)> {
 
                     let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
                         || voxel.material != prev_voxel.material
-                        || should_not_concatenate(voxel.material);
+                        || !should_concatenate(prev_voxel.material);
                     if stop_concatenation {
                         x_sequences.push(
                             VoxelSequence {
@@ -111,7 +112,9 @@ pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(Mesh, &Voxel)> {
                         }).collect();
                     for sequence in x_sequences {
                         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
-                            s.start.position.x == sequence.start.position.x && s.end.position.x == sequence.end.position.x
+                            s.start.position.x == sequence.start.position.x
+                                && s.end.position.x == sequence.end.position.x
+                                && should_concatenate(sequence.start.material)
                         });
 
                         if let Some(same) = same_sequence {
@@ -136,13 +139,17 @@ pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(Mesh, &Voxel)> {
                 max_z: sequence.end.position.z - sequence.start.position.z + 1.0,
             };
 
-            meshes.push((Mesh::from(shape), sequence.start));
+            meshes.push((shape, sequence.start));
         }
     }
 
     meshes
 }
 
-fn should_not_concatenate(material: VoxelMaterial) -> bool {
-    material == VoxelMaterial::BlueLight && material == VoxelMaterial::OrangeLight
+fn should_concatenate(material: VoxelMaterial) -> bool {
+    ![
+        VoxelMaterial::BlueLight,
+        VoxelMaterial::OrangeLight,
+        VoxelMaterial::Glass
+    ].contains(&material)
 }
