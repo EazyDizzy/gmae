@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use crate::ENABLE_EXTREME_GRAPHIC;
 
 pub fn setup(mut commands: Commands) {
-    commands.spawn_bundle(DirectionalLightBundle { ..Default::default() });
+    // commands.spawn_bundle(DirectionalLightBundle { ..Default::default() });
 }
 
 pub fn spawn_orange_light_source(x: f32, y: f32, z: f32, commands: &mut EntityCommands) {
