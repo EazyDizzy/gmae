@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::level::porter::read_level;
 use crate::level::render::material::concatenate_material;
-use crate::level::render::mesh::concatenate_voxels;
+use crate::level::render::mesh::merge_voxels_in_meshes;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::VoxelMaterial;
 
@@ -21,7 +21,7 @@ pub fn render_world(
     let map = read_level("debug");
 
     let now = Instant::now();
-    let concatenated_voxels = concatenate_voxels(&map);
+    let concatenated_voxels = merge_voxels_in_meshes(&map);
     let time = now.elapsed().as_millis();
     println!("concatenate_voxels time {}ms", time);
     println!("concatenations {}", concatenated_voxels.len());
@@ -35,6 +35,7 @@ pub fn render_world(
             &asset_server,
             &shape,
         );
+
         let mesh = meshes.add(Mesh::from(shape));
 
         let mut entity_commands = commands.spawn_bundle(PbrBundle {

@@ -1,28 +1,10 @@
 use std::cmp;
 use std::collections::HashMap;
 
-use bevy::asset::HandleId;
 use bevy::prelude::*;
-use bevy::utils::Uuid;
 
 use crate::entity::voxel::Voxel;
 use crate::VoxelMaterial;
-
-const MESH_UUID: Uuid = Uuid::from_bytes([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-const STANDARD_BLOCK_MESH_ID: HandleId = HandleId::Id(MESH_UUID, 1);
-const GRASS_MESH_ID: HandleId = HandleId::Id(MESH_UUID, 2);
-
-pub fn get_entity_mesh(material: VoxelMaterial, meshes: &ResMut<Assets<Mesh>>) -> Handle<Mesh> {
-    match material {
-        VoxelMaterial::Grass => { meshes.get_handle(GRASS_MESH_ID) }
-        _ => meshes.get_handle(STANDARD_BLOCK_MESH_ID)
-    }
-}
-
-pub fn setup(mut meshes: ResMut<Assets<Mesh>>) {
-    let _ = meshes.set(STANDARD_BLOCK_MESH_ID, Mesh::from(shape::Cube { size: 1.0 }));
-    let _ = meshes.set(GRASS_MESH_ID, Mesh::from(shape::Cube { size: 1.0 }));
-}
 
 #[derive(Debug)]
 struct VoxelSequence<'a> {
@@ -30,7 +12,7 @@ struct VoxelSequence<'a> {
     end: &'a Voxel,
 }
 
-pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
+pub fn merge_voxels_in_meshes(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
     let mut stats = HashMap::new();
 
     let mut min_y = usize::MAX;
@@ -83,7 +65,7 @@ pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
 
                     let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
                         || voxel.material != prev_voxel.material
-                        || !should_concatenate(prev_voxel.material);
+                        || !should_merge(prev_voxel.material);
                     if stop_concatenation {
                         x_sequences.push(
                             VoxelSequence {
@@ -114,7 +96,8 @@ pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
                         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
                             s.start.position.x == sequence.start.position.x
                                 && s.end.position.x == sequence.end.position.x
-                                && should_concatenate(sequence.start.material)
+                                && s.start.material == sequence.start.material
+                                && should_merge(sequence.start.material)
                         });
 
                         if let Some(same) = same_sequence {
@@ -146,7 +129,7 @@ pub fn concatenate_voxels(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
     meshes
 }
 
-fn should_concatenate(material: VoxelMaterial) -> bool {
+fn should_merge(material: VoxelMaterial) -> bool {
     ![
         VoxelMaterial::BlueLight,
         VoxelMaterial::OrangeLight,
