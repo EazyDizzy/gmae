@@ -1,4 +1,3 @@
-use std::cmp;
 use std::collections::HashMap;
 
 use bevy::prelude::*;
@@ -13,26 +12,17 @@ struct VoxelSequence<'a> {
 }
 
 pub fn merge_voxels_in_meshes(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
-    let (grouped_voxels, min_y, max_y) = group_voxels_by_coordinates(voxels);
+    let grouped_voxels = group_voxels_by_coordinates(voxels);
 
     let mut meshes = vec![];
 
     for (_, plate) in grouped_voxels {
         let mut xy_sequences = vec![];
 
-        for y in min_y..=max_y {
-            let y_row = plate.get(y);
-            if y_row.is_none() {
-                continue;
-            }
-            let row = y_row.unwrap().clone();
-            if row.len() == 0 {
-                continue;
-            }
+        for (y, row) in plate.iter() {
+            let x_sequences = merge_voxels_row(row.clone());
 
-            let x_sequences = merge_voxels_row(row);
-
-            xy_sequences = stretch_sequences_by_y(x_sequences, xy_sequences, y);
+            xy_sequences = stretch_sequences_by_y(x_sequences, xy_sequences, *y);
         }
 
         for sequence in xy_sequences {
@@ -116,31 +106,20 @@ fn merge_voxels_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
     x_sequences
 }
 
-fn group_voxels_by_coordinates(voxels: &Vec<Voxel>) -> (HashMap<String, Vec<Vec<&Voxel>>>, usize, usize) {
-    let mut stats = HashMap::new();
-    let mut min_y = usize::MAX;
-    let mut max_y = 0;
+fn group_voxels_by_coordinates(voxels: &Vec<Voxel>) -> HashMap<usize, HashMap<usize, Vec<&Voxel>>> {
+    let mut grouping = HashMap::new();
 
     for voxel in voxels {
-        let z = voxel.position.z.round().to_string();
-        if stats.get(&z).is_none() {
-            stats.insert(z.clone(), vec![]);
-        }
+        let z = voxel.position.z.round() as usize;
+        let z_plane = grouping.entry(z).or_insert(HashMap::new());
 
-        let plane = stats.get_mut(&z).unwrap();
         let y = voxel.position.y.round() as usize;
-        if plane.get(y).is_none() {
-            for _ in plane.len()..=y {
-                plane.push(vec![]);
-            }
-        }
+        let y_row = z_plane.entry(y).or_insert(vec![]);
 
-        plane[y].push(voxel);
-        max_y = cmp::max(y, max_y);
-        min_y = cmp::min(y, min_y);
+        y_row.push(voxel);
     }
 
-    (stats, min_y, max_y)
+    grouping
 }
 
 fn should_merge(material: VoxelMaterial) -> bool {
