@@ -13,7 +13,7 @@ struct VoxelSequence<'a> {
 }
 
 pub fn merge_voxels_in_meshes(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
-    let (grouped_voxels, min_y, max_y) = group_voxels(voxels);
+    let (grouped_voxels, min_y, max_y) = group_voxels_by_coordinates(voxels);
 
     let mut meshes = vec![];
 
@@ -25,66 +25,14 @@ pub fn merge_voxels_in_meshes(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> 
             if y_row.is_none() {
                 continue;
             }
-            let mut row = y_row.unwrap().clone();
+            let row = y_row.unwrap().clone();
             if row.len() == 0 {
                 continue;
             }
 
-            row.sort_by(|a, b| {
-                a.position.x.partial_cmp(&b.position.x).unwrap()
-            });
+            let x_sequences = merge_voxels_row(row);
 
-            let mut x_sequences = vec![];
-            let mut start_voxel = row[0];
-            let mut prev_voxel = row[0];
-
-            for voxel in row {
-                if voxel.id == prev_voxel.id {
-                    continue;
-                }
-
-                let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
-                    || voxel.material != prev_voxel.material
-                    || !should_merge(prev_voxel.material);
-                if stop_concatenation {
-                    x_sequences.push(
-                        VoxelSequence {
-                            start: start_voxel,
-                            end: prev_voxel,
-                        });
-
-                    start_voxel = voxel;
-                }
-
-                prev_voxel = voxel;
-            }
-            x_sequences.push(
-                VoxelSequence {
-                    start: start_voxel,
-                    end: prev_voxel,
-                });
-
-            let mut sequences_to_append = vec![];
-            let mut prev_row_sequences: Vec<&mut VoxelSequence> = xy_sequences.iter_mut()
-                .filter(|s: &&mut VoxelSequence| {
-                    s.end.position.y == y as f32 - 1.0
-                }).collect();
-            for sequence in x_sequences {
-                let same_sequence = prev_row_sequences.iter_mut().find(|s| {
-                    s.start.position.x == sequence.start.position.x
-                        && s.end.position.x == sequence.end.position.x
-                        && s.start.material == sequence.start.material
-                        && should_merge(sequence.start.material)
-                });
-
-                if let Some(same) = same_sequence {
-                    same.end = sequence.end;
-                } else {
-                    sequences_to_append.push(sequence);
-                }
-            }
-
-            xy_sequences.append(&mut sequences_to_append);
+            xy_sequences = stretch_sequences_by_y(x_sequences, xy_sequences, y);
         }
 
         for sequence in xy_sequences {
@@ -104,7 +52,71 @@ pub fn merge_voxels_in_meshes(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> 
     meshes
 }
 
-fn group_voxels(voxels: &Vec<Voxel>) -> (HashMap<String, Vec<Vec<&Voxel>>>, usize, usize) {
+fn stretch_sequences_by_y<'a>(x_sequences: Vec<VoxelSequence<'a>>, mut xy_sequences: Vec<VoxelSequence<'a>>, y: usize) -> Vec<VoxelSequence<'a>> {
+    let mut sequences_to_append = vec![];
+    let mut prev_row_sequences: Vec<&mut VoxelSequence> = xy_sequences.iter_mut()
+        .filter(|s: &&mut VoxelSequence| {
+            s.end.position.y == y as f32 - 1.0
+        }).collect();
+    for sequence in x_sequences {
+        let same_sequence = prev_row_sequences.iter_mut().find(|s| {
+            s.start.position.x == sequence.start.position.x
+                && s.end.position.x == sequence.end.position.x
+                && s.start.material == sequence.start.material
+                && should_merge(sequence.start.material)
+        });
+
+        if let Some(same) = same_sequence {
+            same.end = sequence.end;
+        } else {
+            sequences_to_append.push(sequence);
+        }
+    }
+
+    xy_sequences.append(&mut sequences_to_append);
+
+    xy_sequences
+}
+
+fn merge_voxels_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
+    row.sort_by(|a, b| {
+        a.position.x.partial_cmp(&b.position.x).unwrap()
+    });
+
+    let mut x_sequences = vec![];
+    let mut start_voxel = row[0];
+    let mut prev_voxel = row[0];
+
+    for voxel in row {
+        if voxel.id == prev_voxel.id {
+            continue;
+        }
+
+        let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
+            || voxel.material != prev_voxel.material
+            || !should_merge(prev_voxel.material);
+        if stop_concatenation {
+            x_sequences.push(
+                VoxelSequence {
+                    start: start_voxel,
+                    end: prev_voxel,
+                });
+
+            start_voxel = voxel;
+        }
+
+        prev_voxel = voxel;
+    }
+    x_sequences.push(
+        VoxelSequence {
+            start: start_voxel,
+            end: prev_voxel,
+        });
+
+    x_sequences
+}
+
+fn group_voxels_by_coordinates(voxels: &Vec<Voxel>) -> (HashMap<String, Vec<Vec<&Voxel>>>, usize, usize) {
     let mut stats = HashMap::new();
     let mut min_y = usize::MAX;
     let mut max_y = 0;
