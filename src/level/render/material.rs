@@ -48,7 +48,6 @@ pub fn concatenate_material(
     let file_name = format!("{:?}_{}_{}.png", voxel_material, image_width, image_height);
     let path = format!("./assets/{}", file_name);
 
-
     if !Path::new(&path).exists() {
         let texture_width = basic_image.width() * image_width;
         let texture_height = basic_image.width() * image_height;

@@ -48,6 +48,7 @@ fn stretch_sequences_by_y<'a>(x_sequences: Vec<VoxelSequence<'a>>, mut xy_sequen
         .filter(|s: &&mut VoxelSequence| {
             s.end.position.y == y as f32 - 1.0
         }).collect();
+
     for sequence in x_sequences {
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
             s.start.position.x == sequence.start.position.x
@@ -77,11 +78,7 @@ fn merge_voxels_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
     let mut start_voxel = row[0];
     let mut prev_voxel = row[0];
 
-    for voxel in row {
-        if voxel.id == prev_voxel.id {
-            continue;
-        }
-
+    for voxel in row.into_iter().skip(1) {
         let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
             || voxel.material != prev_voxel.material
             || !should_merge(prev_voxel.material);
