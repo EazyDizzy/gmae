@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::level::porter::read_level;
 use crate::level::render::material::concatenate_material;
 use crate::level::render::mesh::concatenate_voxels;
-use crate::system::light::{spawn_blue_light_source, spawn_orange_light_source};
+use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::VoxelMaterial;
 
 pub mod material;
@@ -45,10 +45,10 @@ pub fn render_world(
         });
 
         if voxel.material == VoxelMaterial::OrangeLight {
-            spawn_orange_light_source(pos.x, pos.y, pos.z, &mut entity_commands);
+            spawn_orange_light_source_inside(&mut entity_commands);
         }
         if voxel.material == VoxelMaterial::BlueLight {
-            spawn_blue_light_source(pos.x, pos.y, pos.z, &mut entity_commands);
+            spawn_blue_light_source_inside(&mut entity_commands);
         }
     }
 }
