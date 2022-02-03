@@ -31,7 +31,7 @@ fn spawn_point_light_source_inside(point_light: PointLight, commands: &mut Entit
     commands.with_children(|b| {
         b.spawn_bundle(
             PointLightBundle {
-                transform: Transform::from_xyz(0.5, 0.5, 0.5),
+                transform: Transform::from_xyz(0.0, 0.0, 0.5),
                 point_light,
                 ..Default::default()
             }

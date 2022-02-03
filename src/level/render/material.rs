@@ -36,11 +36,10 @@ pub fn concatenate_material(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     asset_server: &Res<AssetServer>,
-    shape: &shape::Box,
+    image_width: u32,
+    image_height: u32
 ) -> Handle<StandardMaterial> {
     let basic_image = get_basic_image_for_material(voxel_material);
-    let image_width = (shape.max_x - shape.min_x) as u32;
-    let image_height = (shape.max_y - shape.min_y) as u32;
     if image_width == 1 && image_height == 1 {
         return get_material(voxel_material, &materials);
     }
