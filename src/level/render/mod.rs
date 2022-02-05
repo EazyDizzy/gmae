@@ -94,12 +94,13 @@ pub fn render_world(
             y_size as u32,
         );
 
-        let top_side_needed = is_top_side_needed(pos, &shape, &concatenated_voxels);
-        let bottom_side_needed = is_bottom_side_needed(pos, &shape, &concatenated_voxels);
-        let right_side_needed = is_right_side_needed(pos, &shape, &concatenated_voxels);
-        let left_side_needed = is_left_side_needed(pos, &shape, &concatenated_voxels);
-        let forward_side_needed = is_forward_side_needed(pos, &shape, &concatenated_voxels);
-        let back_side_needed = is_back_side_needed(pos, &shape, &concatenated_voxels);
+        let top_side_needed = is_top_side_needed(pos, shape, &concatenated_voxels);
+        let bottom_side_needed = is_bottom_side_needed(pos, shape, &concatenated_voxels);
+        let right_side_needed = is_right_side_needed(pos, shape, &concatenated_voxels);
+        let left_side_needed = is_left_side_needed(pos, shape, &concatenated_voxels);
+        let forward_side_needed = is_forward_side_needed(pos, shape, &concatenated_voxels);
+        let back_side_needed = is_back_side_needed(pos, shape, &concatenated_voxels);
+        let top_side_needed = false;
 
         if top_side_needed {
             let top_shape = shape::Quad {
@@ -201,7 +202,7 @@ pub fn render_world(
     }
 }
 
-fn is_left_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape::Box, &Voxel)>) -> bool {
+fn is_left_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_y = pos.y;
     let max_y = pos.y + shape.max_y;
     let min_x = pos.x;
@@ -241,7 +242,7 @@ fn is_left_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape:
     false
 }
 
-fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape::Box, &Voxel)>) -> bool {
+fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_y = pos.y;
     let max_y = pos.y + shape.max_y;
     let max_x = pos.x + shape.max_x;
@@ -281,42 +282,44 @@ fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape
     false
 }
 
-fn is_back_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape::Box, &Voxel)>) -> bool {
-    let min_x = pos.x;
-    let max_x = pos.x + shape.max_x;
-    let layer_y = pos.y - 1.0;
+fn is_back_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
+    let min_x = pos.x as usize;
+    let max_x = (pos.x + shape.max_x) as usize;
 
-    let next_y_layer: Vec<&(shape::Box, &Voxel)> = all_shapes.iter().filter(|(s, v)| {
-        let seq_min_y = v.position.y;
-        let seq_max_y = v.position.y + s.max_y;
+    let adjoining_plane_x: Vec<usize> = all_shapes.iter()
+        .filter(|(s, v)| {
+            let seq_end_y = v.position.y + s.max_y;
+            let same_height = v.position.z == pos.z;
+            let ends_on_the_start = seq_end_y == pos.y;
 
-        v.position.z == pos.z
-            && (seq_min_y == layer_y || seq_max_y == pos.y)
-    }).collect();
+            same_height && ends_on_the_start
+        })
+        .flat_map(|(s, v)| {
+            let seq_start_x = v.position.x as usize;
+            let seq_end_x = (v.position.x + s.max_x) as usize;
 
-    if next_y_layer.is_empty() {
-        return true;
-    }
+            seq_start_x..=seq_end_x
+        })
+        .collect();
 
-    for x in min_x as usize..=max_x as usize {
-        let x = x as f32;
+    array_contains_all(&adjoining_plane_x, (min_x..=max_x)) == false
+}
 
-        let voxel_is_covered = next_y_layer.iter().find(|(s, v)| {
-            let seq_min_x = v.position.x;
-            let seq_max_x = v.position.x + s.max_x;
-
-            seq_min_x <= x && seq_max_x >= x
-        }).is_some();
-
-        if !voxel_is_covered {
-            return true;
+fn array_contains_all<T, I>(container: &[T], content: I) -> bool
+    where
+        I: IntoIterator<Item=T>,
+        T: PartialEq
+{
+    for element in content {
+        if !container.contains(&element) {
+            return false;
         }
     }
 
-    false
+    true
 }
 
-fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape::Box, &Voxel)>) -> bool {
+fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_x = pos.x;
     let max_x = pos.x + shape.max_x;
     let max_y = pos.y + shape.max_y;
@@ -352,7 +355,7 @@ fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(sha
     false
 }
 
-fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape::Box, &Voxel)>) -> bool {
+fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     if pos.z == 0.0 {
         return false;
     }
@@ -392,7 +395,7 @@ fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shap
     false
 }
 
-fn is_top_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape::Box, &Voxel)>) -> bool {
+fn is_top_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_x = pos.x;
     let max_x = pos.x + shape.max_x;
     let min_y = pos.y;
@@ -428,7 +431,7 @@ fn is_top_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &Vec<(shape::
     false
 }
 
-fn get_next_z_layer<'a>(pos: &'a Point, shape: &'a shape::Box, all_shapes: &'a Vec<(shape::Box, &Voxel)>, z_bonus: f32) -> Vec<&'a (shape::Box, &'a Voxel)> {
+fn get_next_z_layer<'a>(pos: &'a Point, shape: &'a shape::Box, all_shapes: &'a [(shape::Box, &Voxel)], z_bonus: f32) -> Vec<&'a (shape::Box, &'a Voxel)> {
     let min_x = pos.x;
     let max_x = pos.x + shape.max_x;
     let min_y = pos.y;
