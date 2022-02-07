@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::io::{BufWriter};
+use std::io::BufWriter;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -37,11 +37,11 @@ pub fn concatenate_material(
     images: &mut ResMut<Assets<Image>>,
     asset_server: &Res<AssetServer>,
     image_width: u32,
-    image_height: u32
+    image_height: u32,
 ) -> Handle<StandardMaterial> {
     let basic_image = get_basic_image_for_material(voxel_material);
     if image_width == 1 && image_height == 1 {
-        return get_material(voxel_material, &materials);
+        return get_material(voxel_material, materials);
     }
 
     let file_name = format!("{:?}_{}_{}.png", voxel_material, image_width, image_height);
@@ -80,7 +80,7 @@ pub fn concatenate_material(
             .expect("failed to save as file");
     }
 
-    return materials.add(create_material(asset_server.load(&file_name)));
+    materials.add(create_material(asset_server.load(&file_name)))
 
     // let image = Image::from_buffer(out.buffer(), ImageType::Extension("png"))
     //     .expect("Failed to convert into image");

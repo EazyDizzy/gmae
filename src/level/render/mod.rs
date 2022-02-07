@@ -13,46 +13,6 @@ pub mod mesh;
 
 const PI: f32 = std::f32::consts::PI;
 
-pub fn render_world2(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
-    mut images: ResMut<Assets<Image>>,
-) {
-    let map = read_level("debug");
-
-    let concatenated_voxels = merge_voxels_in_meshes(&map);
-
-    for (shape, voxel) in concatenated_voxels {
-        let pos = &voxel.position;
-        let material = concatenate_material(
-            voxel.material,
-            &mut materials,
-            &mut images,
-            &asset_server,
-            shape.max_x as u32,
-            shape.max_y as u32,
-        );
-
-        let mesh = meshes.add(Mesh::from(shape));
-
-        let mut entity_commands = commands.spawn_bundle(PbrBundle {
-            mesh,
-            material,
-            transform: Transform::from_xyz(pos.x, pos.y, pos.z),
-            ..Default::default()
-        });
-
-        if voxel.material == VoxelMaterial::OrangeLight {
-            spawn_orange_light_source_inside(&mut entity_commands);
-        }
-        if voxel.material == VoxelMaterial::BlueLight {
-            spawn_blue_light_source_inside(&mut entity_commands);
-        }
-    }
-}
-
 pub fn render_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -69,6 +29,7 @@ pub fn render_world(
         let x_size = shape.max_x;
         let y_size = shape.max_y;
 
+        // TODO not generate material if it is not needed
         let top_and_bottom_material = concatenate_material(
             voxel.material,
             &mut materials,
@@ -100,7 +61,6 @@ pub fn render_world(
         let left_side_needed = is_left_side_needed(pos, shape, &concatenated_voxels);
         let forward_side_needed = is_forward_side_needed(pos, shape, &concatenated_voxels);
         let back_side_needed = is_back_side_needed(pos, shape, &concatenated_voxels);
-        let top_side_needed = false;
 
         if top_side_needed {
             let top_shape = shape::Quad {
@@ -293,7 +253,7 @@ fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape:
     let max_y = pos.y + shape.max_y;
 
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
-        .filter(|(s, v)| {
+        .filter(|(_, v)| {
             let seq_min_y = v.position.y;
             let same_height = v.position.z == pos.z;
             let starts_on_the_end = seq_min_y == max_y;
@@ -327,22 +287,9 @@ fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::
         return true;
     }
 
-    for y in min_y as usize..=max_y as usize {
-        let y = y as f32;
-        for x in min_x as usize..=max_x as usize {
-            let x = x as f32;
-
-            let voxel_is_covered = next_z_layer.iter().find(|(s, v)| {
-                let seq_min_x = v.position.x;
-                let seq_max_x = v.position.x + s.max_x;
-                let seq_min_y = v.position.y;
-                let seq_max_y = v.position.y + s.max_y;
-
-                seq_min_x <= x && seq_max_x >= x
-                    && seq_min_y <= y && seq_max_y >= y
-            }).is_some();
-
-            if !voxel_is_covered {
+    for y in min_y as usize..max_y as usize {
+        for x in min_x as usize..max_x as usize {
+            if !next_z_layer.contains(&(x, y)) {
                 return true;
             }
         }
@@ -351,6 +298,7 @@ fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::
     false
 }
 
+// TODO fix random bug of rendering
 fn is_top_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_x = pos.x;
     let max_x = pos.x + shape.max_x;
@@ -363,22 +311,9 @@ fn is_top_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box
         return true;
     }
 
-    for y in min_y as usize..=max_y as usize {
-        let y = y as f32;
-        for x in min_x as usize..=max_x as usize {
-            let x = x as f32;
-
-            let voxel_is_covered = next_z_layer.iter().find(|(s, v)| {
-                let seq_min_x = v.position.x;
-                let seq_max_x = v.position.x + s.max_x;
-                let seq_min_y = v.position.y;
-                let seq_max_y = v.position.y + s.max_y;
-
-                seq_min_x <= x && seq_max_x >= x
-                    && seq_min_y <= y && seq_max_y >= y
-            }).is_some();
-
-            if !voxel_is_covered {
+    for y in min_y as usize..max_y as usize {
+        for x in min_x as usize..max_x as usize {
+            if !next_z_layer.contains(&(x, y)) {
                 return true;
             }
         }
@@ -387,21 +322,44 @@ fn is_top_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box
     false
 }
 
-fn get_next_z_layer<'a>(pos: &'a Point, shape: &'a shape::Box, all_shapes: &'a [(shape::Box, &Voxel)], z_bonus: f32) -> Vec<&'a (shape::Box, &'a Voxel)> {
+fn get_next_z_layer<'a>(pos: &'a Point, shape: &'a shape::Box, all_shapes: &'a [(shape::Box, &Voxel)], z_bonus: f32) -> Vec<(usize, usize)> {
     let min_x = pos.x;
     let max_x = pos.x + shape.max_x;
     let min_y = pos.y;
     let max_y = pos.y + shape.max_y;
 
-    all_shapes.iter().filter(|(s, v)| {
-        let seq_min_x = v.position.x;
-        let seq_max_x = v.position.x + s.max_x;
-        let seq_min_y = v.position.y;
-        let seq_max_y = v.position.y + s.max_y;
+    all_shapes.iter()
+        .filter(|(s, v)| {
+            let seq_min_x = v.position.x;
+            let seq_max_x = v.position.x + s.max_x;
+            let seq_min_y = v.position.y;
+            let seq_max_y = v.position.y + s.max_y;
 
-        v.position.z == pos.z + z_bonus
-            && seq_min_x <= min_x && seq_max_x >= max_x
-            && seq_min_y <= min_y && seq_max_y >= max_y
-    }).collect()
+            let has_needed_height = v.position.z == pos.z + z_bonus;
+            let start_y_within_borders = min_y >= seq_min_y && min_y <= seq_max_y;
+            let end_y_within_borders = max_y >= seq_min_y && max_y <= seq_max_y;
+            let start_x_within_borders = min_x >= seq_min_x && min_x <= seq_max_x;
+            let end_x_within_borders = max_x >= seq_min_x && max_x <= seq_max_x;
+
+            has_needed_height
+                && (start_y_within_borders || end_y_within_borders)
+                && (start_x_within_borders || end_x_within_borders)
+        })
+        .flat_map(|(s, v)| {
+            let seq_min_x = v.position.x as usize;
+            let seq_max_x = (v.position.x + s.max_x) as usize;
+            let seq_min_y = v.position.y as usize;
+            let seq_max_y = (v.position.y + s.max_y) as usize;
+
+            let mut coordinates = vec![];
+            for y in seq_min_y..seq_max_y {
+                for x in seq_min_x..seq_max_x {
+                    coordinates.push((x, y));
+                }
+            }
+
+            coordinates
+        })
+        .collect()
 }
 

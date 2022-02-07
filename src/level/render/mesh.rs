@@ -11,7 +11,7 @@ struct VoxelSequence<'a> {
     end: &'a Voxel,
 }
 
-pub fn merge_voxels_in_meshes(voxels: &Vec<Voxel>) -> Vec<(shape::Box, &Voxel)> {
+pub fn merge_voxels_in_meshes(voxels: &[Voxel]) -> Vec<(shape::Box, &Voxel)> {
     let grouped_voxels = group_voxels_by_coordinates(voxels);
 
     let mut meshes = vec![];
@@ -103,15 +103,15 @@ fn merge_voxels_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
     x_sequences
 }
 
-fn group_voxels_by_coordinates(voxels: &Vec<Voxel>) -> HashMap<usize, HashMap<usize, Vec<&Voxel>>> {
+fn group_voxels_by_coordinates(voxels: &[Voxel]) -> HashMap<usize, HashMap<usize, Vec<&Voxel>>> {
     let mut grouping = HashMap::new();
 
     for voxel in voxels {
         let z = voxel.position.z.round() as usize;
-        let z_plane = grouping.entry(z).or_insert(HashMap::new());
+        let z_plane = grouping.entry(z).or_insert_with(HashMap::new);
 
         let y = voxel.position.y.round() as usize;
-        let y_row = z_plane.entry(y).or_insert(vec![]);
+        let y_row = z_plane.entry(y).or_insert_with(Vec::new);
 
         y_row.push(voxel);
     }
