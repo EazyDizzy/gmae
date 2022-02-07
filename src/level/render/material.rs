@@ -1,10 +1,11 @@
 use std::collections::HashSet;
 use std::io::{BufWriter, Write};
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use bevy::asset::HandleId;
 use bevy::prelude::*;
+use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::render::texture::ImageType;
 use bevy::utils::Uuid;
 use image::{codecs, ColorType, DynamicImage, GenericImageView, ImageEncoder, Rgba};
@@ -54,30 +55,29 @@ pub fn concatenate_material(
         texture_height,
     );
 
-    for w in 0..image_width {
-        let x_bonus = w * basic_image.width();
+    let original_width = basic_image.width();
+    let original_height = basic_image.height();
+    img_buf.enumerate_pixels_mut().for_each(|(x, y, p)| {
+        let w = x / original_width;
+        let h = y / original_height;
+        let original_x = x - w * original_width;
+        let original_y = y - h * original_height;
 
-        for h in 0..image_height {
-            let y_bonus = h * basic_image.height();
+        *p = basic_image.get_pixel(original_x, original_y);
+    });
 
-            basic_image.pixels()
-                .for_each(|(x, y, pixel)| {
-                    img_buf.put_pixel(x + x_bonus, y + y_bonus, pixel);
-                });
-        }
-    }
+    // raw creation to prevent triple conversion of image (img_buf -> slice_buf -> DynamicImage -> img_buf)
+    let image = Image::new(
+        Extent3d {
+            width: texture_width,
+            height: texture_height,
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2,
+        img_buf.into_raw(),
+        TextureFormat::Rgba8UnormSrgb,
+    );
 
-    let mut out = vec![];
-    codecs::png::PngEncoder::new(&mut out).write_image(
-        img_buf.as_raw(),
-        texture_width,
-        texture_height,
-        ColorType::Rgba8,
-    )
-        .expect("Cannot write to memory");
-
-    let image = Image::from_buffer(&out, ImageType::MimeType("image/png"))
-        .expect("Failed to convert into image");
 
     let image_handle = images.add(image);
     let original_material = materials.get(get_material_id(voxel_material))

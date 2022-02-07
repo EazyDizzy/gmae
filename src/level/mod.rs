@@ -13,6 +13,6 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(setup_material)
-            .add_startup_system(render_world);
+            .add_startup_system_to_stage(StartupStage::PostStartup, render_world);
     }
 }
