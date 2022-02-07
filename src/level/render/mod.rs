@@ -29,32 +29,6 @@ pub fn render_world(
         let x_size = shape.max_x;
         let y_size = shape.max_y;
 
-        // TODO not generate material if it is not needed
-        let top_and_bottom_material = concatenate_material(
-            voxel.material,
-            &mut materials,
-            &mut images,
-            &asset_server,
-            x_size as u32,
-            y_size as u32,
-        );
-        let back_and_forward_material = concatenate_material(
-            voxel.material,
-            &mut materials,
-            &mut images,
-            &asset_server,
-            x_size as u32,
-            1,
-        );
-        let left_and_right_material = concatenate_material(
-            voxel.material,
-            &mut materials,
-            &mut images,
-            &asset_server,
-            1,
-            y_size as u32,
-        );
-
         let top_side_needed = is_top_side_needed(pos, shape, &concatenated_voxels);
         let bottom_side_needed = is_bottom_side_needed(pos, shape, &concatenated_voxels);
         let right_side_needed = is_right_side_needed(pos, shape, &concatenated_voxels);
@@ -62,102 +36,135 @@ pub fn render_world(
         let forward_side_needed = is_forward_side_needed(pos, shape, &concatenated_voxels);
         let back_side_needed = is_back_side_needed(pos, shape, &concatenated_voxels);
 
-        if top_side_needed {
-            let top_shape = shape::Quad {
-                size: Vec2::new(x_size, y_size),
-                flip: false,
-            };
-            let top_mesh = meshes.add(Mesh::from(top_shape));
+        if top_side_needed || bottom_side_needed {
+            let top_and_bottom_material = concatenate_material(
+                voxel.material,
+                &mut materials,
+                &mut images,
+                &asset_server,
+                x_size as u32,
+                y_size as u32,
+            );
 
-            // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
-            let mut entity_commands = commands.spawn_bundle(PbrBundle {
-                mesh: top_mesh,
-                material: top_and_bottom_material.clone(),
-                transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size / 2.0, pos.z),
-                ..Default::default()
-            });
+            if top_side_needed {
+                let top_shape = shape::Quad {
+                    size: Vec2::new(x_size, y_size),
+                    flip: false,
+                };
+                let top_mesh = meshes.add(Mesh::from(top_shape));
 
-            // TODO should not depend on top side
-            if voxel.material == VoxelMaterial::OrangeLight {
-                spawn_orange_light_source_inside(&mut entity_commands);
+                // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
+                let mut entity_commands = commands.spawn_bundle(PbrBundle {
+                    mesh: top_mesh,
+                    material: top_and_bottom_material.clone(),
+                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size / 2.0, pos.z),
+                    ..Default::default()
+                });
+
+                // TODO should not depend on top side
+                if voxel.material == VoxelMaterial::OrangeLight {
+                    spawn_orange_light_source_inside(&mut entity_commands);
+                }
+                if voxel.material == VoxelMaterial::BlueLight {
+                    spawn_blue_light_source_inside(&mut entity_commands);
+                }
             }
-            if voxel.material == VoxelMaterial::BlueLight {
-                spawn_blue_light_source_inside(&mut entity_commands);
+
+            if bottom_side_needed {
+                let bottom_shape = shape::Quad {
+                    size: Vec2::new(x_size, y_size),
+                    flip: true,
+                };
+                let bottom_mesh = meshes.add(Mesh::from(bottom_shape));
+                commands.spawn_bundle(PbrBundle {
+                    mesh: bottom_mesh,
+                    material: top_and_bottom_material.clone(),
+                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size / 2.0, pos.z - 1.0),
+                    ..Default::default()
+                });
             }
         }
 
-        if bottom_side_needed {
-            let bottom_shape = shape::Quad {
-                size: Vec2::new(x_size, y_size),
-                flip: true,
-            };
-            let bottom_mesh = meshes.add(Mesh::from(bottom_shape));
-            commands.spawn_bundle(PbrBundle {
-                mesh: bottom_mesh,
-                material: top_and_bottom_material.clone(),
-                transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size / 2.0, pos.z - 1.0),
-                ..Default::default()
-            });
+        if right_side_needed || left_side_needed {
+            let left_and_right_material = concatenate_material(
+                voxel.material,
+                &mut materials,
+                &mut images,
+                &asset_server,
+                1,
+                y_size as u32,
+            );
+
+            if right_side_needed {
+                let right_shape = shape::Quad {
+                    size: Vec2::new(1.0, y_size),
+                    flip: false,
+                };
+                let right_mesh = meshes.add(Mesh::from(right_shape));
+                commands.spawn_bundle(PbrBundle {
+                    mesh: right_mesh,
+                    material: left_and_right_material.clone(),
+                    transform: Transform::from_xyz(pos.x + x_size, pos.y + y_size / 2.0, pos.z - 0.5)
+                        .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
+                    ..Default::default()
+                });
+            }
+
+            if left_side_needed {
+                let left_shape = shape::Quad {
+                    size: Vec2::new(1.0, y_size),
+                    flip: true,
+                };
+                let left_mesh = meshes.add(Mesh::from(left_shape));
+                commands.spawn_bundle(PbrBundle {
+                    mesh: left_mesh,
+                    material: left_and_right_material.clone(),
+                    transform: Transform::from_xyz(pos.x, pos.y + y_size / 2.0, pos.z - 0.5)
+                        .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
+                    ..Default::default()
+                });
+            }
         }
 
-        if right_side_needed {
-            let right_shape = shape::Quad {
-                size: Vec2::new(1.0, y_size),
-                flip: false,
-            };
-            let right_mesh = meshes.add(Mesh::from(right_shape));
-            commands.spawn_bundle(PbrBundle {
-                mesh: right_mesh,
-                material: left_and_right_material.clone(),
-                transform: Transform::from_xyz(pos.x + x_size, pos.y + y_size / 2.0, pos.z - 0.5)
-                    .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
-                ..Default::default()
-            });
-        }
+        if forward_side_needed || back_side_needed {
+            let back_and_forward_material = concatenate_material(
+                voxel.material,
+                &mut materials,
+                &mut images,
+                &asset_server,
+                x_size as u32,
+                1,
+            );
 
-        if left_side_needed {
-            let left_shape = shape::Quad {
-                size: Vec2::new(1.0, y_size),
-                flip: true,
-            };
-            let left_mesh = meshes.add(Mesh::from(left_shape));
-            commands.spawn_bundle(PbrBundle {
-                mesh: left_mesh,
-                material: left_and_right_material.clone(),
-                transform: Transform::from_xyz(pos.x, pos.y + y_size / 2.0, pos.z - 0.5)
-                    .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
-                ..Default::default()
-            });
-        }
+            if forward_side_needed {
+                let forward_shape = shape::Quad {
+                    size: Vec2::new(x_size, 1.0),
+                    flip: true,
+                };
+                let forward_mesh = meshes.add(Mesh::from(forward_shape));
+                commands.spawn_bundle(PbrBundle {
+                    mesh: forward_mesh,
+                    material: back_and_forward_material.clone(),
+                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size, pos.z - 0.5)
+                        .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
+                    ..Default::default()
+                });
+            }
 
-        if forward_side_needed {
-            let forward_shape = shape::Quad {
-                size: Vec2::new(x_size, 1.0),
-                flip: true,
-            };
-            let forward_mesh = meshes.add(Mesh::from(forward_shape));
-            commands.spawn_bundle(PbrBundle {
-                mesh: forward_mesh,
-                material: back_and_forward_material.clone(),
-                transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size, pos.z - 0.5)
-                    .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
-                ..Default::default()
-            });
-        }
-
-        if back_side_needed {
-            let back_shape = shape::Quad {
-                size: Vec2::new(x_size, 1.0),
-                flip: false,
-            };
-            let back_mesh = meshes.add(Mesh::from(back_shape));
-            commands.spawn_bundle(PbrBundle {
-                mesh: back_mesh,
-                material: back_and_forward_material.clone(),
-                transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y, pos.z - 0.5)
-                    .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
-                ..Default::default()
-            });
+            if back_side_needed {
+                let back_shape = shape::Quad {
+                    size: Vec2::new(x_size, 1.0),
+                    flip: false,
+                };
+                let back_mesh = meshes.add(Mesh::from(back_shape));
+                commands.spawn_bundle(PbrBundle {
+                    mesh: back_mesh,
+                    material: back_and_forward_material.clone(),
+                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y, pos.z - 0.5)
+                        .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
+                    ..Default::default()
+                });
+            }
         }
     }
 }
