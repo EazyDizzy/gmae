@@ -33,13 +33,13 @@ pub fn concatenate_material(
     voxel_material: VoxelMaterial,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
-    image_width: u32,
-    image_height: u32,
+    number_of_images_wide: u32,
+    number_of_images_in_height: u32,
 ) -> Handle<StandardMaterial> {
-    if image_width == 1 && image_height == 1 {
+    if number_of_images_wide == 1 && number_of_images_in_height == 1 {
         return materials.get_handle(get_material_id(voxel_material));
     }
-    let handle_id = generate_handle_id_for_material(voxel_material, image_width, image_height);
+    let handle_id = generate_handle_id_for_material(voxel_material, number_of_images_wide, number_of_images_in_height);
 
     if materials.get(handle_id).is_some() {
         return materials.get_handle(handle_id);
@@ -47,37 +47,35 @@ pub fn concatenate_material(
 
     let basic_image = get_basic_image_for_material(voxel_material);
 
-    let texture_width = basic_image.width() * image_width;
-    let texture_height = basic_image.width() * image_height;
+    let original_texture_width = basic_image.width();
+    let original_texture_height = basic_image.height();
+    let new_texture_width = original_texture_width * number_of_images_wide;
+    let new_texture_height = original_texture_height * number_of_images_in_height;
 
-    let mut img_buf = image::ImageBuffer::new(
-        texture_width,
-        texture_height,
+    let img_buf = image::ImageBuffer::from_fn(
+        new_texture_width,
+        new_texture_height,
+        |x, y| {
+            let w = x / original_texture_width;
+            let h = y / original_texture_height;
+            let original_x = x - w * original_texture_width;
+            let original_y = y - h * original_texture_height;
+
+            basic_image.get_pixel(original_x, original_y)
+        },
     );
-
-    let original_width = basic_image.width();
-    let original_height = basic_image.height();
-    img_buf.enumerate_pixels_mut().for_each(|(x, y, p)| {
-        let w = x / original_width;
-        let h = y / original_height;
-        let original_x = x - w * original_width;
-        let original_y = y - h * original_height;
-
-        *p = basic_image.get_pixel(original_x, original_y);
-    });
 
     // raw creation to prevent triple conversion of image (img_buf -> slice_buf -> DynamicImage -> img_buf)
     let image = Image::new(
         Extent3d {
-            width: texture_width,
-            height: texture_height,
+            width: new_texture_width,
+            height: new_texture_height,
             depth_or_array_layers: 1,
         },
         TextureDimension::D2,
         img_buf.into_raw(),
         TextureFormat::Rgba8UnormSrgb,
     );
-
 
     let image_handle = images.add(image);
     let original_material = materials.get(get_material_id(voxel_material))
@@ -112,8 +110,7 @@ fn get_basic_image_for_material(voxel_material: VoxelMaterial) -> DynamicImage {
         VoxelMaterial::Glass => "./assets/texture/block/glass.png",
         VoxelMaterial::Hay => "./assets/texture/block/hay.png",
         VoxelMaterial::Pumpkin => "./assets/texture/block/pumpkin.png",
-        // TODO
-        VoxelMaterial::Unknown => "./assets/texture/block/grass_0.png",
+        VoxelMaterial::Unknown => "./assets/texture/block/unknown.png",
     };
 
     image::open(material_id).unwrap()
