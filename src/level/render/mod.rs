@@ -1,3 +1,4 @@
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
 use crate::entity::point::Point;
@@ -29,14 +30,18 @@ pub fn render_world(
         let x_size = shape.max_x;
         let y_size = shape.max_y;
 
-        let top_side_needed = is_top_side_needed(pos, shape, &concatenated_voxels);
-        let bottom_side_needed = is_bottom_side_needed(pos, shape, &concatenated_voxels);
-        let right_side_needed = is_right_side_needed(pos, shape, &concatenated_voxels);
-        let left_side_needed = is_left_side_needed(pos, shape, &concatenated_voxels);
-        let forward_side_needed = is_forward_side_needed(pos, shape, &concatenated_voxels);
-        let back_side_needed = is_back_side_needed(pos, shape, &concatenated_voxels);
+        let top_side_visible = is_top_side_visible(pos, shape, &concatenated_voxels);
+        let bottom_side_visible = is_bottom_side_visible(pos, shape, &concatenated_voxels);
+        let right_side_visible = is_right_side_visible(pos, shape, &concatenated_voxels);
+        let left_side_visible = is_left_side_visible(pos, shape, &concatenated_voxels);
+        let forward_side_visible = is_forward_side_visible(pos, shape, &concatenated_voxels);
+        let back_side_visible = is_back_side_visible(pos, shape, &concatenated_voxels);
 
-        if top_side_needed || bottom_side_needed {
+        let mut light_spawned = false;
+
+
+        // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
+        if top_side_visible || bottom_side_visible {
             let top_and_bottom_material = concatenate_material(
                 voxel.material,
                 &mut materials,
@@ -46,14 +51,13 @@ pub fn render_world(
                 y_size as u32,
             );
 
-            if top_side_needed {
+            if top_side_visible {
                 let top_shape = shape::Quad {
                     size: Vec2::new(x_size, y_size),
                     flip: false,
                 };
                 let top_mesh = meshes.add(Mesh::from(top_shape));
 
-                // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh: top_mesh,
                     material: top_and_bottom_material.clone(),
@@ -61,31 +65,31 @@ pub fn render_world(
                     ..Default::default()
                 });
 
-                // TODO should not depend on top side
-                if voxel.material == VoxelMaterial::OrangeLight {
-                    spawn_orange_light_source_inside(&mut entity_commands);
-                }
-                if voxel.material == VoxelMaterial::BlueLight {
-                    spawn_blue_light_source_inside(&mut entity_commands);
+                if !light_spawned {
+                    light_spawned = spawn_light(&mut entity_commands, voxel);
                 }
             }
 
-            if bottom_side_needed {
+            if bottom_side_visible {
                 let bottom_shape = shape::Quad {
                     size: Vec2::new(x_size, y_size),
                     flip: true,
                 };
                 let bottom_mesh = meshes.add(Mesh::from(bottom_shape));
-                commands.spawn_bundle(PbrBundle {
+                let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh: bottom_mesh,
                     material: top_and_bottom_material.clone(),
                     transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size / 2.0, pos.z - 1.0),
                     ..Default::default()
                 });
+
+                if !light_spawned {
+                    light_spawned = spawn_light(&mut entity_commands, voxel);
+                }
             }
         }
 
-        if right_side_needed || left_side_needed {
+        if right_side_visible || left_side_visible {
             let left_and_right_material = concatenate_material(
                 voxel.material,
                 &mut materials,
@@ -95,38 +99,46 @@ pub fn render_world(
                 y_size as u32,
             );
 
-            if right_side_needed {
+            if right_side_visible {
                 let right_shape = shape::Quad {
                     size: Vec2::new(1.0, y_size),
                     flip: false,
                 };
                 let right_mesh = meshes.add(Mesh::from(right_shape));
-                commands.spawn_bundle(PbrBundle {
+                let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh: right_mesh,
                     material: left_and_right_material.clone(),
                     transform: Transform::from_xyz(pos.x + x_size, pos.y + y_size / 2.0, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
                     ..Default::default()
                 });
+
+                if !light_spawned {
+                    light_spawned = spawn_light(&mut entity_commands, voxel);
+                }
             }
 
-            if left_side_needed {
+            if left_side_visible {
                 let left_shape = shape::Quad {
                     size: Vec2::new(1.0, y_size),
                     flip: true,
                 };
                 let left_mesh = meshes.add(Mesh::from(left_shape));
-                commands.spawn_bundle(PbrBundle {
+                let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh: left_mesh,
                     material: left_and_right_material.clone(),
                     transform: Transform::from_xyz(pos.x, pos.y + y_size / 2.0, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
                     ..Default::default()
                 });
+
+                if !light_spawned {
+                    light_spawned = spawn_light(&mut entity_commands, voxel);
+                }
             }
         }
 
-        if forward_side_needed || back_side_needed {
+        if forward_side_visible || back_side_visible {
             let back_and_forward_material = concatenate_material(
                 voxel.material,
                 &mut materials,
@@ -136,40 +148,60 @@ pub fn render_world(
                 1,
             );
 
-            if forward_side_needed {
+            if forward_side_visible {
                 let forward_shape = shape::Quad {
                     size: Vec2::new(x_size, 1.0),
                     flip: true,
                 };
                 let forward_mesh = meshes.add(Mesh::from(forward_shape));
-                commands.spawn_bundle(PbrBundle {
+                let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh: forward_mesh,
                     material: back_and_forward_material.clone(),
                     transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
                     ..Default::default()
                 });
+
+                if !light_spawned {
+                    light_spawned = spawn_light(&mut entity_commands, voxel);
+                }
             }
 
-            if back_side_needed {
+            if back_side_visible {
                 let back_shape = shape::Quad {
                     size: Vec2::new(x_size, 1.0),
                     flip: false,
                 };
                 let back_mesh = meshes.add(Mesh::from(back_shape));
-                commands.spawn_bundle(PbrBundle {
+                let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh: back_mesh,
                     material: back_and_forward_material.clone(),
                     transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
                     ..Default::default()
                 });
+
+                if !light_spawned {
+                    light_spawned = spawn_light(&mut entity_commands, voxel);
+                }
             }
         }
     }
 }
 
-fn is_left_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
+fn spawn_light(mut entity_commands: &mut EntityCommands, voxel: &Voxel) -> bool {
+    if voxel.material == VoxelMaterial::OrangeLight {
+        spawn_orange_light_source_inside(entity_commands);
+        true
+    } else if voxel.material == VoxelMaterial::BlueLight {
+        spawn_blue_light_source_inside(entity_commands);
+        true
+    } else {
+        false
+    }
+}
+
+fn is_left_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_y = pos.y;
     let max_y = pos.y + shape.max_y;
     let min_x = pos.x;
@@ -184,10 +216,12 @@ fn is_left_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Bo
             let x_ends_on_the_start = seq_max_x == min_x;
             let start_y_within_borders = min_y >= seq_min_y && min_y <= seq_max_y;
             let end_y_within_borders = max_y >= seq_min_y && max_y <= seq_max_y;
+            let is_not_transparent = v.material != VoxelMaterial::Glass;
 
             same_height
                 && (start_y_within_borders || end_y_within_borders)
                 && x_ends_on_the_start
+                && is_not_transparent
         })
         .flat_map(|(s, v)| {
             let seq_start_y = v.position.y as usize;
@@ -200,7 +234,7 @@ fn is_left_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Bo
     !(min_y as usize..=max_y as usize).into_iter().all(|y| adjoining_plane_y.contains(&y))
 }
 
-fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
+fn is_right_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_y = pos.y;
     let max_y = pos.y + shape.max_y;
     let max_x = pos.x + shape.max_x;
@@ -215,10 +249,12 @@ fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::B
             let x_starts_on_the_end = seq_min_x == max_x;
             let start_y_within_borders = min_y >= seq_min_y && min_y <= seq_max_y;
             let end_y_within_borders = max_y >= seq_min_y && max_y <= seq_max_y;
+            let is_not_transparent = v.material != VoxelMaterial::Glass;
 
             same_height
                 && (start_y_within_borders || end_y_within_borders)
                 && x_starts_on_the_end
+                && is_not_transparent
         })
         .flat_map(|(s, v)| {
             let seq_start_y = v.position.y as usize;
@@ -231,7 +267,7 @@ fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::B
     !(min_y as usize..=max_y as usize).into_iter().all(|y| adjoining_plane_y.contains(&y))
 }
 
-fn is_back_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
+fn is_back_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_x = pos.x as usize;
     let max_x = (pos.x + shape.max_x) as usize;
 
@@ -240,8 +276,10 @@ fn is_back_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Bo
             let seq_end_y = v.position.y + s.max_y;
             let same_height = v.position.z == pos.z;
             let ends_on_the_start = seq_end_y == pos.y;
+            let is_not_transparent = v.material != VoxelMaterial::Glass;
 
             same_height && ends_on_the_start
+                && is_not_transparent
         })
         .flat_map(|(s, v)| {
             let seq_start_x = v.position.x as usize;
@@ -254,7 +292,7 @@ fn is_back_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Bo
     !(min_x..=max_x).into_iter().all(|x| adjoining_plane_x.contains(&x))
 }
 
-fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
+fn is_forward_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_x = pos.x as usize;
     let max_x = (pos.x + shape.max_x) as usize;
     let max_y = pos.y + shape.max_y;
@@ -264,8 +302,9 @@ fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape:
             let seq_min_y = v.position.y;
             let same_height = v.position.z == pos.z;
             let starts_on_the_end = seq_min_y == max_y;
+            let is_not_transparent = v.material != VoxelMaterial::Glass;
 
-            same_height && starts_on_the_end
+            same_height && starts_on_the_end && is_not_transparent
         })
         .flat_map(|(s, v)| {
             let seq_start_x = v.position.x as usize;
@@ -278,7 +317,7 @@ fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape:
     !(min_x..=max_x).into_iter().all(|x| adjoining_plane_x.contains(&x))
 }
 
-fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
+fn is_bottom_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     if pos.z == 0.0 {
         return false;
     }
@@ -305,8 +344,8 @@ fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::
     false
 }
 
-// TODO fix random bug of rendering
-fn is_top_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
+// TODO fix random bug of unneeded rendering
+fn is_top_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
     let min_x = pos.x;
     let max_x = pos.x + shape.max_x;
     let min_y = pos.y;
@@ -347,10 +386,12 @@ fn get_next_z_layer<'a>(pos: &'a Point, shape: &'a shape::Box, all_shapes: &'a [
             let end_y_within_borders = max_y >= seq_min_y && max_y <= seq_max_y;
             let start_x_within_borders = min_x >= seq_min_x && min_x <= seq_max_x;
             let end_x_within_borders = max_x >= seq_min_x && max_x <= seq_max_x;
+            let is_not_transparent = v.material != VoxelMaterial::Glass;
 
             has_needed_height
                 && (start_y_within_borders || end_y_within_borders)
                 && (start_x_within_borders || end_x_within_borders)
+                && is_not_transparent
         })
         .flat_map(|(s, v)| {
             let seq_min_x = v.position.x as usize;
