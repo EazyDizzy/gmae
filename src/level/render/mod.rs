@@ -18,7 +18,6 @@ pub fn render_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
 ) {
     let map = read_level("debug");
@@ -46,7 +45,6 @@ pub fn render_world(
                 voxel.material,
                 &mut materials,
                 &mut images,
-                &asset_server,
                 x_size as u32,
                 y_size as u32,
             );
@@ -94,7 +92,6 @@ pub fn render_world(
                 voxel.material,
                 &mut materials,
                 &mut images,
-                &asset_server,
                 1,
                 y_size as u32,
             );
@@ -143,7 +140,6 @@ pub fn render_world(
                 voxel.material,
                 &mut materials,
                 &mut images,
-                &asset_server,
                 x_size as u32,
                 1,
             );

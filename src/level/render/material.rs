@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::io::BufWriter;
+use std::io::{BufWriter, Write};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -15,9 +15,6 @@ use crate::VoxelMaterial;
 
 const MATERIAL_UUID: Uuid = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 const GRASS_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 1);
-const GRASS_MATERIAL2_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10002);
-const GRASS_MATERIAL3_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10003);
-const GRASS_MATERIAL4_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10004);
 
 const STONE_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 2);
 const DIRT_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 3);
@@ -35,63 +32,57 @@ pub fn concatenate_material(
     voxel_material: VoxelMaterial,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
-    asset_server: &Res<AssetServer>,
     image_width: u32,
     image_height: u32,
 ) -> Handle<StandardMaterial> {
-    let basic_image = get_basic_image_for_material(voxel_material);
     if image_width == 1 && image_height == 1 {
         return get_material(voxel_material, materials);
     }
 
+    let basic_image = get_basic_image_for_material(voxel_material);
+
     let file_name = format!("{:?}_{}_{}.png", voxel_material, image_width, image_height);
-    let path = format!("./assets/{}", file_name);
 
-    if !Path::new(&path).exists() {
-        let texture_width = basic_image.width() * image_width;
-        let texture_height = basic_image.width() * image_height;
+    let texture_width = basic_image.width() * image_width;
+    let texture_height = basic_image.width() * image_height;
 
-        let mut img_buf = image::ImageBuffer::new(
-            texture_width,
-            texture_height,
-        );
+    let mut img_buf = image::ImageBuffer::new(
+        texture_width,
+        texture_height,
+    );
 
-        for w in 0..image_width {
-            let x_bonus = w * basic_image.width();
+    for w in 0..image_width {
+        let x_bonus = w * basic_image.width();
 
-            for h in 0..image_height {
-                let y_bonus = h * basic_image.height();
-                basic_image.pixels().for_each(|(x, y, pixel)| {
+        for h in 0..image_height {
+            let y_bonus = h * basic_image.height();
+
+            basic_image.pixels()
+                .for_each(|(x, y, pixel)| {
                     img_buf.put_pixel(x + x_bonus, y + y_bonus, pixel);
                 });
-            }
         }
-
-        let mut out = &mut BufWriter::new(Vec::new());
-        codecs::png::PngEncoder::new(&mut out).write_image(
-            img_buf.as_raw(),
-            texture_width,
-            texture_height,
-            ColorType::Rgba8,
-        )
-            .expect("Cannot write to memory");
-
-        img_buf.save(path)
-            .expect("failed to save as file");
     }
 
-    materials.add(create_material(asset_server.load(&file_name)))
+    let mut out = vec![];
+    codecs::png::PngEncoder::new(&mut out).write_image(
+        img_buf.as_raw(),
+        texture_width,
+        texture_height,
+        ColorType::Rgba8,
+    )
+        .expect("Cannot write to memory");
 
-    // let image = Image::from_buffer(out.buffer(), ImageType::Extension("png"))
-    //     .expect("Failed to convert into image");
-    //
-    // let image_handle = images.add(image);
-    // materials.add(create_material(image_handle))
+    let image = Image::from_buffer(&out, ImageType::MimeType("image/png"))
+        .expect("Failed to convert into image");
+
+    let image_handle = images.add(image);
+    materials.add(create_material(image_handle))
 }
 
 fn get_basic_image_for_material(voxel_material: VoxelMaterial) -> DynamicImage {
     let material_id = match voxel_material {
-        VoxelMaterial::Grass => "./assets/texture/block/grass_0.png",
+        VoxelMaterial::Grass => "./assets/texture/block/grass.png",
         VoxelMaterial::Stone => "./assets/texture/block/stone.png",
         VoxelMaterial::Dirt => "./assets/texture/block/dirt.png",
         VoxelMaterial::Bedrock => "./assets/texture/block/bedrock.png",
@@ -110,14 +101,6 @@ fn get_basic_image_for_material(voxel_material: VoxelMaterial) -> DynamicImage {
 }
 
 fn get_material(voxel_material: VoxelMaterial, materials: &ResMut<Assets<StandardMaterial>>) -> Handle<StandardMaterial> {
-    if voxel_material == VoxelMaterial::Grass {
-        let mut rng = get_rng();
-
-        let material_id = *rng.choose(&[GRASS_MATERIAL_ID, GRASS_MATERIAL2_ID, GRASS_MATERIAL3_ID, GRASS_MATERIAL4_ID]).unwrap();
-
-        return materials.get_handle(material_id);
-    }
-
     let material_id = match voxel_material {
         VoxelMaterial::Grass => GRASS_MATERIAL_ID,
         VoxelMaterial::Stone => STONE_MATERIAL_ID,
@@ -137,16 +120,7 @@ fn get_material(voxel_material: VoxelMaterial, materials: &ResMut<Assets<Standar
 }
 
 pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>, mut images: ResMut<Assets<Image>>) {
-    let img = image::open("./assets/texture/block/grass_0.png").unwrap();
-    let grass_handle = images.set(GRASS_MATERIAL_ID, create_random_texture_from(&img));
-    let grass1_handle = images.set(GRASS_MATERIAL2_ID, create_random_texture_from(&img));
-    let grass2_handle = images.set(GRASS_MATERIAL3_ID, create_random_texture_from(&img));
-    let grass3_handle = images.set(GRASS_MATERIAL4_ID, create_random_texture_from(&img));
-
-    let _ = materials.set(GRASS_MATERIAL_ID, create_material(grass_handle));
-    let _ = materials.set(GRASS_MATERIAL2_ID, create_material(grass1_handle));
-    let _ = materials.set(GRASS_MATERIAL3_ID, create_material(grass2_handle));
-    let _ = materials.set(GRASS_MATERIAL4_ID, create_material(grass3_handle));
+    let _ = materials.set(GRASS_MATERIAL_ID, create_material(asset_server.load("texture/block/grass.png")));
     let _ = materials.set(STONE_MATERIAL_ID, create_material(asset_server.load("texture/block/stone.png")));
     let _ = materials.set(DIRT_MATERIAL_ID, create_material(asset_server.load("texture/block/dirt.png")));
     let _ = materials.set(BEDROCK_MATERIAL_ID, create_material(asset_server.load("texture/block/bedrock.png")));

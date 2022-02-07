@@ -123,6 +123,7 @@ fn should_merge(material: VoxelMaterial) -> bool {
     ![
         VoxelMaterial::BlueLight,
         VoxelMaterial::OrangeLight,
+        // TODO remove glass from here
         VoxelMaterial::Glass
     ].contains(&material)
 }
