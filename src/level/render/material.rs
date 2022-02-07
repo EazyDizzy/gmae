@@ -36,7 +36,7 @@ pub fn concatenate_material(
     image_height: u32,
 ) -> Handle<StandardMaterial> {
     if image_width == 1 && image_height == 1 {
-        return get_material(voxel_material, materials);
+        return materials.get_handle(get_material_id(voxel_material));
     }
     let handle_id = generate_handle_id_for_material(voxel_material, image_width, image_height);
 
@@ -80,7 +80,17 @@ pub fn concatenate_material(
         .expect("Failed to convert into image");
 
     let image_handle = images.add(image);
-    materials.set(handle_id, create_material(image_handle))
+    let original_material = materials.get(get_material_id(voxel_material))
+        .expect(&format!("Cannot get material for {:?}", voxel_material))
+        .clone();
+
+    materials.set(
+        handle_id,
+        StandardMaterial {
+            base_color_texture: Some(image_handle),
+            ..original_material
+        },
+    )
 }
 
 fn generate_handle_id_for_material(voxel_material: VoxelMaterial, image_width: u32, image_height: u32) -> HandleId {
@@ -109,8 +119,8 @@ fn get_basic_image_for_material(voxel_material: VoxelMaterial) -> DynamicImage {
     image::open(material_id).unwrap()
 }
 
-fn get_material(voxel_material: VoxelMaterial, materials: &ResMut<Assets<StandardMaterial>>) -> Handle<StandardMaterial> {
-    let material_id = match voxel_material {
+fn get_material_id(voxel_material: VoxelMaterial) -> HandleId {
+    match voxel_material {
         VoxelMaterial::Grass => GRASS_MATERIAL_ID,
         VoxelMaterial::Stone => STONE_MATERIAL_ID,
         VoxelMaterial::Dirt => DIRT_MATERIAL_ID,
@@ -123,9 +133,7 @@ fn get_material(voxel_material: VoxelMaterial, materials: &ResMut<Assets<Standar
         VoxelMaterial::Hay => HAY_MATERIAL_ID,
         VoxelMaterial::Pumpkin => PUMPKIN_MATERIAL_ID,
         VoxelMaterial::Unknown => UNKNOWN_MATERIAL_ID,
-    };
-
-    materials.get_handle(material_id)
+    }
 }
 
 pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>, mut images: ResMut<Assets<Image>>) {
