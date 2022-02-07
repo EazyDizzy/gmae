@@ -6,7 +6,7 @@ use rand::Rng;
 
 use crate::ENABLE_EXTREME_GRAPHIC;
 use crate::entity::point::Point;
-use crate::entity::voxel::{Voxel, VoxelMaterial};
+use crate::entity::voxel::{Voxel, Material};
 use crate::level::util::get_rng;
 
 const EXPORT_DIAPASON: usize = 8;
@@ -65,22 +65,22 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     voxels
 }
 
-fn match_name_to_material(name: &str) -> VoxelMaterial {
+fn match_name_to_material(name: &str) -> Material {
     match name {
-        "minecraft:bedrock" => { VoxelMaterial::Bedrock }
-        "minecraft:grass_block" => { VoxelMaterial::Grass }
-        "minecraft:dirt" => { VoxelMaterial::Dirt }
-        "minecraft:stone" => { VoxelMaterial::Stone }
-        "minecraft:oak_planks" => { VoxelMaterial::WoodenPlanks }
-        "minecraft:glowstone" => { VoxelMaterial::OrangeLight }
-        "minecraft:sea_lantern" => { VoxelMaterial::BlueLight }
-        "minecraft:dirt_path" => { VoxelMaterial::DirtPath }
-        "minecraft:glass" => { VoxelMaterial::Glass }
-        "minecraft:hay_block" => { VoxelMaterial::Hay }
-        "minecraft:pumpkin" => { VoxelMaterial::Pumpkin }
+        "minecraft:bedrock" => { Material::Bedrock }
+        "minecraft:grass_block" => { Material::Grass }
+        "minecraft:dirt" => { Material::Dirt }
+        "minecraft:stone" => { Material::Stone }
+        "minecraft:oak_planks" => { Material::WoodenPlanks }
+        "minecraft:glowstone" => { Material::OrangeLight }
+        "minecraft:sea_lantern" => { Material::BlueLight }
+        "minecraft:dirt_path" => { Material::DirtPath }
+        "minecraft:glass" => { Material::Glass }
+        "minecraft:hay_block" => { Material::Hay }
+        "minecraft:pumpkin" => { Material::Pumpkin }
         &_ => {
             println!("Unknown block name: {}", name);
-            VoxelMaterial::Unknown
+            Material::Unknown
         }
     }
 }

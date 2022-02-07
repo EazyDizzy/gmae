@@ -26,6 +26,7 @@ pub fn setup(mut commands: Commands, windows: ResMut<Windows>) {
     initial_grab_cursor(windows);
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn cursor_grab(
     keys: Res<Input<KeyCode>>,
     mut windows: ResMut<Windows>,

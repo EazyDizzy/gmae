@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::entity::voxel::Voxel;
-use crate::VoxelMaterial;
+use crate::Material;
 
 #[derive(Debug)]
 struct VoxelSequence<'a> {
@@ -12,10 +12,6 @@ struct VoxelSequence<'a> {
 }
 
 impl<'a> VoxelSequence<'a> {
-    fn width(&self) -> u32 {
-        (self.end.position.x + 1.0 - self.start.position.x) as u32
-    }
-
     fn height(&self) -> u32 {
         (self.end.position.y + 1.0 - self.start.position.y) as u32
     }
@@ -27,15 +23,15 @@ pub fn merge_voxels_in_meshes(voxels: &[Voxel], max_voxels_per_dimension: u32) -
     let mut meshes = vec![];
 
     for (_, plate) in grouped_voxels {
-        let mut xy_sequences = vec![];
+        let mut plane_sequences = vec![];
 
-        for (y, row) in plate.iter() {
-            let x_sequences = merge_voxels_row(row.clone(), max_voxels_per_dimension);
+        for (y, row) in &plate {
+            let row_sequences = merge_voxels_row(row.clone(), max_voxels_per_dimension);
 
-            xy_sequences = stretch_sequences_by_y(x_sequences, xy_sequences, *y, max_voxels_per_dimension);
+            plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, *y, max_voxels_per_dimension);
         }
 
-        for sequence in xy_sequences {
+        for sequence in plane_sequences {
             let shape = shape::Box {
                 min_x: 0.0,
                 max_x: sequence.end.position.x - sequence.start.position.x + 1.0,
@@ -53,18 +49,18 @@ pub fn merge_voxels_in_meshes(voxels: &[Voxel], max_voxels_per_dimension: u32) -
 }
 
 fn stretch_sequences_by_y<'a>(
-    x_sequences: Vec<VoxelSequence<'a>>,
-    mut xy_sequences: Vec<VoxelSequence<'a>>,
+    row_sequences: Vec<VoxelSequence<'a>>,
+    mut plane_sequences: Vec<VoxelSequence<'a>>,
     y: usize,
     max_voxels_per_dimension: u32,
 ) -> Vec<VoxelSequence<'a>> {
     let mut sequences_to_append = vec![];
-    let mut prev_row_sequences: Vec<&mut VoxelSequence> = xy_sequences.iter_mut()
+    let mut prev_row_sequences: Vec<&mut VoxelSequence> = plane_sequences.iter_mut()
         .filter(|s: &&mut VoxelSequence| {
             s.end.position.y == y as f32 - 1.0
         }).collect();
 
-    for sequence in x_sequences {
+    for sequence in row_sequences {
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
             s.start.position.x == sequence.start.position.x
                 && s.end.position.x == sequence.end.position.x
@@ -83,9 +79,9 @@ fn stretch_sequences_by_y<'a>(
         }
     }
 
-    xy_sequences.append(&mut sequences_to_append);
+    plane_sequences.append(&mut sequences_to_append);
 
-    xy_sequences
+    plane_sequences
 }
 
 fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
@@ -141,9 +137,9 @@ fn group_voxels_by_coordinates(voxels: &[Voxel]) -> HashMap<usize, HashMap<usize
     grouping
 }
 
-fn should_merge(material: VoxelMaterial) -> bool {
+fn should_merge(material: Material) -> bool {
     ![
-        VoxelMaterial::BlueLight,
-        VoxelMaterial::OrangeLight
+        Material::BlueLight,
+        Material::OrangeLight
     ].contains(&material)
 }

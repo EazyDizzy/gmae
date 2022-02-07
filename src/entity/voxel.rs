@@ -1,7 +1,7 @@
 use crate::entity::point::Point;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub enum VoxelMaterial {
+pub enum Material {
     Unknown,
     Bedrock,
     Stone,
@@ -20,11 +20,11 @@ pub enum VoxelMaterial {
 pub struct Voxel {
     pub id: usize,
     pub position: Point,
-    pub material: VoxelMaterial,
+    pub material: Material,
 }
 
 impl Voxel {
-    pub fn new(id: usize, position: Point, material: VoxelMaterial) -> Voxel {
+    pub fn new(id: usize, position: Point, material: Material) -> Voxel {
         Voxel {
             id,
             position,
