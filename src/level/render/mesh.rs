@@ -11,7 +11,17 @@ struct VoxelSequence<'a> {
     end: &'a Voxel,
 }
 
-pub fn merge_voxels_in_meshes(voxels: &[Voxel]) -> Vec<(shape::Box, &Voxel)> {
+impl<'a> VoxelSequence<'a> {
+    fn width(&self) -> u32 {
+        (self.end.position.x + 1.0 - self.start.position.x) as u32
+    }
+
+    fn height(&self) -> u32 {
+        (self.end.position.y + 1.0 - self.start.position.y) as u32
+    }
+}
+
+pub fn merge_voxels_in_meshes(voxels: &[Voxel], max_voxels_per_dimension: u32) -> Vec<(shape::Box, &Voxel)> {
     let grouped_voxels = group_voxels_by_coordinates(voxels);
 
     let mut meshes = vec![];
@@ -20,9 +30,9 @@ pub fn merge_voxels_in_meshes(voxels: &[Voxel]) -> Vec<(shape::Box, &Voxel)> {
         let mut xy_sequences = vec![];
 
         for (y, row) in plate.iter() {
-            let x_sequences = merge_voxels_row(row.clone());
+            let x_sequences = merge_voxels_row(row.clone(), max_voxels_per_dimension);
 
-            xy_sequences = stretch_sequences_by_y(x_sequences, xy_sequences, *y);
+            xy_sequences = stretch_sequences_by_y(x_sequences, xy_sequences, *y, max_voxels_per_dimension);
         }
 
         for sequence in xy_sequences {
@@ -42,7 +52,12 @@ pub fn merge_voxels_in_meshes(voxels: &[Voxel]) -> Vec<(shape::Box, &Voxel)> {
     meshes
 }
 
-fn stretch_sequences_by_y<'a>(x_sequences: Vec<VoxelSequence<'a>>, mut xy_sequences: Vec<VoxelSequence<'a>>, y: usize) -> Vec<VoxelSequence<'a>> {
+fn stretch_sequences_by_y<'a>(
+    x_sequences: Vec<VoxelSequence<'a>>,
+    mut xy_sequences: Vec<VoxelSequence<'a>>,
+    y: usize,
+    max_voxels_per_dimension: u32,
+) -> Vec<VoxelSequence<'a>> {
     let mut sequences_to_append = vec![];
     let mut prev_row_sequences: Vec<&mut VoxelSequence> = xy_sequences.iter_mut()
         .filter(|s: &&mut VoxelSequence| {
@@ -58,7 +73,11 @@ fn stretch_sequences_by_y<'a>(x_sequences: Vec<VoxelSequence<'a>>, mut xy_sequen
         });
 
         if let Some(same) = same_sequence {
-            same.end = sequence.end;
+            if same.height() + sequence.height() < max_voxels_per_dimension {
+                same.end = sequence.end;
+            } else {
+                sequences_to_append.push(sequence);
+            }
         } else {
             sequences_to_append.push(sequence);
         }
@@ -69,7 +88,7 @@ fn stretch_sequences_by_y<'a>(x_sequences: Vec<VoxelSequence<'a>>, mut xy_sequen
     xy_sequences
 }
 
-fn merge_voxels_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
+fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
     row.sort_by(|a, b| {
         a.position.x.partial_cmp(&b.position.x).unwrap()
     });
@@ -79,9 +98,12 @@ fn merge_voxels_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
     let mut prev_voxel = row[0];
 
     for voxel in row.into_iter().skip(1) {
+        let concatenation_width = (prev_voxel.position.x - start_voxel.position.x) as u32;
         let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
             || voxel.material != prev_voxel.material
-            || !should_merge(prev_voxel.material);
+            || !should_merge(prev_voxel.material)
+            || concatenation_width + 1 == max_voxels_per_dimension;
+
         if stop_concatenation {
             x_sequences.push(
                 VoxelSequence {
@@ -122,8 +144,6 @@ fn group_voxels_by_coordinates(voxels: &[Voxel]) -> HashMap<usize, HashMap<usize
 fn should_merge(material: VoxelMaterial) -> bool {
     ![
         VoxelMaterial::BlueLight,
-        VoxelMaterial::OrangeLight,
-        // TODO remove glass from here
-        VoxelMaterial::Glass
+        VoxelMaterial::OrangeLight
     ].contains(&material)
 }

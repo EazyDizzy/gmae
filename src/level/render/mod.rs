@@ -2,11 +2,12 @@ use std::time::Instant;
 
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+use bevy::render::renderer::RenderDevice;
 
 use crate::entity::point::Point;
 use crate::entity::voxel::Voxel;
 use crate::level::porter::read_level;
-use crate::level::render::material::concatenate_material;
+use crate::level::render::material::{concatenate_material, TEXTURE_SIZE};
 use crate::level::render::mesh::merge_voxels_in_meshes;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::VoxelMaterial;
@@ -21,10 +22,15 @@ pub fn render_world(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
+    render_device: Res<RenderDevice>
 ) {
-    let map = read_level("debug");
+    let limits = render_device.limits().max_texture_dimension_2d;
+    let max_voxels_per_dimension = limits / TEXTURE_SIZE;
 
-    let concatenated_voxels = merge_voxels_in_meshes(&map);
+    let map = read_level("debug");
+    dbg!(max_voxels_per_dimension);
+
+    let concatenated_voxels = merge_voxels_in_meshes(&map, max_voxels_per_dimension);
     let start = Instant::now();
 
     for (shape, voxel) in &concatenated_voxels {

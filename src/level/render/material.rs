@@ -29,6 +29,8 @@ const HAY_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10);
 const PUMPKIN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 11);
 const UNKNOWN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 666);
 
+pub const TEXTURE_SIZE: u32 = 64;
+
 pub fn concatenate_material(
     voxel_material: VoxelMaterial,
     materials: &mut ResMut<Assets<StandardMaterial>>,
