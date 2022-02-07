@@ -207,39 +207,30 @@ fn is_left_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Bo
     let max_y = pos.y + shape.max_y;
     let min_x = pos.x;
 
-    let next_x_layer: Vec<&(shape::Box, &Voxel)> = all_shapes.iter().filter(|(s, v)| {
-        let seq_max_x = v.position.x + s.max_x;
-        let seq_min_y = v.position.y;
-        let seq_max_y = v.position.y + s.max_y;
-
-        v.position.z == pos.z
-            && (
-            (min_y >= seq_min_y && min_y <= seq_max_y)
-                || (max_y >= seq_min_y && max_y <= seq_max_y)
-        )
-            && seq_max_x == min_x
-    }).collect();
-
-    if next_x_layer.is_empty() {
-        return true;
-    }
-
-    for y in min_y as usize..=max_y as usize {
-        let y = y as f32;
-
-        let voxel_is_covered = next_x_layer.iter().find(|(s, v)| {
+    let adjoining_plane_y: Vec<usize> = all_shapes.iter()
+        .filter(|(s, v)| {
+            let seq_max_x = v.position.x + s.max_x;
             let seq_min_y = v.position.y;
             let seq_max_y = v.position.y + s.max_y;
 
-            seq_min_y <= y && seq_max_y >= y
-        }).is_some();
+            let same_height = v.position.z == pos.z;
+            let x_ends_on_the_start = seq_max_x == min_x;
+            let start_y_within_borders = min_y >= seq_min_y && min_y <= seq_max_y;
+            let end_y_within_borders = max_y >= seq_min_y && max_y <= seq_max_y;
 
-        if !voxel_is_covered {
-            return true;
-        }
-    }
+            same_height
+                && (start_y_within_borders || end_y_within_borders)
+                && x_ends_on_the_start
+        })
+        .flat_map(|(s, v)| {
+            let seq_start_y = v.position.y as usize;
+            let seq_end_y = (v.position.y + s.max_y) as usize;
 
-    false
+            seq_start_y..=seq_end_y
+        })
+        .collect();
+
+    !(min_y as usize..=max_y as usize).into_iter().all(|y| adjoining_plane_y.contains(&y))
 }
 
 fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
@@ -247,39 +238,30 @@ fn is_right_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::B
     let max_y = pos.y + shape.max_y;
     let max_x = pos.x + shape.max_x;
 
-    let next_x_layer: Vec<&(shape::Box, &Voxel)> = all_shapes.iter().filter(|(s, v)| {
-        let seq_min_x = v.position.x;
-        let seq_min_y = v.position.y;
-        let seq_max_y = v.position.y + s.max_y;
-
-        v.position.z == pos.z
-            && (
-            (min_y >= seq_min_y && min_y <= seq_max_y)
-                || (max_y >= seq_min_y && max_y <= seq_max_y)
-        )
-            && seq_min_x == max_x
-    }).collect();
-
-    if next_x_layer.is_empty() {
-        return true;
-    }
-
-    for y in min_y as usize..=max_y as usize {
-        let y = y as f32;
-
-        let voxel_is_covered = next_x_layer.iter().find(|(s, v)| {
+    let adjoining_plane_y: Vec<usize> = all_shapes.iter()
+        .filter(|(s, v)| {
+            let seq_min_x = v.position.x;
             let seq_min_y = v.position.y;
             let seq_max_y = v.position.y + s.max_y;
 
-            seq_min_y <= y && seq_max_y >= y
-        }).is_some();
+            let same_height = v.position.z == pos.z;
+            let x_starts_on_the_end = seq_min_x == max_x;
+            let start_y_within_borders = min_y >= seq_min_y && min_y <= seq_max_y;
+            let end_y_within_borders = max_y >= seq_min_y && max_y <= seq_max_y;
 
-        if !voxel_is_covered {
-            return true;
-        }
-    }
+            same_height
+                && (start_y_within_borders || end_y_within_borders)
+                && x_starts_on_the_end
+        })
+        .flat_map(|(s, v)| {
+            let seq_start_y = v.position.y as usize;
+            let seq_end_y = (v.position.y + s.max_y) as usize;
 
-    false
+            seq_start_y..=seq_end_y
+        })
+        .collect();
+
+    !(min_y as usize..=max_y as usize).into_iter().all(|y| adjoining_plane_y.contains(&y))
 }
 
 fn is_back_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
@@ -302,57 +284,31 @@ fn is_back_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Bo
         })
         .collect();
 
-    array_contains_all(&adjoining_plane_x, (min_x..=max_x)) == false
-}
-
-fn array_contains_all<T, I>(container: &[T], content: I) -> bool
-    where
-        I: IntoIterator<Item=T>,
-        T: PartialEq
-{
-    for element in content {
-        if !container.contains(&element) {
-            return false;
-        }
-    }
-
-    true
+    !(min_x..=max_x).into_iter().all(|x| adjoining_plane_x.contains(&x))
 }
 
 fn is_forward_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
-    let min_x = pos.x;
-    let max_x = pos.x + shape.max_x;
+    let min_x = pos.x as usize;
+    let max_x = (pos.x + shape.max_x) as usize;
     let max_y = pos.y + shape.max_y;
-    let layer_y = max_y + 1.0;
 
-    let next_y_layer: Vec<&(shape::Box, &Voxel)> = all_shapes.iter().filter(|(s, v)| {
-        let seq_min_y = v.position.y;
-        let seq_max_y = v.position.y + s.max_y;
+    let adjoining_plane_x: Vec<usize> = all_shapes.iter()
+        .filter(|(s, v)| {
+            let seq_min_y = v.position.y;
+            let same_height = v.position.z == pos.z;
+            let starts_on_the_end = seq_min_y == max_y;
 
-        v.position.z == pos.z
-            && (seq_max_y == layer_y || seq_min_y == max_y)
-    }).collect();
+            same_height && starts_on_the_end
+        })
+        .flat_map(|(s, v)| {
+            let seq_start_x = v.position.x as usize;
+            let seq_end_x = (v.position.x + s.max_x) as usize;
 
-    if next_y_layer.is_empty() {
-        return true;
-    }
+            seq_start_x..=seq_end_x
+        })
+        .collect();
 
-    for x in min_x as usize..=max_x as usize {
-        let x = x as f32;
-
-        let voxel_is_covered = next_y_layer.iter().find(|(s, v)| {
-            let seq_min_x = v.position.x;
-            let seq_max_x = v.position.x + s.max_x;
-
-            seq_min_x <= x && seq_max_x >= x
-        }).is_some();
-
-        if !voxel_is_covered {
-            return true;
-        }
-    }
-
-    false
+    !(min_x..=max_x).into_iter().all(|x| adjoining_plane_x.contains(&x))
 }
 
 fn is_bottom_side_needed(pos: &Point, shape: &shape::Box, all_shapes: &[(shape::Box, &Voxel)]) -> bool {
