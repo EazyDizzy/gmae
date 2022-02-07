@@ -38,10 +38,13 @@ pub fn concatenate_material(
     if image_width == 1 && image_height == 1 {
         return get_material(voxel_material, materials);
     }
+    let handle_id = generate_handle_id_for_material(voxel_material, image_width, image_height);
+
+    if materials.get(handle_id).is_some() {
+        return materials.get_handle(handle_id);
+    }
 
     let basic_image = get_basic_image_for_material(voxel_material);
-
-    let file_name = format!("{:?}_{}_{}.png", voxel_material, image_width, image_height);
 
     let texture_width = basic_image.width() * image_width;
     let texture_height = basic_image.width() * image_height;
@@ -77,7 +80,13 @@ pub fn concatenate_material(
         .expect("Failed to convert into image");
 
     let image_handle = images.add(image);
-    materials.add(create_material(image_handle))
+    materials.set(handle_id, create_material(image_handle))
+}
+
+fn generate_handle_id_for_material(voxel_material: VoxelMaterial, image_width: u32, image_height: u32) -> HandleId {
+    let id = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, voxel_material as u8, image_width as u8, image_height as u8]);
+
+    HandleId::Id(id, 0)
 }
 
 fn get_basic_image_for_material(voxel_material: VoxelMaterial) -> DynamicImage {

@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
@@ -23,6 +25,7 @@ pub fn render_world(
     let map = read_level("debug");
 
     let concatenated_voxels = merge_voxels_in_meshes(&map);
+    let start = Instant::now();
 
     for (shape, voxel) in &concatenated_voxels {
         let pos = &voxel.position;
@@ -37,7 +40,6 @@ pub fn render_world(
         let back_side_visible = is_back_side_visible(pos, shape, &concatenated_voxels);
 
         let mut light_spawned = false;
-
 
         // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
         if top_side_visible || bottom_side_visible {
@@ -183,6 +185,9 @@ pub fn render_world(
             }
         }
     }
+
+    let duration = start.elapsed();
+    println!("initial render: {:?}", duration);
 }
 
 fn spawn_light(mut entity_commands: &mut EntityCommands, voxel: &Voxel) -> bool {
