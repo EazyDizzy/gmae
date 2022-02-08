@@ -22,7 +22,7 @@ impl<'a> VoxelSequence<'a> {
         &self.start.position
     }
 
-    pub fn equals(&self, other: &Self) -> bool {
+    pub fn same_size_and_material(&self, other: &Self) -> bool {
         other.start.position.x == self.start.position.x
             && other.end.position.x == self.end.position.x
             && other.start.material == self.start.material
@@ -48,20 +48,10 @@ impl<'a> VoxelSequence<'a> {
 
         self.contains_y(start_y) || self.contains_y(end_y)
     }
-    pub fn contains_y(&self, y: f32) -> bool {
-        let (start_y, end_y) = self.y_borders();
-
-        y >= start_y && y <= end_y
-    }
     pub fn intersects_by_x(&self, other: &Self) -> bool {
         let (start_x, end_x) = other.x_borders();
 
         self.contains_x(start_x) || self.contains_x(end_x)
-    }
-    pub fn contains_x(&self, x: f32) -> bool {
-        let (start_x, end_x) = self.x_borders();
-
-        x >= start_x && x <= end_x
     }
 
     pub fn has_x_start_on(&self, x: f32) -> bool {
@@ -81,6 +71,9 @@ impl<'a> VoxelSequence<'a> {
         end_y == y
     }
 
+    pub fn has_same_height(&self, other: &Self) -> bool {
+        self.has_height(other.start.position.z)
+    }
     pub fn has_height(&self, z: f32) -> bool {
         self.start.position.z == z
     }
@@ -89,7 +82,7 @@ impl<'a> VoxelSequence<'a> {
         let (start_x, end_x) = self.x_borders();
         let (start_y, end_y) = self.y_borders();
 
-        let mut coordinates = vec![];
+        let mut coordinates = Vec::with_capacity((self.x_width() * self.y_height()) as usize);
         // TODO use covered_x/y
         for y in start_y as usize..end_y as usize {
             for x in start_x as usize..end_x as usize {
@@ -132,5 +125,16 @@ impl<'a> VoxelSequence<'a> {
         let end_y = self.start.position.y + self.y_height();
 
         (start_y, end_y)
+    }
+
+    fn contains_y(&self, y: f32) -> bool {
+        let (start_y, end_y) = self.y_borders();
+
+        y >= start_y && y <= end_y
+    }
+    fn contains_x(&self, x: f32) -> bool {
+        let (start_x, end_x) = self.x_borders();
+
+        x >= start_x && x <= end_x
     }
 }

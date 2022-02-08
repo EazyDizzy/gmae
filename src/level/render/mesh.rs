@@ -38,7 +38,7 @@ fn stretch_sequences_by_y<'a>(
 
     for sequence in row_sequences {
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
-            s.equals(&sequence)
+            s.same_size_and_material(&sequence)
                 && should_merge(sequence.material())
         });
 

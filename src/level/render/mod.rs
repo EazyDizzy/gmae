@@ -196,7 +196,7 @@ fn is_left_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
 
     let adjoining_plane_y: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            sequence.has_height(main_sequence.height())
+            sequence.has_same_height(main_sequence)
                 && sequence.intersects_by_y(main_sequence)
                 && sequence.has_x_end_on(start_x)
                 && sequence.is_not_transparent()
@@ -212,7 +212,7 @@ fn is_right_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSeque
 
     let adjoining_plane_y: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            sequence.has_height(main_sequence.height())
+            sequence.has_same_height(main_sequence)
                 && sequence.intersects_by_y(main_sequence)
                 && sequence.has_x_start_on(end_x)
                 && sequence.is_not_transparent()
@@ -228,7 +228,7 @@ fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
 
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            sequence.has_height(main_sequence.height())
+            sequence.has_same_height(main_sequence)
                 && sequence.has_y_end_on(start_y)
                 && sequence.is_not_transparent()
         })
@@ -243,7 +243,7 @@ fn is_forward_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSeq
 
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            sequence.has_height(main_sequence.height())
+            sequence.has_same_height(main_sequence)
                 && sequence.has_y_start_on(end_y)
                 && sequence.is_not_transparent()
         })
@@ -304,4 +304,3 @@ fn get_next_z_layer<'a>(main_sequence: &'a VoxelSequence, all_sequences: &'a [Vo
         .flat_map(VoxelSequence::covered_coordinates)
         .collect()
 }
-
