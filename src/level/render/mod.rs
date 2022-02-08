@@ -4,7 +4,6 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
 
-use crate::entity::voxel::Voxel;
 use crate::level::porter::read_level;
 use crate::level::render::material::{merge_materials, TEXTURE_SIZE};
 use crate::level::render::mesh::merge_voxels;
@@ -37,11 +36,9 @@ pub fn init_world(
     let start = Instant::now();
 
     for sequence in &concatenated_voxels {
-        let start_voxel = sequence.start;
-        let box_shape = sequence.get_box();
-        let pos = &start_voxel.position;
-        let x_size = box_shape.max_x;
-        let y_size = box_shape.max_y;
+        let pos = sequence.start_position();
+        let width = sequence.x_width();
+        let height = sequence.y_height();
 
         let top_side_visible = is_top_side_visible(sequence, &concatenated_voxels);
         let bottom_side_visible = is_bottom_side_visible(sequence, &concatenated_voxels);
@@ -55,125 +52,125 @@ pub fn init_world(
         // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
         if top_side_visible || bottom_side_visible {
             let material = merge_materials(
-                start_voxel.material,
+                sequence.material(),
                 &mut materials,
                 &mut images,
-                x_size as u32,
-                y_size as u32,
+                width as u32,
+                height as u32,
             );
 
             if top_side_visible {
-                let shape = shape::Quad { size: Vec2::new(x_size, y_size), flip: false };
+                let shape = shape::Quad { size: Vec2::new(width, height), flip: false };
                 let mesh = meshes.add(Mesh::from(shape));
 
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material: material.clone(),
-                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size / 2.0, pos.z),
+                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z),
                     ..Default::default()
                 });
 
                 if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, start_voxel);
+                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
                 }
             }
 
             if bottom_side_visible {
-                let shape = shape::Quad { size: Vec2::new(x_size, y_size), flip: true };
+                let shape = shape::Quad { size: Vec2::new(width, height), flip: true };
                 let mesh = meshes.add(Mesh::from(shape));
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material,
-                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size / 2.0, pos.z - 1.0),
+                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z - 1.0),
                     ..Default::default()
                 });
 
                 if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, start_voxel);
+                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
                 }
             }
         }
 
         if right_side_visible || left_side_visible {
             let material = merge_materials(
-                start_voxel.material,
+                sequence.material(),
                 &mut materials,
                 &mut images,
                 1,
-                y_size as u32,
+                height as u32,
             );
 
             if right_side_visible {
-                let shape = shape::Quad { size: Vec2::new(1.0, y_size), flip: false };
+                let shape = shape::Quad { size: Vec2::new(1.0, height), flip: false };
                 let mesh = meshes.add(Mesh::from(shape));
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material: material.clone(),
-                    transform: Transform::from_xyz(pos.x + x_size, pos.y + y_size / 2.0, pos.z - 0.5)
+                    transform: Transform::from_xyz(pos.x + width, pos.y + height / 2.0, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
                     ..Default::default()
                 });
 
                 if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, start_voxel);
+                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
                 }
             }
 
             if left_side_visible {
-                let shape = shape::Quad { size: Vec2::new(1.0, y_size), flip: true };
+                let shape = shape::Quad { size: Vec2::new(1.0, height), flip: true };
                 let mesh = meshes.add(Mesh::from(shape));
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material,
-                    transform: Transform::from_xyz(pos.x, pos.y + y_size / 2.0, pos.z - 0.5)
+                    transform: Transform::from_xyz(pos.x, pos.y + height / 2.0, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
                     ..Default::default()
                 });
 
                 if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, start_voxel);
+                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
                 }
             }
         }
 
         if forward_side_visible || back_side_visible {
             let material = merge_materials(
-                start_voxel.material,
+                sequence.material(),
                 &mut materials,
                 &mut images,
-                x_size as u32,
+                width as u32,
                 1,
             );
 
             if forward_side_visible {
-                let shape = shape::Quad { size: Vec2::new(x_size, 1.0), flip: true };
+                let shape = shape::Quad { size: Vec2::new(width, 1.0), flip: true };
                 let mesh = meshes.add(Mesh::from(shape));
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material: material.clone(),
-                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y + y_size, pos.z - 0.5)
+                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
                     ..Default::default()
                 });
 
                 if !light_spawned {
-                    light_spawned = !light_spawned && spawn_light(&mut entity_commands, start_voxel);
+                    light_spawned = !light_spawned && spawn_light(&mut entity_commands, sequence.material());
                 }
             }
 
             if back_side_visible {
-                let shape = shape::Quad { size: Vec2::new(x_size, 1.0), flip: false };
+                let shape = shape::Quad { size: Vec2::new(width, 1.0), flip: false };
                 let mesh = meshes.add(Mesh::from(shape));
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material,
-                    transform: Transform::from_xyz(pos.x + x_size / 2.0, pos.y, pos.z - 0.5)
+                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y, pos.z - 0.5)
                         .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
                     ..Default::default()
                 });
 
                 if !light_spawned {
-                    spawn_light(&mut entity_commands, start_voxel);
+                    spawn_light(&mut entity_commands, sequence.material());
                 }
             }
         }
@@ -182,11 +179,11 @@ pub fn init_world(
     println!("world initialization: {:?}", start.elapsed());
 }
 
-fn spawn_light(entity_commands: &mut EntityCommands, voxel: &Voxel) -> bool {
-    if voxel.material == Material::OrangeLight {
+fn spawn_light(entity_commands: &mut EntityCommands, material: Material) -> bool {
+    if material == Material::OrangeLight {
         spawn_orange_light_source_inside(entity_commands);
         true
-    } else if voxel.material == Material::BlueLight {
+    } else if material == Material::BlueLight {
         spawn_blue_light_source_inside(entity_commands);
         true
     } else {

@@ -1,19 +1,42 @@
 use std::ops::RangeInclusive;
 
-use bevy::prelude::*;
-
+use crate::entity::point::Point;
 use crate::entity::voxel::Voxel;
 use crate::Material;
 
 #[derive(Debug)]
 pub struct VoxelSequence<'a> {
-    pub start: &'a Voxel,
-    pub end: &'a Voxel,
+    start: &'a Voxel,
+    end: &'a Voxel,
 }
 
 impl<'a> VoxelSequence<'a> {
+    pub fn new(start: &'a Voxel, end: &'a Voxel) -> VoxelSequence<'a> {
+        VoxelSequence {
+            start,
+            end,
+        }
+    }
+
+    pub fn start_position(&self) -> &Point {
+        &self.start.position
+    }
+
+    pub fn equals(&self, other: &Self) -> bool {
+        other.start.position.x == self.start.position.x
+            && other.end.position.x == self.end.position.x
+            && other.start.material == self.start.material
+    }
+
+    pub fn expand_end(&mut self, other: &Self) {
+        self.end = other.end
+    }
+
     pub fn height(&self) -> f32 {
         self.start.position.z
+    }
+    pub fn material(&self) -> Material {
+        self.start.material
     }
 
     pub fn is_not_transparent(&self) -> bool {
@@ -91,21 +114,10 @@ impl<'a> VoxelSequence<'a> {
         (self.end.position.y + 1.0 - self.start.position.y) as u32
     }
 
-    pub fn get_box(&self) -> shape::Box {
-        shape::Box {
-            min_x: 0.0,
-            max_x: self.x_width(),
-            min_y: 0.0,
-            max_y: self.y_height(),
-            min_z: 0.0,
-            max_z: self.end.position.z - self.start.position.z + 1.0,
-        }
-    }
-
-    fn x_width(&self) -> f32 {
+    pub fn x_width(&self) -> f32 {
         self.end.position.x - self.start.position.x + 1.0
     }
-    fn y_height(&self) -> f32 {
+    pub fn y_height(&self) -> f32 {
         self.end.position.y - self.start.position.y + 1.0
     }
 

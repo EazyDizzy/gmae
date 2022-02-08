@@ -33,20 +33,18 @@ fn stretch_sequences_by_y<'a>(
     let mut sequences_to_append = vec![];
     let mut prev_row_sequences: Vec<&mut VoxelSequence> = plane_sequences.iter_mut()
         .filter(|s: &&mut VoxelSequence| {
-            s.end.position.y == y as f32 - 1.0
+            s.has_y_end_on(y as f32 - 1.0)
         }).collect();
 
     for sequence in row_sequences {
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
-            s.start.position.x == sequence.start.position.x
-                && s.end.position.x == sequence.end.position.x
-                && s.start.material == sequence.start.material
-                && should_merge(sequence.start.material)
+            s.equals(&sequence)
+                && should_merge(sequence.material())
         });
 
         if let Some(same) = same_sequence {
             if same.sequence_height() + sequence.sequence_height() < max_voxels_per_dimension {
-                same.end = sequence.end;
+                same.expand_end(&sequence);
             } else {
                 sequences_to_append.push(sequence);
             }
@@ -77,22 +75,14 @@ fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<
             || concatenation_width + 1 == max_voxels_per_dimension;
 
         if stop_concatenation {
-            x_sequences.push(
-                VoxelSequence {
-                    start: start_voxel,
-                    end: prev_voxel,
-                });
+            x_sequences.push(VoxelSequence::new(start_voxel, prev_voxel));
 
             start_voxel = voxel;
         }
 
         prev_voxel = voxel;
     }
-    x_sequences.push(
-        VoxelSequence {
-            start: start_voxel,
-            end: prev_voxel,
-        });
+    x_sequences.push(VoxelSequence::new(start_voxel, prev_voxel));
 
     x_sequences
 }
