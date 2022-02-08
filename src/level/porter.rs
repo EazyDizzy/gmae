@@ -9,7 +9,7 @@ use crate::entity::point::Point;
 use crate::entity::voxel::{Voxel, Material};
 use crate::level::util::get_rng;
 
-const EXPORT_DIAPASON: usize = 8;
+const EXPORT_DIAPASON: usize = 1;
 
 pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut voxels = vec![];

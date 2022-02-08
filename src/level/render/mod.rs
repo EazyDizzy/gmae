@@ -4,16 +4,17 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
 
-use crate::entity::point::Point;
 use crate::entity::voxel::Voxel;
 use crate::level::porter::read_level;
 use crate::level::render::material::{merge_materials, TEXTURE_SIZE};
-use crate::level::render::mesh::{merge_voxels, VoxelSequence};
+use crate::level::render::mesh::merge_voxels;
+use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::Material;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 
 pub mod material;
 pub mod mesh;
+mod voxel_sequence;
 
 const PI: f32 = std::f32::consts::PI;
 
@@ -42,12 +43,12 @@ pub fn init_world(
         let x_size = box_shape.max_x;
         let y_size = box_shape.max_y;
 
-        let top_side_visible = is_top_side_visible(pos, &box_shape, &concatenated_voxels);
-        let bottom_side_visible = is_bottom_side_visible(pos, &box_shape, &concatenated_voxels);
-        let right_side_visible = is_right_side_visible(pos, &box_shape, &concatenated_voxels);
-        let left_side_visible = is_left_side_visible(pos, &box_shape, &concatenated_voxels);
-        let forward_side_visible = is_forward_side_visible(pos, &box_shape, &concatenated_voxels);
-        let back_side_visible = is_back_side_visible(pos, &box_shape, &concatenated_voxels);
+        let top_side_visible = is_top_side_visible(sequence, &concatenated_voxels);
+        let bottom_side_visible = is_bottom_side_visible(sequence, &concatenated_voxels);
+        let right_side_visible = is_right_side_visible(sequence, &concatenated_voxels);
+        let left_side_visible = is_left_side_visible(sequence, &concatenated_voxels);
+        let forward_side_visible = is_forward_side_visible(sequence, &concatenated_voxels);
+        let back_side_visible = is_back_side_visible(sequence, &concatenated_voxels);
 
         let mut light_spawned = false;
 
@@ -193,106 +194,80 @@ fn spawn_light(entity_commands: &mut EntityCommands, voxel: &Voxel) -> bool {
     }
 }
 
-fn is_left_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[VoxelSequence]) -> bool {
-    let min_y = pos.y;
-    let max_y = pos.y + shape.max_y;
-    let min_x = pos.x;
+fn is_left_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
+    let (start_x, ..) = main_sequence.x_borders();
 
     let adjoining_plane_y: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            let x_ends_on_the_start = sequence.has_x_end_on(min_x);
-            let same_height = sequence.has_height(pos.z);
-            let start_y_within_borders = sequence.contains_y(min_y);
-            let end_y_within_borders = sequence.contains_y(max_y);
-            let is_not_transparent = sequence.is_not_transparent();
-
-            same_height
-                && (start_y_within_borders || end_y_within_borders)
-                && x_ends_on_the_start
-                && is_not_transparent
+            sequence.has_height(main_sequence.height())
+                && sequence.intersects_by_y(main_sequence)
+                && sequence.has_x_end_on(start_x)
+                && sequence.is_not_transparent()
         })
         .flat_map(VoxelSequence::covered_y)
         .collect();
 
-    !(min_y as usize..=max_y as usize).into_iter().all(|y| adjoining_plane_y.contains(&y))
+    !main_sequence.covered_y().all(|y| adjoining_plane_y.contains(&y))
 }
 
-fn is_right_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[VoxelSequence]) -> bool {
-    let min_y = pos.y;
-    let max_y = pos.y + shape.max_y;
-    let max_x = pos.x + shape.max_x;
+fn is_right_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
+    let (.., end_x) = main_sequence.x_borders();
 
     let adjoining_plane_y: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            let same_height = sequence.has_height(pos.z);
-            let x_starts_on_the_end = sequence.has_x_start_on(max_x);
-            let start_y_within_borders = sequence.contains_y(min_y);
-            let end_y_within_borders = sequence.contains_y(max_y);
-            let is_not_transparent = sequence.is_not_transparent();
-
-            same_height
-                && (start_y_within_borders || end_y_within_borders)
-                && x_starts_on_the_end
-                && is_not_transparent
+            sequence.has_height(main_sequence.height())
+                && sequence.intersects_by_y(main_sequence)
+                && sequence.has_x_start_on(end_x)
+                && sequence.is_not_transparent()
         })
         .flat_map(VoxelSequence::covered_y)
         .collect();
 
-    !(min_y as usize..=max_y as usize).into_iter().all(|y| adjoining_plane_y.contains(&y))
+    !main_sequence.covered_y().all(|y| adjoining_plane_y.contains(&y))
 }
 
-fn is_back_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[VoxelSequence]) -> bool {
-    let min_x = pos.x as usize;
-    let max_x = (pos.x + shape.max_x) as usize;
+fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
+    let (start_y, ..) = main_sequence.y_borders();
 
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            let same_height = sequence.has_height(pos.z);
-            let ends_on_the_start = sequence.has_y_end_on(pos.y);
-            let is_not_transparent = sequence.is_not_transparent();
-
-            same_height && ends_on_the_start
-                && is_not_transparent
+            sequence.has_height(main_sequence.height())
+                && sequence.has_y_end_on(start_y)
+                && sequence.is_not_transparent()
         })
         .flat_map(VoxelSequence::covered_x)
         .collect();
 
-    !(min_x..=max_x).into_iter().all(|x| adjoining_plane_x.contains(&x))
+    !main_sequence.covered_x().all(|x| adjoining_plane_x.contains(&x))
 }
 
-fn is_forward_side_visible(pos: &Point, shape: &shape::Box, all_shapes: &[VoxelSequence]) -> bool {
-    let min_x = pos.x as usize;
-    let max_x = (pos.x + shape.max_x) as usize;
-    let max_y = pos.y + shape.max_y;
+fn is_forward_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
+    let (.., end_y) = main_sequence.y_borders();
 
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
-            let same_height = sequence.has_height(pos.z);
-            let starts_on_the_end = sequence.has_y_start_on(max_y);
-            let is_not_transparent = sequence.is_not_transparent();
-
-            same_height && starts_on_the_end && is_not_transparent
+            sequence.has_height(main_sequence.height())
+                && sequence.has_y_start_on(end_y)
+                && sequence.is_not_transparent()
         })
         .flat_map(VoxelSequence::covered_x)
         .collect();
 
-    !(min_x..=max_x).into_iter().all(|x| adjoining_plane_x.contains(&x))
+    !main_sequence.covered_x().all(|x| adjoining_plane_x.contains(&x))
 }
 
-fn is_bottom_side_visible(pos: &Point, shape: &shape::Box, sequences: &[VoxelSequence]) -> bool {
-    if pos.z == 0.0 {
+fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence]) -> bool {
+    if main_sequence.has_height(0.0) {
         return false;
     }
 
-    let min_x = pos.x;
-    let max_x = pos.x + shape.max_x;
-    let min_y = pos.y;
-    let max_y = pos.y + shape.max_y;
+    let (start_x, end_x) = main_sequence.x_borders();
+    let (start_y, end_y) = main_sequence.y_borders();
 
-    let next_z_layer = get_next_z_layer(pos, shape, sequences, -1.0);
+    let next_z_layer = get_next_z_layer(main_sequence, sequences, -1.0);
 
-    for y in min_y as usize..max_y as usize {
-        for x in min_x as usize..max_x as usize {
+    for y in start_y as usize..end_y as usize {
+        for x in start_x as usize..end_x as usize {
             if !next_z_layer.contains(&(x, y)) {
                 return true;
             }
@@ -303,16 +278,13 @@ fn is_bottom_side_visible(pos: &Point, shape: &shape::Box, sequences: &[VoxelSeq
 }
 
 // TODO fix random bug of unneeded rendering
-fn is_top_side_visible(pos: &Point, shape: &shape::Box, sequences: &[VoxelSequence]) -> bool {
-    let min_x = pos.x;
-    let max_x = pos.x + shape.max_x;
-    let min_y = pos.y;
-    let max_y = pos.y + shape.max_y;
+fn is_top_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence]) -> bool {
+    let (start_x, end_x) = main_sequence.x_borders();
+    let (start_y, end_y) = main_sequence.y_borders();
+    let next_z_layer = get_next_z_layer(main_sequence, sequences, 1.0);
 
-    let next_z_layer = get_next_z_layer(pos, shape, sequences, 1.0);
-
-    for y in min_y as usize..max_y as usize {
-        for x in min_x as usize..max_x as usize {
+    for y in start_y as usize..end_y as usize {
+        for x in start_x as usize..end_x as usize {
             if !next_z_layer.contains(&(x, y)) {
                 return true;
             }
@@ -322,25 +294,15 @@ fn is_top_side_visible(pos: &Point, shape: &shape::Box, sequences: &[VoxelSequen
     false
 }
 
-fn get_next_z_layer<'a>(pos: &'a Point, shape: &'a shape::Box, sequences: &'a [VoxelSequence], z_bonus: f32) -> Vec<(usize, usize)> {
-    let start_x = pos.x;
-    let end_x = pos.x + shape.max_x;
-    let start_y = pos.y;
-    let end_y = pos.y + shape.max_y;
+fn get_next_z_layer<'a>(main_sequence: &'a VoxelSequence, all_sequences: &'a [VoxelSequence], z_bonus: f32) -> Vec<(usize, usize)> {
+    let height = main_sequence.height() + z_bonus;
 
-    sequences.iter()
+    all_sequences.iter()
         .filter(|sequence| {
-            let right_height = sequence.has_height(pos.z + z_bonus);
-            let column_start_within_borders = sequence.contains_y(start_y);
-            let column_end_within_borders = sequence.contains_y(end_y);
-            let row_start_within_borders = sequence.contains_x(start_x);
-            let row_end_within_borders = sequence.contains_x(end_x);
-            let is_not_transparent = sequence.is_not_transparent();
-
-            right_height
-                && (column_start_within_borders || column_end_within_borders)
-                && (row_start_within_borders || row_end_within_borders)
-                && is_not_transparent
+            sequence.has_height(height)
+                && sequence.intersects_by_y(main_sequence)
+                && sequence.intersects_by_x(main_sequence)
+                && sequence.is_not_transparent()
         })
         .flat_map(VoxelSequence::covered_coordinates)
         .collect()
