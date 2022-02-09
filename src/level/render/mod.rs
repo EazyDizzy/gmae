@@ -1,5 +1,6 @@
+use std::ops::Add;
 use std::ptr;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
@@ -32,9 +33,12 @@ pub fn init_world(
     dbg!(max_voxels_per_dimension);
 
     let map = read_level("debug");
-
-    let merged_voxels = merge_voxels(&map, max_voxels_per_dimension);
     let start = Instant::now();
+    let merged_voxels = merge_voxels(&map, max_voxels_per_dimension);
+    println!("merging: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    let mut material_duration = Duration::default();
 
     for sequence in &merged_voxels {
         let pos = sequence.start_position();
@@ -47,16 +51,12 @@ pub fn init_world(
         let left_side_visible = is_left_side_visible(sequence, &merged_voxels);
         let forward_side_visible = is_forward_side_visible(sequence, &merged_voxels);
         let back_side_visible = is_back_side_visible(sequence, &merged_voxels);
-        // let right_side_visible = false;
-        // let left_side_visible = false;
-        // let back_side_visible = false;
-        // let forward_side_visible = false;
-        // let bottom_side_visible = false;
 
         let mut light_spawned = false;
 
         // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
         if top_side_visible || bottom_side_visible {
+            let start = Instant::now();
             let material = merge_materials(
                 sequence.material(),
                 &mut materials,
@@ -64,6 +64,8 @@ pub fn init_world(
                 width as u32,
                 height as u32,
             );
+            let dr = start.elapsed();
+            material_duration = material_duration.add(dr);
 
             if top_side_visible {
                 let shape = shape::Quad { size: Vec2::new(width, height), flip: false };
@@ -98,6 +100,8 @@ pub fn init_world(
         }
 
         if right_side_visible || left_side_visible {
+            let start = Instant::now();
+
             let material = merge_materials(
                 sequence.material(),
                 &mut materials,
@@ -105,6 +109,8 @@ pub fn init_world(
                 1,
                 height as u32,
             );
+            material_duration = material_duration.add(start.elapsed());
+
 
             if right_side_visible {
                 let shape = shape::Quad { size: Vec2::new(1.0, height), flip: false };
@@ -140,6 +146,8 @@ pub fn init_world(
         }
 
         if forward_side_visible || back_side_visible {
+            let start = Instant::now();
+
             let material = merge_materials(
                 sequence.material(),
                 &mut materials,
@@ -147,6 +155,7 @@ pub fn init_world(
                 width as u32,
                 1,
             );
+            material_duration = material_duration.add(start.elapsed());
 
             if forward_side_visible {
                 let shape = shape::Quad { size: Vec2::new(width, 1.0), flip: true };
@@ -183,6 +192,7 @@ pub fn init_world(
     }
 
     println!("world initialization: {:?}", start.elapsed());
+    println!("material: {:?}", material_duration);
 }
 
 fn spawn_light(entity_commands: &mut EntityCommands, material: Material) -> bool {
@@ -285,7 +295,6 @@ fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSeque
     false
 }
 
-// TODO fix random bug of unneeded rendering
 fn is_top_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence]) -> bool {
     let next_z_layer = get_next_z_layer(main_sequence, sequences, 1.0);
 

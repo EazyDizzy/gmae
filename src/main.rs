@@ -35,7 +35,7 @@ fn main() {
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FlyCameraPlugin)
-        // .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
         .add_startup_system(system::camera::setup.system())
         // .add_startup_system(system::light::setup.system())

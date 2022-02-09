@@ -1,4 +1,4 @@
-use std::ops::{Range, RangeInclusive};
+use std::ops::RangeInclusive;
 
 use crate::entity::point::Point;
 use crate::entity::voxel::Voxel;
@@ -6,7 +6,7 @@ use crate::Material;
 
 #[derive(Debug)]
 pub struct VoxelSequence<'a> {
-    start: &'a Voxel,
+    pub start: &'a Voxel,
     end: &'a Voxel,
 }
 
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn one_block_y_borders() {
-        let start = Voxel::new(Point::new(0, 0, 0.0), Material::Unknown);
+        let start = Voxel::new(0, Point::new(0, 0, 0.0), Material::Unknown);
         let seq = VoxelSequence::new(
             &start,
             &start,

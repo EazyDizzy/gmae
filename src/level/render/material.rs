@@ -1,8 +1,10 @@
+use std::time::Instant;
+
 use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::utils::Uuid;
-use image::{DynamicImage, GenericImageView};
+use image::{DynamicImage, GenericImageView, Rgba};
 
 use crate::Material;
 
@@ -42,23 +44,33 @@ pub fn merge_materials(
 
     let basic_image = get_basic_image_for_material(voxel_material);
 
-    let original_texture_width = basic_image.width();
-    let original_texture_height = basic_image.height();
-    let new_texture_width = original_texture_width * number_of_images_wide;
-    let new_texture_height = original_texture_height * number_of_images_in_height;
+    let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
+    let new_texture_height = TEXTURE_SIZE * number_of_images_in_height;
 
+    let default_pixel_row = [Rgba::from([0, 0, 0, 0]); TEXTURE_SIZE as usize];
+    let mut pixel_matrix = [default_pixel_row; TEXTURE_SIZE as usize];
+
+    for y in 0..TEXTURE_SIZE {
+        for x in 0..TEXTURE_SIZE {
+            pixel_matrix[y as usize][x as usize] = basic_image.get_pixel(x, y);
+        }
+    }
+
+    let start = Instant::now();
     let img_buf = image::ImageBuffer::from_fn(
         new_texture_width,
         new_texture_height,
         |x, y| {
-            let w = x / original_texture_width;
-            let h = y / original_texture_height;
-            let original_x = x - w * original_texture_width;
-            let original_y = y - h * original_texture_height;
+            let original_x = x % TEXTURE_SIZE;
+            let original_y = y % TEXTURE_SIZE;
 
-            basic_image.get_pixel(original_x, original_y)
+            pixel_matrix[original_y as usize][original_x as usize]
         },
     );
+
+    if voxel_material == Material::Grass {
+        println!("buffer creation {} {} {:?}", number_of_images_wide, number_of_images_in_height, start.elapsed());
+    }
 
     // raw creation to prevent triple conversion of image (img_buf -> slice_buf -> DynamicImage -> img_buf)
     let image = Image::new(
