@@ -1,3 +1,4 @@
+use std::ptr;
 use std::time::Instant;
 
 use bevy::ecs::system::EntityCommands;
@@ -32,20 +33,25 @@ pub fn init_world(
 
     let map = read_level("debug");
 
-    let concatenated_voxels = merge_voxels(&map, max_voxels_per_dimension);
+    let merged_voxels = merge_voxels(&map, max_voxels_per_dimension);
     let start = Instant::now();
 
-    for sequence in &concatenated_voxels {
+    for sequence in &merged_voxels {
         let pos = sequence.start_position();
         let width = sequence.x_width();
         let height = sequence.y_height();
 
-        let top_side_visible = is_top_side_visible(sequence, &concatenated_voxels);
-        let bottom_side_visible = is_bottom_side_visible(sequence, &concatenated_voxels);
-        let right_side_visible = is_right_side_visible(sequence, &concatenated_voxels);
-        let left_side_visible = is_left_side_visible(sequence, &concatenated_voxels);
-        let forward_side_visible = is_forward_side_visible(sequence, &concatenated_voxels);
-        let back_side_visible = is_back_side_visible(sequence, &concatenated_voxels);
+        let top_side_visible = is_top_side_visible(sequence, &merged_voxels);
+        let bottom_side_visible = is_bottom_side_visible(sequence, &merged_voxels);
+        let right_side_visible = is_right_side_visible(sequence, &merged_voxels);
+        let left_side_visible = is_left_side_visible(sequence, &merged_voxels);
+        let forward_side_visible = is_forward_side_visible(sequence, &merged_voxels);
+        let back_side_visible = is_back_side_visible(sequence, &merged_voxels);
+        // let right_side_visible = false;
+        // let left_side_visible = false;
+        // let back_side_visible = false;
+        // let forward_side_visible = false;
+        // let bottom_side_visible = false;
 
         let mut light_spawned = false;
 
@@ -200,6 +206,8 @@ fn is_left_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
                 && sequence.intersects_by_y(main_sequence)
                 && sequence.has_x_end_on(start_x)
                 && sequence.is_not_transparent()
+                // checking if it is not the same sequence
+                && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_y)
         .collect();
@@ -216,6 +224,8 @@ fn is_right_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSeque
                 && sequence.intersects_by_y(main_sequence)
                 && sequence.has_x_start_on(end_x)
                 && sequence.is_not_transparent()
+                // checking if it is not the same sequence
+                && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_y)
         .collect();
@@ -231,6 +241,8 @@ fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
             sequence.has_same_height(main_sequence)
                 && sequence.has_y_end_on(start_y)
                 && sequence.is_not_transparent()
+                // checking if it is not the same sequence
+                && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_x)
         .collect();
@@ -246,6 +258,8 @@ fn is_forward_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSeq
             sequence.has_same_height(main_sequence)
                 && sequence.has_y_start_on(end_y)
                 && sequence.is_not_transparent()
+                // checking if it is not the same sequence
+                && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_x)
         .collect();
@@ -258,13 +272,10 @@ fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSeque
         return false;
     }
 
-    let (start_x, end_x) = main_sequence.x_borders();
-    let (start_y, end_y) = main_sequence.y_borders();
-
     let next_z_layer = get_next_z_layer(main_sequence, sequences, -1.0);
 
-    for y in start_y as usize..end_y as usize {
-        for x in start_x as usize..end_x as usize {
+    for y in main_sequence.covered_y() {
+        for x in main_sequence.covered_x() {
             if !next_z_layer.contains(&(x, y)) {
                 return true;
             }
@@ -276,12 +287,10 @@ fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSeque
 
 // TODO fix random bug of unneeded rendering
 fn is_top_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence]) -> bool {
-    let (start_x, end_x) = main_sequence.x_borders();
-    let (start_y, end_y) = main_sequence.y_borders();
     let next_z_layer = get_next_z_layer(main_sequence, sequences, 1.0);
 
-    for y in start_y as usize..end_y as usize {
-        for x in start_x as usize..end_x as usize {
+    for y in main_sequence.covered_y() {
+        for x in main_sequence.covered_x() {
             if !next_z_layer.contains(&(x, y)) {
                 return true;
             }
@@ -303,4 +312,9 @@ fn get_next_z_layer<'a>(main_sequence: &'a VoxelSequence, all_sequences: &'a [Vo
         })
         .flat_map(VoxelSequence::covered_coordinates)
         .collect()
+}
+
+fn is_same_sequence(a: &VoxelSequence, b: &VoxelSequence) -> bool {
+    // checking if pointer points to the same struct
+    ptr::eq(a, b)
 }

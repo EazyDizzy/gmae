@@ -9,11 +9,19 @@ pub fn merge_voxels(voxels: &[Voxel], max_voxels_per_dimension: u32) -> Vec<Voxe
 
     let mut all_sequences = vec![];
 
-    for (_, plate) in grouped_voxels {
+    let mut z_keys: Vec<&usize> = grouped_voxels.keys().into_iter().collect();
+    z_keys.sort_by(|z1, z2| { z1.cmp(z2) });
+
+    for z in z_keys {
+        let plate = &grouped_voxels[z];
+        let mut y_keys: Vec<&usize> = plate.keys().into_iter().collect();
+        y_keys.sort_by(|y1, y2| { y1.cmp(y2) });
+
         let mut plane_sequences = vec![];
 
-        for (y, row) in &plate {
-            let row_sequences = merge_voxels_row(row.clone(), max_voxels_per_dimension);
+        for y in y_keys {
+            let row = plate[y].clone();
+            let row_sequences = merge_voxels_row(row, max_voxels_per_dimension);
 
             plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, *y, max_voxels_per_dimension);
         }
@@ -38,12 +46,12 @@ fn stretch_sequences_by_y<'a>(
 
     for sequence in row_sequences {
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
-            s.same_size_and_material(&sequence)
+            s.same_x_size_and_material(&sequence)
                 && should_merge(sequence.material())
         });
 
         if let Some(same) = same_sequence {
-            if same.sequence_height() + sequence.sequence_height() < max_voxels_per_dimension {
+            if (same.y_height() as u32) + (sequence.y_height() as u32) < max_voxels_per_dimension {
                 same.expand_end(&sequence);
             } else {
                 sequences_to_append.push(sequence);

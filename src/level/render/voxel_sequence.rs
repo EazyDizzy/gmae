@@ -1,4 +1,4 @@
-use std::ops::RangeInclusive;
+use std::ops::{Range, RangeInclusive};
 
 use crate::entity::point::Point;
 use crate::entity::voxel::Voxel;
@@ -22,7 +22,7 @@ impl<'a> VoxelSequence<'a> {
         &self.start.position
     }
 
-    pub fn same_size_and_material(&self, other: &Self) -> bool {
+    pub fn same_x_size_and_material(&self, other: &Self) -> bool {
         other.start.position.x == self.start.position.x
             && other.end.position.x == self.end.position.x
             && other.start.material == self.start.material
@@ -55,7 +55,9 @@ impl<'a> VoxelSequence<'a> {
     }
 
     pub fn has_x_start_on(&self, x: f32) -> bool {
-        self.start.position.x == x
+        let (start_x, ..) = self.x_borders();
+
+        start_x == x
     }
     pub fn has_x_end_on(&self, x: f32) -> bool {
         let (.., end_x) = self.x_borders();
@@ -79,13 +81,10 @@ impl<'a> VoxelSequence<'a> {
     }
 
     pub fn covered_coordinates(&self) -> Vec<(usize, usize)> {
-        let (start_x, end_x) = self.x_borders();
-        let (start_y, end_y) = self.y_borders();
-
         let mut coordinates = Vec::with_capacity((self.x_width() * self.y_height()) as usize);
-        // TODO use covered_x/y
-        for y in start_y as usize..end_y as usize {
-            for x in start_x as usize..end_x as usize {
+
+        for y in self.covered_y() {
+            for x in self.covered_x() {
                 coordinates.push((x, y));
             }
         }
@@ -103,26 +102,24 @@ impl<'a> VoxelSequence<'a> {
         start_y as usize..=end_y as usize
     }
 
-    pub fn sequence_height(&self) -> u32 {
-        (self.end.position.y + 1.0 - self.start.position.y) as u32
-    }
-
     pub fn x_width(&self) -> f32 {
-        self.end.position.x - self.start.position.x + 1.0
+        let (start_x, end_x) = self.x_borders();
+        end_x - start_x + 1.0
     }
     pub fn y_height(&self) -> f32 {
-        self.end.position.y - self.start.position.y + 1.0
+        let (start_y, end_y) = self.y_borders();
+        end_y - start_y + 1.0
     }
 
     pub fn x_borders(&self) -> (f32, f32) {
         let start_x = self.start.position.x;
-        let end_x = self.start.position.x + self.x_width();
+        let end_x = self.end.position.x;
 
         (start_x, end_x)
     }
     pub fn y_borders(&self) -> (f32, f32) {
         let start_y = self.start.position.y;
-        let end_y = self.start.position.y + self.y_height();
+        let end_y = self.end.position.y;
 
         (start_y, end_y)
     }
@@ -136,5 +133,27 @@ impl<'a> VoxelSequence<'a> {
         let (start_x, end_x) = self.x_borders();
 
         x >= start_x && x <= end_x
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::entity::point::Point;
+    use crate::entity::voxel::Voxel;
+    use crate::level::render::voxel_sequence::VoxelSequence;
+    use crate::Material;
+
+    #[test]
+    fn one_block_y_borders() {
+        let start = Voxel::new(Point::new(0, 0, 0.0), Material::Unknown);
+        let seq = VoxelSequence::new(
+            &start,
+            &start,
+        );
+
+        assert_eq!(
+            seq.y_borders(),
+            (0.0, 0.0)
+        );
     }
 }

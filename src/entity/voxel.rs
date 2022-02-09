@@ -18,15 +18,13 @@ pub enum Material {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Voxel {
-    pub id: usize,
     pub position: Point,
     pub material: Material,
 }
 
 impl Voxel {
-    pub fn new(id: usize, position: Point, material: Material) -> Voxel {
+    pub fn new(position: Point, material: Material) -> Voxel {
         Voxel {
-            id,
             position,
             material,
         }

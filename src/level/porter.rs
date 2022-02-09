@@ -19,7 +19,6 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
 
     let mut region = RegionBuffer::new(file);
     let mut rng = get_rng();
-    let mut voxel_id = 0;
 
     region.for_each_chunk(|chunk_y, chunk_x, data| {
         if chunk_y > EXPORT_DIAPASON || chunk_x > EXPORT_DIAPASON {
@@ -46,7 +45,6 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
                             };
 
                             voxels.push(Voxel::new(
-                                voxel_id,
                                 Point::new(
                                     voxel_x as isize,
                                     voxel_y as isize,
@@ -54,7 +52,6 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
                                 ),
                                 material,
                             ));
-                            voxel_id += 1;
                         }
                     }
                 }
