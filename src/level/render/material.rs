@@ -6,22 +6,9 @@ use image::{DynamicImage, GenericImageView, Pixel, Rgba};
 
 use crate::Material;
 
-const MATERIAL_UUID: Uuid = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-const GRASS_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 1);
-
-const STONE_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 2);
-const DIRT_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 3);
-const BEDROCK_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 4);
-const WOODEN_PLANKS_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 5);
-const ORANGE_LIGHT_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 6);
-const BLUE_LIGHT_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 7);
-const DIRT_PATH_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 8);
-const GLASS_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 9);
-const HAY_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 10);
-const PUMPKIN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 11);
-const UNKNOWN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 666);
-
 pub const TEXTURE_SIZE: u32 = 64;
+
+const MATERIAL_UUID: Uuid = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 
@@ -34,9 +21,9 @@ pub fn merge_materials(
     number_of_images_in_height: u32,
 ) -> Handle<StandardMaterial> {
     if number_of_images_wide == 1 && number_of_images_in_height == 1 {
-        return materials.get_handle(get_material_id(voxel_material));
+        return materials.get_handle(generate_material_handle_id(voxel_material));
     }
-    let handle_id = generate_handle_id_for_material(voxel_material, number_of_images_wide, number_of_images_in_height);
+    let handle_id = generate_dynamic_material_handle_id(voxel_material, number_of_images_wide, number_of_images_in_height);
 
     if materials.get(handle_id).is_some() {
         return materials.get_handle(handle_id);
@@ -49,7 +36,7 @@ pub fn merge_materials(
         .flat_map(|(.., p)| p.0)
         .collect();
 
-    let mut pixel_row = Vec::with_capacity((COLOR_SIZE * TEXTURE_SIZE * number_of_images_wide) as usize);
+    let mut pixel_row = Vec::with_capacity((BYTES_IN_ROW * number_of_images_wide) as usize);
     for y in 0..TEXTURE_SIZE {
         let start = y * BYTES_IN_ROW;
         let end = start + BYTES_IN_ROW;
@@ -78,7 +65,7 @@ pub fn merge_materials(
     );
 
     let image_handle = images.add(image);
-    let original_material = materials.get(get_material_id(voxel_material))
+    let original_material = materials.get(generate_material_handle_id(voxel_material))
         .expect(&format!("Cannot get material for {:?}", voxel_material))
         .clone();
 
@@ -89,12 +76,6 @@ pub fn merge_materials(
             ..original_material
         },
     )
-}
-
-fn generate_handle_id_for_material(voxel_material: Material, image_width: u32, image_height: u32) -> HandleId {
-    let id = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, voxel_material as u8, image_width as u8, image_height as u8]);
-
-    HandleId::Id(id, 0)
 }
 
 fn get_basic_image_for_material(voxel_material: Material) -> DynamicImage {
@@ -116,54 +97,47 @@ fn get_basic_image_for_material(voxel_material: Material) -> DynamicImage {
     image::open(material_id).unwrap()
 }
 
-fn get_material_id(voxel_material: Material) -> HandleId {
-    match voxel_material {
-        Material::Grass => GRASS_MATERIAL_ID,
-        Material::Stone => STONE_MATERIAL_ID,
-        Material::Dirt => DIRT_MATERIAL_ID,
-        Material::Bedrock => BEDROCK_MATERIAL_ID,
-        Material::WoodenPlanks => WOODEN_PLANKS_MATERIAL_ID,
-        Material::OrangeLight => ORANGE_LIGHT_MATERIAL_ID,
-        Material::BlueLight => BLUE_LIGHT_MATERIAL_ID,
-        Material::DirtPath => DIRT_PATH_MATERIAL_ID,
-        Material::Glass => GLASS_MATERIAL_ID,
-        Material::Hay => HAY_MATERIAL_ID,
-        Material::Pumpkin => PUMPKIN_MATERIAL_ID,
-        Material::Unknown => UNKNOWN_MATERIAL_ID,
-    }
+fn generate_dynamic_material_handle_id(voxel_material: Material, image_width: u32, image_height: u32) -> HandleId {
+    let id = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, voxel_material as u8, image_width as u8, image_height as u8]);
+
+    HandleId::Id(id, 0)
+}
+
+fn generate_material_handle_id(voxel_material: Material) -> HandleId {
+    HandleId::Id(MATERIAL_UUID, voxel_material as u64)
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>) {
-    let _id = materials.set(GRASS_MATERIAL_ID, create_material(asset_server.load("texture/block/grass.png")));
-    let _id = materials.set(STONE_MATERIAL_ID, create_material(asset_server.load("texture/block/stone.png")));
-    let _id = materials.set(DIRT_MATERIAL_ID, create_material(asset_server.load("texture/block/dirt.png")));
-    let _id = materials.set(BEDROCK_MATERIAL_ID, create_material(asset_server.load("texture/block/bedrock.png")));
-    let _id = materials.set(WOODEN_PLANKS_MATERIAL_ID, create_material(asset_server.load("texture/block/wooden_planks.png")));
-    let _id = materials.set(ORANGE_LIGHT_MATERIAL_ID, StandardMaterial {
+    let _id = materials.set(generate_material_handle_id(Material::Grass), create_material(asset_server.load("texture/block/grass.png")));
+    let _id = materials.set(generate_material_handle_id(Material::Stone), create_material(asset_server.load("texture/block/stone.png")));
+    let _id = materials.set(generate_material_handle_id(Material::Dirt), create_material(asset_server.load("texture/block/dirt.png")));
+    let _id = materials.set(generate_material_handle_id(Material::Bedrock), create_material(asset_server.load("texture/block/bedrock.png")));
+    let _id = materials.set(generate_material_handle_id(Material::WoodenPlanks), create_material(asset_server.load("texture/block/wooden_planks.png")));
+    let _id = materials.set(generate_material_handle_id(Material::OrangeLight), StandardMaterial {
         base_color_texture: Some(asset_server.load("texture/block/orange_light.png")),
         reflectance: 1.0,
         alpha_mode: AlphaMode::Blend,
         unlit: true,
         ..Default::default()
     });
-    let _id = materials.set(BLUE_LIGHT_MATERIAL_ID, StandardMaterial {
+    let _id = materials.set(generate_material_handle_id(Material::BlueLight), StandardMaterial {
         base_color_texture: Some(asset_server.load("texture/block/blue_light.png")),
         reflectance: 1.0,
         alpha_mode: AlphaMode::Blend,
         unlit: true,
         ..Default::default()
     });
-    let _id = materials.set(DIRT_PATH_MATERIAL_ID, create_material(asset_server.load("texture/block/dirt_path.png")));
-    let _id = materials.set(GLASS_MATERIAL_ID, StandardMaterial {
+    let _id = materials.set(generate_material_handle_id(Material::DirtPath), create_material(asset_server.load("texture/block/dirt_path.png")));
+    let _id = materials.set(generate_material_handle_id(Material::Glass), StandardMaterial {
         base_color_texture: Some(asset_server.load("texture/block/glass.png")),
         reflectance: 1.0,
         alpha_mode: AlphaMode::Blend,
         ..Default::default()
     });
-    let _id = materials.set(HAY_MATERIAL_ID, create_material(asset_server.load("texture/block/hay.png")));
-    let _id = materials.set(PUMPKIN_MATERIAL_ID, create_material(asset_server.load("texture/block/pumpkin.png")));
-    let _id = materials.set(UNKNOWN_MATERIAL_ID, StandardMaterial {
+    let _id = materials.set(generate_material_handle_id(Material::Hay), create_material(asset_server.load("texture/block/hay.png")));
+    let _id = materials.set(generate_material_handle_id(Material::Pumpkin), create_material(asset_server.load("texture/block/pumpkin.png")));
+    let _id = materials.set(generate_material_handle_id(Material::Unknown), StandardMaterial {
         base_color: Color::PINK,
         ..Default::default()
     });

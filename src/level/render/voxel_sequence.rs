@@ -29,7 +29,7 @@ impl<'a> VoxelSequence<'a> {
     }
 
     pub fn expand_end(&mut self, other: &Self) {
-        self.end = other.end
+        self.end = other.end;
     }
 
     pub fn height(&self) -> f32 {
