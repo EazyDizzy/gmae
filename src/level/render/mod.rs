@@ -1,6 +1,5 @@
-use std::ops::Add;
 use std::ptr;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
@@ -8,7 +7,7 @@ use bevy::render::renderer::RenderDevice;
 
 use crate::level::porter::read_level;
 use crate::level::render::material::{merge_materials, TEXTURE_SIZE};
-use crate::level::render::mesh::merge_voxels;
+use crate::level::render::mesh::{get_or_create, merge_voxels};
 use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::Material;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
@@ -33,12 +32,9 @@ pub fn init_world(
     dbg!(max_voxels_per_dimension);
 
     let map = read_level("debug");
-    let start = Instant::now();
     let merged_voxels = merge_voxels(&map, max_voxels_per_dimension);
-    println!("merging: {:?}", start.elapsed());
 
     let start = Instant::now();
-    let mut material_duration = Duration::default();
 
     for sequence in &merged_voxels {
         let pos = sequence.start_position();
@@ -56,7 +52,6 @@ pub fn init_world(
 
         // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
         if top_side_visible || bottom_side_visible {
-            let start = Instant::now();
             let material = merge_materials(
                 sequence.material(),
                 &mut materials,
@@ -64,13 +59,9 @@ pub fn init_world(
                 width as u32,
                 height as u32,
             );
-            let dr = start.elapsed();
-            material_duration = material_duration.add(dr);
 
             if top_side_visible {
-                let shape = shape::Quad { size: Vec2::new(width, height), flip: false };
-                let mesh = meshes.add(Mesh::from(shape));
-
+                let mesh = get_or_create(&mut meshes, width, height, false);
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material: material.clone(),
@@ -84,8 +75,7 @@ pub fn init_world(
             }
 
             if bottom_side_visible {
-                let shape = shape::Quad { size: Vec2::new(width, height), flip: true };
-                let mesh = meshes.add(Mesh::from(shape));
+                let mesh = get_or_create(&mut meshes, width, height, true);
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material,
@@ -100,8 +90,6 @@ pub fn init_world(
         }
 
         if right_side_visible || left_side_visible {
-            let start = Instant::now();
-
             let material = merge_materials(
                 sequence.material(),
                 &mut materials,
@@ -109,12 +97,9 @@ pub fn init_world(
                 1,
                 height as u32,
             );
-            material_duration = material_duration.add(start.elapsed());
-
 
             if right_side_visible {
-                let shape = shape::Quad { size: Vec2::new(1.0, height), flip: false };
-                let mesh = meshes.add(Mesh::from(shape));
+                let mesh = get_or_create(&mut meshes, 1.0, height, false);
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material: material.clone(),
@@ -129,8 +114,7 @@ pub fn init_world(
             }
 
             if left_side_visible {
-                let shape = shape::Quad { size: Vec2::new(1.0, height), flip: true };
-                let mesh = meshes.add(Mesh::from(shape));
+                let mesh = get_or_create(&mut meshes, 1.0, height, true);
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material,
@@ -146,8 +130,6 @@ pub fn init_world(
         }
 
         if forward_side_visible || back_side_visible {
-            let start = Instant::now();
-
             let material = merge_materials(
                 sequence.material(),
                 &mut materials,
@@ -155,11 +137,9 @@ pub fn init_world(
                 width as u32,
                 1,
             );
-            material_duration = material_duration.add(start.elapsed());
 
             if forward_side_visible {
-                let shape = shape::Quad { size: Vec2::new(width, 1.0), flip: true };
-                let mesh = meshes.add(Mesh::from(shape));
+                let mesh = get_or_create(&mut meshes, width, 1.0, true);
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material: material.clone(),
@@ -174,8 +154,7 @@ pub fn init_world(
             }
 
             if back_side_visible {
-                let shape = shape::Quad { size: Vec2::new(width, 1.0), flip: false };
-                let mesh = meshes.add(Mesh::from(shape));
+                let mesh = get_or_create(&mut meshes, width, 1.0, false);
                 let mut entity_commands = commands.spawn_bundle(PbrBundle {
                     mesh,
                     material,
@@ -192,7 +171,6 @@ pub fn init_world(
     }
 
     println!("world initialization: {:?}", start.elapsed());
-    println!("material: {:?}", material_duration);
 }
 
 fn spawn_light(entity_commands: &mut EntityCommands, material: Material) -> bool {

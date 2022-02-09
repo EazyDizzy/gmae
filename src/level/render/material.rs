@@ -8,7 +8,6 @@ use crate::Material;
 
 pub const TEXTURE_SIZE: u32 = 64;
 
-const MATERIAL_UUID: Uuid = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 
@@ -104,7 +103,7 @@ fn generate_dynamic_material_handle_id(voxel_material: Material, image_width: u3
 }
 
 fn generate_material_handle_id(voxel_material: Material) -> HandleId {
-    HandleId::Id(MATERIAL_UUID, voxel_material as u64)
+    generate_dynamic_material_handle_id(voxel_material, 0, 0)
 }
 
 #[allow(clippy::needless_pass_by_value)]

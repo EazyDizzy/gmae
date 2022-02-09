@@ -1,8 +1,22 @@
 use std::collections::HashMap;
 
+use bevy::asset::HandleId;
+use bevy::prelude::*;
+use bevy::utils::Uuid;
+
 use crate::entity::voxel::Voxel;
 use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::Material;
+
+pub fn get_or_create(meshes: &mut ResMut<Assets<Mesh>>, width: f32, height: f32, flip: bool) -> Handle<Mesh> {
+    let handle_id = generate_mesh_handle_id(width, height, flip);
+
+    if meshes.get(handle_id).is_none() {
+        meshes.set(handle_id, Mesh::from(shape::Quad { size: Vec2::new(width, height), flip }))
+    } else {
+        meshes.get_handle(handle_id)
+    }
+}
 
 pub fn merge_voxels(voxels: &[Voxel], max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
     let grouped_voxels = group_voxels_by_coordinates(voxels);
@@ -116,4 +130,10 @@ fn should_merge(material: Material) -> bool {
         Material::BlueLight,
         Material::OrangeLight
     ].contains(&material)
+}
+
+fn generate_mesh_handle_id(width: f32, height: f32, flip: bool) -> HandleId {
+    let id = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, width as u8, height as u8, u8::from(flip)]);
+
+    HandleId::Id(id, 1)
 }
