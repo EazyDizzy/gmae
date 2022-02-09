@@ -4,7 +4,7 @@ use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::utils::Uuid;
-use image::{DynamicImage, GenericImageView, Rgba};
+use image::{DynamicImage, GenericImageView, Pixel, Rgba};
 
 use crate::Material;
 
@@ -46,27 +46,37 @@ pub fn merge_materials(
 
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
     let new_texture_height = TEXTURE_SIZE * number_of_images_in_height;
+    const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 
-    let default_pixel_row = [Rgba::from([0, 0, 0, 0]); TEXTURE_SIZE as usize];
-    let mut pixel_matrix = [default_pixel_row; TEXTURE_SIZE as usize];
+    let mut image_pixels = Vec::with_capacity((COLOR_SIZE * TEXTURE_SIZE * TEXTURE_SIZE) as usize);
 
     for y in 0..TEXTURE_SIZE {
         for x in 0..TEXTURE_SIZE {
-            pixel_matrix[y as usize][x as usize] = basic_image.get_pixel(x, y);
+            let p = basic_image.get_pixel(x, y);
+            image_pixels.extend(p.0);
         }
+    }
+    let mut pixel_row = Vec::with_capacity((4 * new_texture_width * new_texture_height) as usize);
+    for y in 0..TEXTURE_SIZE {
+        let bytes_in_row = TEXTURE_SIZE * COLOR_SIZE;
+        let start = y * bytes_in_row ;
+        let end = start + bytes_in_row;
+        let pixels_slice = &image_pixels[start as usize..end as usize];
+
+        for _ in 0..number_of_images_wide {
+            pixel_row.extend(pixels_slice);
+        }
+    }
+    let mut pixel_rows = Vec::with_capacity((4 * new_texture_width * new_texture_height) as usize);
+    for _ in 0..number_of_images_in_height {
+        pixel_rows.extend(&pixel_row);
     }
 
     let start = Instant::now();
-    let img_buf = image::ImageBuffer::from_fn(
-        new_texture_width,
-        new_texture_height,
-        |x, y| {
-            let original_x = x % TEXTURE_SIZE;
-            let original_y = y % TEXTURE_SIZE;
 
-            pixel_matrix[original_y as usize][original_x as usize]
-        },
-    );
+    let img_buf: image::ImageBuffer<Rgba<u8>, _> =
+        image::ImageBuffer::from_vec(new_texture_width, new_texture_height, pixel_rows)
+            .expect("cannot create buffer from vector");
 
     if voxel_material == Material::Grass {
         println!("buffer creation {} {} {:?}", number_of_images_wide, number_of_images_in_height, start.elapsed());
