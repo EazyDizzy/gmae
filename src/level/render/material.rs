@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
@@ -24,6 +22,8 @@ const PUMPKIN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 11);
 const UNKNOWN_MATERIAL_ID: HandleId = HandleId::Id(MATERIAL_UUID, 666);
 
 pub const TEXTURE_SIZE: u32 = 64;
+const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
+const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 
 // TODO dynamically select texture size based on wgpu limits
 pub fn merge_materials(
@@ -42,47 +42,30 @@ pub fn merge_materials(
         return materials.get_handle(handle_id);
     }
 
-    let basic_image = get_basic_image_for_material(voxel_material);
-
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
     let new_texture_height = TEXTURE_SIZE * number_of_images_in_height;
-    const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
+    let original_image_pixels: Vec<u8> = get_basic_image_for_material(voxel_material)
+        .pixels()
+        .flat_map(|(.., p)| p.0)
+        .collect();
 
-    let mut image_pixels = Vec::with_capacity((COLOR_SIZE * TEXTURE_SIZE * TEXTURE_SIZE) as usize);
-
+    let mut pixel_row = Vec::with_capacity((COLOR_SIZE * TEXTURE_SIZE * number_of_images_wide) as usize);
     for y in 0..TEXTURE_SIZE {
-        for x in 0..TEXTURE_SIZE {
-            let p = basic_image.get_pixel(x, y);
-            image_pixels.extend(p.0);
-        }
-    }
-    let mut pixel_row = Vec::with_capacity((4 * new_texture_width * new_texture_height) as usize);
-    for y in 0..TEXTURE_SIZE {
-        let bytes_in_row = TEXTURE_SIZE * COLOR_SIZE;
-        let start = y * bytes_in_row ;
-        let end = start + bytes_in_row;
-        let pixels_slice = &image_pixels[start as usize..end as usize];
+        let start = y * BYTES_IN_ROW;
+        let end = start + BYTES_IN_ROW;
+        let pixels_slice = &original_image_pixels[start as usize..end as usize];
 
         for _ in 0..number_of_images_wide {
             pixel_row.extend(pixels_slice);
         }
     }
-    let mut pixel_rows = Vec::with_capacity((4 * new_texture_width * new_texture_height) as usize);
+
+    let mut pixel_buf = Vec::with_capacity((COLOR_SIZE * new_texture_width * new_texture_height) as usize);
     for _ in 0..number_of_images_in_height {
-        pixel_rows.extend(&pixel_row);
+        pixel_buf.extend(&pixel_row);
     }
 
-    let start = Instant::now();
-
-    let img_buf: image::ImageBuffer<Rgba<u8>, _> =
-        image::ImageBuffer::from_vec(new_texture_width, new_texture_height, pixel_rows)
-            .expect("cannot create buffer from vector");
-
-    if voxel_material == Material::Grass {
-        println!("buffer creation {} {} {:?}", number_of_images_wide, number_of_images_in_height, start.elapsed());
-    }
-
-    // raw creation to prevent triple conversion of image (img_buf -> slice_buf -> DynamicImage -> img_buf)
+    // raw creation to prevent triple conversion of image buffer
     let image = Image::new(
         Extent3d {
             width: new_texture_width,
@@ -90,7 +73,7 @@ pub fn merge_materials(
             depth_or_array_layers: 1,
         },
         TextureDimension::D2,
-        img_buf.into_raw(),
+        pixel_buf,
         TextureFormat::Rgba8UnormSrgb,
     );
 
