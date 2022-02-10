@@ -1,8 +1,10 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::utils::Uuid;
+use pad::PadStr;
 
 use crate::entity::voxel::{Shape, Voxel};
 use crate::level::render::voxel_sequence::VoxelSequence;
@@ -135,7 +137,15 @@ fn should_merge(material: Material) -> bool {
 }
 
 fn generate_mesh_handle_id(width: f32, height: f32, flip: bool) -> HandleId {
-    let id = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, width as u8, height as u8, u8::from(flip)]);
+    // requirement of uuid
+    let hash = format!("{}{}{}",
+                       width.to_string().pad_to_width_with_char(8, 'A').replace(".", "B"),
+                       height.to_string().pad_to_width_with_char(8, 'A').replace(".", "B"),
+                       u8::from(flip).to_string().pad_to_width_with_char(8, 'A'),
+    ).pad_to_width_with_char(32, 'A');
+
+    let id = Uuid::from_str(&hash)
+        .expect(&format!("Cannot generate mesh uuid from {hash}"));
 
     HandleId::Id(id, 1)
 }
