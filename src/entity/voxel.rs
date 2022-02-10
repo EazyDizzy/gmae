@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use bevy::prelude::*;
+
 use crate::entity::point::Point;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -39,7 +41,7 @@ pub struct TrianglePrismProperties {
 }
 
 impl TrianglePrismProperties {
-    pub fn from_properties(properties: &HashMap<String, String>) -> TrianglePrismProperties{
+    pub fn from_properties(properties: &HashMap<String, String>) -> TrianglePrismProperties {
         let fastening = Fastening::from_property(
             properties.get("half")
                 .expect("`half` property does not exist")
@@ -52,7 +54,7 @@ impl TrianglePrismProperties {
 
         TrianglePrismProperties {
             fastening,
-            facing
+            facing,
         }
     }
 }
@@ -89,6 +91,25 @@ impl WorldSide {
             "east" => WorldSide::East,
             "west" => WorldSide::West,
             v => panic!("Unknown world_side value {v}")
+        }
+    }
+
+    pub fn generate_slope_rotation(&self) -> Quat {
+        const PI: f32 = std::f32::consts::PI;
+
+        match self {
+            WorldSide::North => {
+                Quat::from_euler(EulerRot::XYZ, 0.0, PI / 4.0, 0.0)
+            }
+            WorldSide::South => {
+                Quat::from_euler(EulerRot::XYZ, 0.0, -(PI / 4.0), 0.0)
+            }
+            WorldSide::East => {
+                Quat::from_euler(EulerRot::XYZ, PI / 4.0, 0.0, 0.0)
+            }
+            WorldSide::West => {
+                Quat::from_euler(EulerRot::XYZ, -(PI / 4.0), 0.0, 0.0)
+            }
         }
     }
 }

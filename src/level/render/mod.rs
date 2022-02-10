@@ -4,8 +4,9 @@ use std::time::Instant;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
-use crate::level::Level;
 
+use crate::entity::voxel::{Fastening, Shape, TrianglePrismProperties, WorldSide};
+use crate::level::Level;
 use crate::level::render::material::{merge_materials, TEXTURE_SIZE};
 use crate::level::render::mesh::{get_or_create, merge_voxels};
 use crate::level::render::voxel_sequence::VoxelSequence;
@@ -37,140 +38,242 @@ pub fn init_world(
     let start = Instant::now();
 
     for sequence in &merged_voxels {
-        let pos = sequence.start_position();
-        let width = sequence.x_width();
-        let height = sequence.y_height();
-
-        let top_side_visible = is_top_side_visible(sequence, &merged_voxels);
-        let bottom_side_visible = is_bottom_side_visible(sequence, &merged_voxels);
-        let right_side_visible = is_right_side_visible(sequence, &merged_voxels);
-        let left_side_visible = is_left_side_visible(sequence, &merged_voxels);
-        let forward_side_visible = is_forward_side_visible(sequence, &merged_voxels);
-        let back_side_visible = is_back_side_visible(sequence, &merged_voxels);
-
-        let mut light_spawned = false;
-
-        // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
-        if top_side_visible || bottom_side_visible {
-            let material = merge_materials(
-                sequence.material(),
-                &mut materials,
-                &mut images,
-                width as u32,
-                height as u32,
-            );
-
-            if top_side_visible {
-                let mesh = get_or_create(&mut meshes, width, height, false);
-                let mut entity_commands = commands.spawn_bundle(PbrBundle {
-                    mesh,
-                    material: material.clone(),
-                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z),
-                    ..Default::default()
-                });
-
-                if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
-                }
+        match sequence.shape() {
+            Shape::Cube => {
+                spawn_cube_sequence(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    &mut images,
+                    sequence,
+                    &merged_voxels,
+                );
             }
-
-            if bottom_side_visible {
-                let mesh = get_or_create(&mut meshes, width, height, true);
-                let mut entity_commands = commands.spawn_bundle(PbrBundle {
-                    mesh,
-                    material,
-                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z - 1.0),
-                    ..Default::default()
-                });
-
-                if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
-                }
-            }
-        }
-
-        if right_side_visible || left_side_visible {
-            let material = merge_materials(
-                sequence.material(),
-                &mut materials,
-                &mut images,
-                1,
-                height as u32,
-            );
-
-            if right_side_visible {
-                let mesh = get_or_create(&mut meshes, 1.0, height, false);
-                let mut entity_commands = commands.spawn_bundle(PbrBundle {
-                    mesh,
-                    material: material.clone(),
-                    transform: Transform::from_xyz(pos.x + width, pos.y + height / 2.0, pos.z - 0.5)
-                        .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
-                    ..Default::default()
-                });
-
-                if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
-                }
-            }
-
-            if left_side_visible {
-                let mesh = get_or_create(&mut meshes, 1.0, height, true);
-                let mut entity_commands = commands.spawn_bundle(PbrBundle {
-                    mesh,
-                    material,
-                    transform: Transform::from_xyz(pos.x, pos.y + height / 2.0, pos.z - 0.5)
-                        .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
-                    ..Default::default()
-                });
-
-                if !light_spawned {
-                    light_spawned = spawn_light(&mut entity_commands, sequence.material());
-                }
-            }
-        }
-
-        if forward_side_visible || back_side_visible {
-            let material = merge_materials(
-                sequence.material(),
-                &mut materials,
-                &mut images,
-                width as u32,
-                1,
-            );
-
-            if forward_side_visible {
-                let mesh = get_or_create(&mut meshes, width, 1.0, true);
-                let mut entity_commands = commands.spawn_bundle(PbrBundle {
-                    mesh,
-                    material: material.clone(),
-                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height, pos.z - 0.5)
-                        .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
-                    ..Default::default()
-                });
-
-                if !light_spawned {
-                    light_spawned = !light_spawned && spawn_light(&mut entity_commands, sequence.material());
-                }
-            }
-
-            if back_side_visible {
-                let mesh = get_or_create(&mut meshes, width, 1.0, false);
-                let mut entity_commands = commands.spawn_bundle(PbrBundle {
-                    mesh,
-                    material,
-                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y, pos.z - 0.5)
-                        .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
-                    ..Default::default()
-                });
-
-                if !light_spawned {
-                    spawn_light(&mut entity_commands, sequence.material());
-                }
+            Shape::TrianglePrism(properties) => {
+                spawn_triangle_prism_sequence(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    &mut images,
+                    sequence,
+                    properties,
+                    &merged_voxels,
+                );
             }
         }
     }
 
     println!("world initialization: {:?}", start.elapsed());
+}
+
+fn spawn_triangle_prism_sequence(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
+    sequence: &VoxelSequence,
+    properties: &TrianglePrismProperties,
+    merged_voxels: &Vec<VoxelSequence>,
+) {
+    let pos = sequence.start_position();
+    let width = sequence.x_width();
+    let height = sequence.y_height();
+
+    // Don't create material when not needed
+    let top_bottom_material = merge_materials(
+        sequence.material(),
+        materials,
+        images,
+        width as u32,
+        height as u32,
+    );
+
+    match properties.fastening {
+        Fastening::Top => {
+            if is_top_side_visible(sequence, &merged_voxels) {
+                let mesh = get_or_create(meshes, width, height, false);
+
+                commands.spawn_bundle(PbrBundle {
+                    mesh,
+                    material: top_bottom_material.clone(),
+                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z),
+                    ..Default::default()
+                });
+            }
+
+            let slope_mesh = get_or_create(meshes, 1.0, 1.0, true);
+            commands.spawn_bundle(PbrBundle {
+                mesh: slope_mesh,
+                material: top_bottom_material.clone(),
+                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z - 0.5)
+                    .with_rotation(properties.facing.generate_slope_rotation().inverse()),
+                ..Default::default()
+            });
+        }
+        Fastening::Bottom => {
+            if is_bottom_side_visible(sequence, &merged_voxels) {
+                let mesh = get_or_create(meshes, width, height, false);
+
+                commands.spawn_bundle(PbrBundle {
+                    mesh,
+                    material: top_bottom_material.clone(),
+                    transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z - 1.0),
+                    ..Default::default()
+                });
+            }
+
+            let slope_mesh = get_or_create(meshes, 1.0, 1.0, false);
+            commands.spawn_bundle(PbrBundle {
+                mesh: slope_mesh,
+                material: top_bottom_material.clone(),
+                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z - 0.5)
+                    .with_rotation(properties.facing.generate_slope_rotation()),
+                ..Default::default()
+            });
+        }
+    }
+}
+
+fn spawn_cube_sequence(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
+    sequence: &VoxelSequence,
+    merged_voxels: &Vec<VoxelSequence>,
+) {
+    let pos = sequence.start_position();
+    let width = sequence.x_width();
+    let height = sequence.y_height();
+
+    // TODO fix visibility near triangles
+    let top_side_visible = is_top_side_visible(sequence, &merged_voxels);
+    let bottom_side_visible = is_bottom_side_visible(sequence, &merged_voxels);
+    let right_side_visible = is_right_side_visible(sequence, &merged_voxels);
+    let left_side_visible = is_left_side_visible(sequence, &merged_voxels);
+    let forward_side_visible = is_forward_side_visible(sequence, &merged_voxels);
+    let back_side_visible = is_back_side_visible(sequence, &merged_voxels);
+
+    let mut light_spawned = false;
+
+    // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
+    if top_side_visible || bottom_side_visible {
+        let material = merge_materials(
+            sequence.material(),
+            materials,
+            images,
+            width as u32,
+            height as u32,
+        );
+
+        if top_side_visible {
+            let mesh = get_or_create(meshes, width, height, false);
+            let mut entity_commands = commands.spawn_bundle(PbrBundle {
+                mesh,
+                material: material.clone(),
+                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z),
+                ..Default::default()
+            });
+
+            if !light_spawned {
+                light_spawned = spawn_light(&mut entity_commands, sequence.material());
+            }
+        }
+
+        if bottom_side_visible {
+            let mesh = get_or_create(meshes, width, height, true);
+            let mut entity_commands = commands.spawn_bundle(PbrBundle {
+                mesh,
+                material,
+                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z - 1.0),
+                ..Default::default()
+            });
+
+            if !light_spawned {
+                light_spawned = spawn_light(&mut entity_commands, sequence.material());
+            }
+        }
+    }
+
+    if right_side_visible || left_side_visible {
+        let material = merge_materials(
+            sequence.material(),
+            materials,
+            images,
+            1,
+            height as u32,
+        );
+
+        if right_side_visible {
+            let mesh = get_or_create(meshes, 1.0, height, false);
+            let mut entity_commands = commands.spawn_bundle(PbrBundle {
+                mesh,
+                material: material.clone(),
+                transform: Transform::from_xyz(pos.x + width, pos.y + height / 2.0, pos.z - 0.5)
+                    .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
+                ..Default::default()
+            });
+
+            if !light_spawned {
+                light_spawned = spawn_light(&mut entity_commands, sequence.material());
+            }
+        }
+
+        if left_side_visible {
+            let mesh = get_or_create(meshes, 1.0, height, true);
+            let mut entity_commands = commands.spawn_bundle(PbrBundle {
+                mesh,
+                material,
+                transform: Transform::from_xyz(pos.x, pos.y + height / 2.0, pos.z - 0.5)
+                    .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
+                ..Default::default()
+            });
+
+            if !light_spawned {
+                light_spawned = spawn_light(&mut entity_commands, sequence.material());
+            }
+        }
+    }
+
+    if forward_side_visible || back_side_visible {
+        let material = merge_materials(
+            sequence.material(),
+            materials,
+            images,
+            width as u32,
+            1,
+        );
+
+        if forward_side_visible {
+            let mesh = get_or_create(meshes, width, 1.0, true);
+            let mut entity_commands = commands.spawn_bundle(PbrBundle {
+                mesh,
+                material: material.clone(),
+                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height, pos.z - 0.5)
+                    .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
+                ..Default::default()
+            });
+
+            if !light_spawned {
+                light_spawned = !light_spawned && spawn_light(&mut entity_commands, sequence.material());
+            }
+        }
+
+        if back_side_visible {
+            let mesh = get_or_create(meshes, width, 1.0, false);
+            let mut entity_commands = commands.spawn_bundle(PbrBundle {
+                mesh,
+                material,
+                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y, pos.z - 0.5)
+                    .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
+                ..Default::default()
+            });
+
+            if !light_spawned {
+                spawn_light(&mut entity_commands, sequence.material());
+            }
+        }
+    }
 }
 
 fn spawn_light(entity_commands: &mut EntityCommands, material: Material) -> bool {

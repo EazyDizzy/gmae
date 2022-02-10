@@ -94,7 +94,7 @@ fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<
         let concatenation_width = (prev_voxel.position.x - start_voxel.position.x) as u32;
         let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
             || voxel.material != prev_voxel.material
-            || voxel.shape != voxel.shape
+            || voxel.shape != Shape::Cube
             || !should_merge(prev_voxel.material)
             || concatenation_width + 1 == max_voxels_per_dimension;
 
