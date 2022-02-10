@@ -1,13 +1,13 @@
 #![feature(int_abs_diff)]
 #![deny(clippy::all, clippy::pedantic, clippy::cognitive_complexity)]
 #![allow(
-    clippy::expect_fun_call,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    clippy::cast_possible_wrap,
-    clippy::cast_possible_truncation,
-    clippy::float_cmp,
-    clippy::default_trait_access,
+clippy::expect_fun_call,
+clippy::cast_sign_loss,
+clippy::cast_precision_loss,
+clippy::cast_possible_wrap,
+clippy::cast_possible_truncation,
+clippy::float_cmp,
+clippy::default_trait_access,
 )]
 
 use bevy::{
@@ -26,8 +26,6 @@ use crate::system::camera::cursor_grab;
 mod system;
 mod level;
 mod entity;
-
-const ENABLE_EXTREME_GRAPHIC: bool = false;
 
 fn main() {
     App::new()

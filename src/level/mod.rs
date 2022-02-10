@@ -5,7 +5,6 @@ use crate::init_world;
 
 pub mod render;
 mod porter;
-mod util;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct LevelPlugin;
