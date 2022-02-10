@@ -1,10 +1,10 @@
 use std::fs::File;
 
-use fastanvil::{Chunk, JavaChunk, RegionBuffer};
+use fastanvil::{Block, Chunk, JavaChunk, RegionBuffer};
 use fastnbt::de::from_bytes;
 
 use crate::entity::point::Point;
-use crate::entity::voxel::{Material, Shape, Voxel};
+use crate::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
 use crate::level::{DayPart, Level};
 
 const EXPORT_DIAPASON: usize = 8;
@@ -34,7 +34,7 @@ pub fn read_level(lvl_name: &str) -> Level {
                             let voxel_y = (chunk_y * CHUNK_SIZE) + x;
                             let voxel_x = (chunk_x * CHUNK_SIZE) + y;
                             let material = match_name_to_material(block.name());
-                            let shape = detect_shape(block.name());
+                            let shape = detect_shape(block);
                             let voxel_z = height as f32 + MAX_NEGATIVE_HEIGHT;
 
                             voxels.push(Voxel::new(
@@ -50,7 +50,10 @@ pub fn read_level(lvl_name: &str) -> Level {
     })
         .expect("Cannot proceed chunks");
 
-    let day_part = if lvl_name == "debug" { DayPart::Night } else { DayPart::Day };
+    let day_part = match lvl_name {
+        "debug" | "village" => DayPart::Night,
+        &_ => DayPart::Day
+    };
 
     Level::new(voxels, day_part)
 }
@@ -86,9 +89,10 @@ fn match_name_to_material(name: &str) -> Material {
     }
 }
 
-fn detect_shape(name: &str) -> Shape {
-    if name.ends_with("_stairs") {
-        Shape::TrianglePrism
+fn detect_shape(block: &Block) -> Shape {
+    if block.name().ends_with("_stairs") {
+        let properties = TrianglePrismProperties::from_properties(block.properties());
+        Shape::TrianglePrism(properties)
     } else {
         Shape::Cube
     }

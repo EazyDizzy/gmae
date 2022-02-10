@@ -11,6 +11,8 @@ clippy::default_trait_access,
 )]
 
 
+extern crate core;
+
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     prelude::*,
