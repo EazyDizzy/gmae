@@ -6,6 +6,7 @@ pub fn setup(mut commands: Commands) {
     commands.spawn_bundle(DirectionalLightBundle { ..Default::default() });
 }
 
+// TODO fix shadows
 pub fn spawn_orange_light_source_inside(commands: &mut EntityCommands) {
     spawn_point_light_source_inside(PointLight {
         color: Color::ORANGE,

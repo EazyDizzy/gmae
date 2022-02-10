@@ -13,7 +13,7 @@ use crate::Material;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 
 pub mod material;
-pub mod mesh;
+mod mesh;
 mod voxel_sequence;
 
 const PI: f32 = std::f32::consts::PI;

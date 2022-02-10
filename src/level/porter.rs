@@ -1,16 +1,19 @@
 use std::fs::File;
 
-use fastanvil::{Chunk, HeightMode, JavaChunk, RegionBuffer};
+use fastanvil::{Chunk, JavaChunk, RegionBuffer};
 use fastnbt::de::from_bytes;
 
 use crate::entity::point::Point;
 use crate::entity::voxel::{Material, Voxel};
 
 const EXPORT_DIAPASON: usize = 8;
+const LVL_DIR: &str = "./src/level/lvls/";
+const CHUNK_SIZE: usize = 16;
+const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
 
 pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     let mut voxels = vec![];
-    let path = ["./src/level/lvls/", lvl_name, "/r.0.0.mca"].concat();
+    let path = [LVL_DIR, lvl_name, "/r.0.0.mca"].concat();
     let file = File::open(path)
         .expect(&format!("Can't open file {}", lvl_name));
 
@@ -22,25 +25,18 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
         }
         let chunk: JavaChunk = from_bytes(data.as_slice()).unwrap();
 
-        for x in 0..16 {
-            for y in 0..16 {
-                let max_height = chunk.surface_height(x, y, HeightMode::Trust);
-                let min_height = chunk.y_range().start;
-
-                for height in min_height..max_height {
+        for x in 0..CHUNK_SIZE {
+            for y in 0..CHUNK_SIZE {
+                for height in chunk.y_range() {
                     if let Some(block) = chunk.block(x, height, y) {
                         if block.name() != "minecraft:air" {
-                            let voxel_y = (chunk_y * 16) + x;
-                            let voxel_x = (chunk_x * 16) + y;
+                            let voxel_y = (chunk_y * CHUNK_SIZE) + x;
+                            let voxel_x = (chunk_x * CHUNK_SIZE) + y;
                             let material = match_name_to_material(block.name());
-                            let voxel_z = height as f32 + 64.0;
+                            let voxel_z = height as f32 + MAX_NEGATIVE_HEIGHT;
 
                             voxels.push(Voxel::new(
-                                Point::new(
-                                    voxel_x as isize,
-                                    voxel_y as isize,
-                                    voxel_z,
-                                ),
+                                Point::new(voxel_x as f32, voxel_y as f32, voxel_z),
                                 material,
                             ));
                         }
@@ -48,7 +44,8 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
                 }
             }
         }
-    }).unwrap();
+    })
+        .expect("Cannot proceed chunks");
 
     voxels
 }
@@ -67,7 +64,7 @@ fn match_name_to_material(name: &str) -> Material {
         "minecraft:hay_block" => { Material::Hay }
         "minecraft:pumpkin" => { Material::Pumpkin }
         &_ => {
-            println!("Unknown block name: {}", name);
+            eprintln!("Unknown block name: {}", name);
             Material::Unknown
         }
     }

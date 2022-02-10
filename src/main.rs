@@ -10,6 +10,7 @@ clippy::float_cmp,
 clippy::default_trait_access,
 )]
 
+
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     prelude::*,
@@ -20,7 +21,6 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 
 use crate::entity::voxel::Material;
 use crate::level::LevelPlugin;
-use crate::level::render::init_world;
 use crate::system::camera::cursor_grab;
 
 mod system;

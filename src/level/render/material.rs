@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
@@ -30,7 +28,6 @@ pub fn merge_materials(
         return materials.get_handle(handle_id);
     }
 
-    let start = Instant::now();
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
     let new_texture_height = TEXTURE_SIZE * number_of_images_in_height;
     let original_image_pixels: Vec<u8> = get_basic_image_for_material(material)
@@ -52,10 +49,6 @@ pub fn merge_materials(
     let mut pixel_buf = Vec::with_capacity((COLOR_SIZE * new_texture_width * new_texture_height) as usize);
     for _ in 0..number_of_images_in_height {
         pixel_buf.extend(&pixel_row);
-    }
-
-    if material == Material::Grass {
-        println!("material: {:?} {} {} {:?}", material, number_of_images_wide, number_of_images_in_height, start.elapsed());
     }
 
     // raw creation to prevent triple conversion of image buffer

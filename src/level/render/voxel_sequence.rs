@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn one_block_y_borders() {
-        let start = Voxel::new(0, Point::new(0, 0, 0.0), Material::Unknown);
+        let start = Voxel::new(Point::new(0, 0, 0.0), Material::Unknown);
         let seq = VoxelSequence::new(
             &start,
             &start,
