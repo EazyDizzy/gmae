@@ -1,9 +1,19 @@
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
-#[allow(unused)]
-pub fn setup(mut commands: Commands) {
-    commands.spawn_bundle(DirectionalLightBundle { ..Default::default() });
+use crate::level::Level;
+
+pub fn setup(mut commands: Commands, level: Res<Level>) {
+    if level.is_day() {
+        commands.spawn_bundle(DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                color: Color::WHITE,
+                illuminance: 10000.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
 }
 
 // TODO fix shadows

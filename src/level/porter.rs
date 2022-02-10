@@ -5,13 +5,14 @@ use fastnbt::de::from_bytes;
 
 use crate::entity::point::Point;
 use crate::entity::voxel::{Material, Voxel};
+use crate::level::{DayPart, Level};
 
 const EXPORT_DIAPASON: usize = 8;
 const LVL_DIR: &str = "./src/level/lvls/";
 const CHUNK_SIZE: usize = 16;
 const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
 
-pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
+pub fn read_level(lvl_name: &str) -> Level {
     let mut voxels = vec![];
     let path = [LVL_DIR, lvl_name, "/r.0.0.mca"].concat();
     let file = File::open(path)
@@ -47,7 +48,9 @@ pub fn read_level(lvl_name: &str) -> Vec<Voxel> {
     })
         .expect("Cannot proceed chunks");
 
-    voxels
+    let day_part = if lvl_name == "debug" { DayPart::Night } else { DayPart::Day };
+
+    Level::new(voxels, day_part)
 }
 
 fn match_name_to_material(name: &str) -> Material {
@@ -63,8 +66,16 @@ fn match_name_to_material(name: &str) -> Material {
         "minecraft:glass" => { Material::Glass }
         "minecraft:hay_block" => { Material::Hay }
         "minecraft:pumpkin" => { Material::Pumpkin }
+        "minecraft:cobblestone" => { Material::Cobblestone }
+        "minecraft:mossy_cobblestone" => { Material::MossyCobblestone }
+        "minecraft:oak_leaves" => { Material::OakLeaves }
+        "minecraft:oak_log" => { Material::OakLog }
+        "minecraft:white_terracotta" => { Material::WhiteTerracotta }
+        "minecraft:farmland" => { Material::Farmland }
+        "minecraft:stripped_oak_log" => { Material::StrippedOakLog }
+        "minecraft:water" => { Material::Water }
         &_ => {
-            eprintln!("Unknown block name: {}", name);
+            eprintln!("Unknown block name: {name}");
             Material::Unknown
         }
     }

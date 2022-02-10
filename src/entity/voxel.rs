@@ -14,6 +14,14 @@ pub enum Material {
     Glass,
     Hay,
     Pumpkin,
+    Cobblestone,
+    MossyCobblestone,
+    OakLeaves,
+    OakLog,
+    WhiteTerracotta,
+    Farmland,
+    StrippedOakLog,
+    Water,
 }
 
 #[derive(Debug, PartialEq, Clone)]

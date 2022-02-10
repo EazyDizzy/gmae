@@ -4,8 +4,8 @@ use std::time::Instant;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
+use crate::level::Level;
 
-use crate::level::porter::read_level;
 use crate::level::render::material::{merge_materials, TEXTURE_SIZE};
 use crate::level::render::mesh::{get_or_create, merge_voxels};
 use crate::level::render::voxel_sequence::VoxelSequence;
@@ -24,6 +24,7 @@ pub fn init_world(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
+    level: Res<Level>,
     render_device: Res<RenderDevice>,
 ) {
     let limits = render_device.limits().max_texture_dimension_2d;
@@ -31,8 +32,7 @@ pub fn init_world(
     let max_voxels_per_dimension = limits / TEXTURE_SIZE;
     dbg!(max_voxels_per_dimension);
 
-    let map = read_level("debug");
-    let merged_voxels = merge_voxels(&map, max_voxels_per_dimension);
+    let merged_voxels = merge_voxels(&level.voxels, max_voxels_per_dimension);
 
     let start = Instant::now();
 

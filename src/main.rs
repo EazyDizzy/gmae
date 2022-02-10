@@ -36,7 +36,7 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
         .add_startup_system(system::camera::setup.system())
-        // .add_startup_system(system::light::setup.system())
+        .add_startup_system(system::light::setup.system())
         .add_system(cursor_grab)
         .run();
 }
