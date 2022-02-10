@@ -100,106 +100,63 @@ fn generate_material_handle_id(voxel_material: Material) -> HandleId {
     generate_dynamic_material_handle_id(voxel_material, 0, 0)
 }
 
+fn generate_asset_path(material: Material) -> String {
+    format!("texture/block/{}", get_material_file_name(material))
+}
+
 #[allow(clippy::needless_pass_by_value)]
 pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>) {
-    let generate_path = |material: Material| -> String{
-        format!("texture/block/{}", get_material_file_name(material))
-    };
-
-    let _id = materials.set(
-        generate_material_handle_id(Material::Grass),
-        create_default_material(asset_server.load(&generate_path(Material::Grass))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::Stone),
-        create_default_material(asset_server.load(&generate_path(Material::Stone))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::Dirt),
-        create_default_material(asset_server.load(&generate_path(Material::Dirt))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::Bedrock),
-        create_default_material(asset_server.load(&generate_path(Material::Bedrock))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::WoodenPlanks),
-        create_default_material(asset_server.load(&generate_path(Material::WoodenPlanks))),
-    );
     let _id = materials.set(
         generate_material_handle_id(Material::OrangeLight), StandardMaterial {
-            base_color_texture: Some(asset_server.load(&generate_path(Material::OrangeLight))),
+            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::OrangeLight))),
             reflectance: 1.0,
             alpha_mode: AlphaMode::Blend,
             unlit: true,
             ..Default::default()
         });
     let _id = materials.set(generate_material_handle_id(Material::BlueLight), StandardMaterial {
-        base_color_texture: Some(asset_server.load(&generate_path(Material::BlueLight))),
+        base_color_texture: Some(asset_server.load(&generate_asset_path(Material::BlueLight))),
         reflectance: 1.0,
         alpha_mode: AlphaMode::Blend,
         unlit: true,
         ..Default::default()
     });
-    let _id = materials.set(
-        generate_material_handle_id(Material::DirtPath),
-        create_default_material(asset_server.load(&generate_path(Material::DirtPath))),
-    );
     let _id = materials.set(generate_material_handle_id(Material::Glass), StandardMaterial {
-        base_color_texture: Some(asset_server.load(&generate_path(Material::Glass))),
+        base_color_texture: Some(asset_server.load(&generate_asset_path(Material::Glass))),
         reflectance: 1.0,
         alpha_mode: AlphaMode::Blend,
         ..Default::default()
     });
     let _id = materials.set(
-        generate_material_handle_id(Material::Hay),
-        create_default_material(asset_server.load(&generate_path(Material::Hay))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::Pumpkin),
-        create_default_material(asset_server.load(&generate_path(Material::Pumpkin))),
-    );
-    let _id = materials.set(generate_material_handle_id(Material::Unknown), StandardMaterial {
-        base_color: Color::PINK,
-        ..Default::default()
-    });
-    let _id = materials.set(
-        generate_material_handle_id(Material::Cobblestone),
-        create_default_material(asset_server.load(&generate_path(Material::Cobblestone))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::MossyCobblestone),
-        create_default_material(asset_server.load(&generate_path(Material::MossyCobblestone))),
-    );
-    let _id = materials.set(
         generate_material_handle_id(Material::OakLeaves),
         StandardMaterial {
             base_color: Color::DARK_GREEN,
-            base_color_texture: Some(asset_server.load(&generate_path(Material::OakLeaves))),
+            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::OakLeaves))),
             reflectance: 0.0,
             ..Default::default()
-        }
+        },
     );
-    let _id = materials.set(
-        generate_material_handle_id(Material::OakLog),
-        create_default_material(asset_server.load(&generate_path(Material::OakLog))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::WhiteTerracotta),
-        create_default_material(asset_server.load(&generate_path(Material::WhiteTerracotta))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::Farmland),
-        create_default_material(asset_server.load(&generate_path(Material::Farmland))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::StrippedOakLog),
-        create_default_material(asset_server.load(&generate_path(Material::StrippedOakLog))),
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::Water),
-        create_default_material(asset_server.load(&generate_path(Material::Water))),
-    );
+
+    let default_material_names = vec![
+        Material::SmoothStone, Material::Water, Material::StrippedOakLog, Material::Farmland,
+        Material::WhiteTerracotta, Material::OakLog, Material::MossyCobblestone, Material::Cobblestone,
+        Material::Unknown, Material::Pumpkin, Material::Hay, Material::DirtPath, Material::Grass,
+        Material::WoodenPlanks, Material::Bedrock, Material::Dirt, Material::Stone,
+    ];
+    setup_default_materials(materials, asset_server, default_material_names);
+}
+
+pub fn setup_default_materials(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+    material_names: Vec<Material>,
+) {
+    for material in material_names {
+        let _id = materials.set(
+            generate_material_handle_id(material),
+            create_default_material(asset_server.load(&generate_asset_path(material))),
+        );
+    }
 }
 
 fn create_default_material(image: Handle<Image>) -> StandardMaterial {

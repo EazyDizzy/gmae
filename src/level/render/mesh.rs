@@ -4,7 +4,7 @@ use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::utils::Uuid;
 
-use crate::entity::voxel::Voxel;
+use crate::entity::voxel::{Shape, Voxel};
 use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::Material;
 
@@ -61,6 +61,7 @@ fn stretch_sequences_by_y<'a>(
     for sequence in row_sequences {
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
             s.same_x_size_and_material(&sequence)
+                && sequence.shape() == &Shape::Cube
                 && should_merge(sequence.material())
         });
 
@@ -93,6 +94,7 @@ fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<
         let concatenation_width = (prev_voxel.position.x - start_voxel.position.x) as u32;
         let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
             || voxel.material != prev_voxel.material
+            || voxel.shape != voxel.shape
             || !should_merge(prev_voxel.material)
             || concatenation_width + 1 == max_voxels_per_dimension;
 
