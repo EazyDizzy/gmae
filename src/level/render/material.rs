@@ -3,7 +3,9 @@ use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::utils::Uuid;
 use convert_case::{Case, Casing};
-use image::{DynamicImage, GenericImageView, Pixel, Rgba};
+use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba};
+use rand::distributions::Distribution;
+use rand::distributions::Uniform;
 
 use crate::Material;
 
@@ -11,6 +13,7 @@ pub const TEXTURE_SIZE: u32 = 64;
 
 const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
+const DEBUG_TEXTURES: bool = true;
 
 // TODO dynamically select texture size based on wgpu limits
 pub fn merge_materials(
@@ -79,11 +82,33 @@ pub fn merge_materials(
 }
 
 fn get_basic_image_for_material(voxel_material: Material) -> DynamicImage {
+    if DEBUG_TEXTURES {
+        return generate_image_of_random_color();
+    }
+
     const TEXTURE_PATH: &str = "./assets/texture/block/";
     let material_name = get_material_file_name(voxel_material);
     let material_id = format!("{TEXTURE_PATH}{material_name}");
 
     image::open(material_id).unwrap()
+}
+
+fn generate_image_of_random_color() -> DynamicImage {
+    let range = Uniform::new(0_u8, 255_u8);
+    let mut rng = rand::thread_rng();
+    let red = range.sample(&mut rng);
+    let green = range.sample(&mut rng);
+    let blue = range.sample(&mut rng);
+    let color = Rgba::<u8>::from([red, green, blue, 1]);
+
+    let mut img = DynamicImage::new_rgba8(TEXTURE_SIZE, TEXTURE_SIZE);
+    for x in 0..TEXTURE_SIZE {
+        for y in 0..TEXTURE_SIZE {
+            img.put_pixel(x, y, color.clone());
+        }
+    }
+
+    img
 }
 
 fn get_material_file_name(voxel_material: Material) -> String {
