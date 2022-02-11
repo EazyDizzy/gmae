@@ -7,7 +7,7 @@ use crate::entity::point::Point;
 use crate::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
 use crate::level::{DayPart, Level};
 
-const EXPORT_DIAPASON: usize = 1;
+const EXPORT_DIAPASON: usize = 4;
 const LVL_DIR: &str = "./src/level/lvls/";
 const CHUNK_SIZE: usize = 16;
 const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
@@ -90,7 +90,8 @@ fn match_name_to_material(name: &str) -> Material {
 }
 
 fn detect_shape(block: &Block) -> Shape {
-    if block.name().ends_with("_stairs") {
+    // render everything as a cube until support for custom polygons added
+    if block.name().ends_with("_stairs") && false {
         let properties = TrianglePrismProperties::from_properties(block.properties());
         Shape::TrianglePrism(properties)
     } else {

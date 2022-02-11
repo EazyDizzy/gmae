@@ -59,7 +59,7 @@ impl TrianglePrismProperties {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Fastening {
     Top,
     Bottom,
@@ -75,7 +75,7 @@ impl Fastening {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum WorldSide {
     North,
     South,
