@@ -1,10 +1,11 @@
+use std::collections::HashMap;
+
 use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::utils::Uuid;
 use convert_case::{Case, Casing};
 use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba};
-use memoize::memoize;
 use rand::distributions::Distribution;
 use rand::distributions::Uniform;
 
@@ -38,26 +39,21 @@ pub fn merge_materials(
     let new_texture_height = TEXTURE_SIZE * number_of_images_in_height;
     let mut pixel_buf = Vec::with_capacity((COLOR_SIZE * new_texture_width * new_texture_height) as usize);
 
+    let mut cached_images = HashMap::new();
+
     for y in 0..new_texture_height {
-        for x in 0..new_texture_width {
-            let voxel_x = x / TEXTURE_SIZE;
+        for x in 0..number_of_images_wide {
             let voxel_y = y / TEXTURE_SIZE;
-            let original_x = x - voxel_x * TEXTURE_SIZE;
             let original_y = y - voxel_y * TEXTURE_SIZE;
 
-            let voxel = voxels[voxel_y as usize][voxel_x as usize];
-            let original_image = get_basic_image_for_material(voxel.material);
-            let pixel = original_image.get_pixel(original_x, original_y);
-            pixel_buf.extend(pixel.0);
+            let voxel = voxels[voxel_y as usize][x as usize];
+            let original_image = cached_images.entry(voxel.material)
+                .or_insert_with(|| get_basic_image_pixels(voxel.material));
+            let start = (original_y * BYTES_IN_ROW) as usize;
+            let end = start + BYTES_IN_ROW as usize;
+            pixel_buf.extend(&original_image[start..end]);
         }
     }
-
-    // for row in voxels {
-    //     for voxel in row {
-    //         let original_image_pixels = get_basic_image_pixels(voxel.material);
-    //         pixel_buf.extend(original_image_pixels);
-    //     }
-    // }
 
     // raw creation to prevent triple conversion of image buffer
     let image = Image::new(
@@ -82,7 +78,6 @@ pub fn merge_materials(
     })
 }
 
-#[memoize]
 fn get_basic_image_pixels(material: Material) -> Vec<u8> {
     get_basic_image_for_material(material)
         .pixels()
@@ -90,7 +85,6 @@ fn get_basic_image_pixels(material: Material) -> Vec<u8> {
         .collect()
 }
 
-#[memoize]
 fn get_basic_image_for_material(voxel_material: Material) -> DynamicImage {
     if DEBUG_TEXTURES {
         return generate_image_of_random_color();

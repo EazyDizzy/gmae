@@ -4,7 +4,7 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
 
-use crate::entity::voxel::{Shape, TrianglePrismProperties};
+use crate::entity::voxel::Shape;
 use crate::level::Level;
 use crate::level::render::material::TEXTURE_SIZE;
 use crate::level::render::mesh::merge_voxels;
@@ -48,7 +48,7 @@ pub fn init_world(
                     &merged_voxels,
                 );
             }
-            Shape::TrianglePrism(properties) => {
+            Shape::TrianglePrism(..) => {
                 // spawn_triangle_prism_sequence(
                 //     &mut commands,
                 //     &mut meshes,

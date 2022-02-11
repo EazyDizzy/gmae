@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use bevy::prelude::*;
 
 use crate::entity::point::Point;
 
@@ -94,24 +93,24 @@ impl WorldSide {
         }
     }
 
-    pub fn generate_slope_rotation(&self) -> Quat {
-        const PI: f32 = std::f32::consts::PI;
-
-        match self {
-            WorldSide::North => {
-                Quat::from_euler(EulerRot::XYZ, 0.0, PI / 4.0, 0.0)
-            }
-            WorldSide::South => {
-                Quat::from_euler(EulerRot::XYZ, 0.0, -(PI / 4.0), 0.0)
-            }
-            WorldSide::East => {
-                Quat::from_euler(EulerRot::XYZ, PI / 4.0, 0.0, 0.0)
-            }
-            WorldSide::West => {
-                Quat::from_euler(EulerRot::XYZ, -(PI / 4.0), 0.0, 0.0)
-            }
-        }
-    }
+    // pub fn generate_slope_rotation(&self) -> Quat {
+    //     const PI: f32 = std::f32::consts::PI;
+    //
+    //     match self {
+    //         WorldSide::North => {
+    //             Quat::from_euler(EulerRot::XYZ, 0.0, PI / 4.0, 0.0)
+    //         }
+    //         WorldSide::South => {
+    //             Quat::from_euler(EulerRot::XYZ, 0.0, -(PI / 4.0), 0.0)
+    //         }
+    //         WorldSide::East => {
+    //             Quat::from_euler(EulerRot::XYZ, PI / 4.0, 0.0, 0.0)
+    //         }
+    //         WorldSide::West => {
+    //             Quat::from_euler(EulerRot::XYZ, -(PI / 4.0), 0.0, 0.0)
+    //         }
+    //     }
+    // }
 }
 
 #[derive(Debug, PartialEq, Clone)]
