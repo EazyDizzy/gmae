@@ -62,14 +62,14 @@ fn stretch_sequences_by_y<'a>(
 
     for sequence in row_sequences {
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
-            s.same_x_size_and_material(&sequence)
+            s.same_x_size(&sequence)
                 && sequence.shape() == &Shape::Cube
                 && should_merge(sequence.material())
         });
 
         if let Some(same) = same_sequence {
             if (same.y_height() as u32) + (sequence.y_height() as u32) < max_voxels_per_dimension {
-                same.expand_end(&sequence);
+                same.expand_end(sequence);
             } else {
                 sequences_to_append.push(sequence);
             }
@@ -89,26 +89,27 @@ fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<
     });
 
     let mut x_sequences = vec![];
-    let mut start_voxel = row[0];
-    let mut prev_voxel = row[0];
+    let mut start_voxel_index = 0;
+    let mut prev_voxel_index = 0;
 
-    for voxel in row.into_iter().skip(1) {
+    for (index, voxel) in row.iter().enumerate().skip(1) {
+        let start_voxel = row[start_voxel_index];
+        let prev_voxel = row[prev_voxel_index];
         let concatenation_width = (prev_voxel.position.x - start_voxel.position.x) as u32;
         let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
-            || voxel.material != prev_voxel.material
-            || voxel.shape != Shape::Cube
+            || voxel.shape != prev_voxel.shape
             || !should_merge(prev_voxel.material)
             || concatenation_width + 1 == max_voxels_per_dimension;
 
         if stop_concatenation {
-            x_sequences.push(VoxelSequence::new(start_voxel, prev_voxel));
+            x_sequences.push(VoxelSequence::new(row[start_voxel_index..=prev_voxel_index].to_vec()));
 
-            start_voxel = voxel;
+            start_voxel_index = index;
         }
 
-        prev_voxel = voxel;
+        prev_voxel_index = index;
     }
-    x_sequences.push(VoxelSequence::new(start_voxel, prev_voxel));
+    x_sequences.push(VoxelSequence::new(row[start_voxel_index..=prev_voxel_index].to_vec()));
 
     x_sequences
 }

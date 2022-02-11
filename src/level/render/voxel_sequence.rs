@@ -6,30 +6,33 @@ use crate::Material;
 
 #[derive(Debug)]
 pub struct VoxelSequence<'a> {
-    pub start: &'a Voxel,
+    start: &'a Voxel,
     end: &'a Voxel,
+    voxels: Vec<Vec<&'a Voxel>>,
 }
 
 impl<'a> VoxelSequence<'a> {
-    pub fn new(start: &'a Voxel, end: &'a Voxel) -> VoxelSequence<'a> {
+    pub fn new(voxels: Vec<&'a Voxel>) -> VoxelSequence<'a> {
         VoxelSequence {
-            start,
-            end,
+            start: voxels.first().unwrap(),
+            end: voxels.last().unwrap(),
+            voxels: vec![voxels],
         }
+    }
+
+    pub fn expand_end(&mut self, other: Self) {
+        self.end = other.end;
+        let only_row = other.voxels[0].clone();
+        self.voxels.push(only_row);
     }
 
     pub fn start_position(&self) -> &Point {
         &self.start.position
     }
 
-    pub fn same_x_size_and_material(&self, other: &Self) -> bool {
+    pub fn same_x_size(&self, other: &Self) -> bool {
         other.start.position.x == self.start.position.x
             && other.end.position.x == self.end.position.x
-            && other.start.material == self.start.material
-    }
-
-    pub fn expand_end(&mut self, other: &Self) {
-        self.end = other.end;
     }
 
     pub fn height(&self) -> f32 {

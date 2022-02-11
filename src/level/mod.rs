@@ -21,7 +21,7 @@ impl Plugin for LevelPlugin {
 
 impl LevelPlugin {
     fn get_level_resource(&self) -> Level {
-        read_level("bug_detection")
+        read_level("debug")
     }
 }
 
