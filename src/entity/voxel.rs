@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 use crate::entity::point::Point;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum Material {
     Unknown,
     Bedrock,

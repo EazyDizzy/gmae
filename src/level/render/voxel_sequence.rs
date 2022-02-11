@@ -26,6 +26,28 @@ impl<'a> VoxelSequence<'a> {
         self.voxels.push(only_row);
     }
 
+    pub fn top_voxels(&self) -> Vec<Vec<&'a Voxel>> {
+        let mut voxels = self.voxels.clone();
+        voxels.reverse();
+
+        voxels
+    }
+    pub fn bottom_voxels(&self) -> &Vec<Vec<&'a Voxel>> {
+        &self.voxels
+    }
+    pub fn left_voxels(&self) -> &Vec<Vec<&'a Voxel>> {
+        &self.voxels
+    }
+    pub fn right_voxels(&self) -> &Vec<Vec<&'a Voxel>> {
+        &self.voxels
+    }
+    pub fn forward_voxels(&self) -> &Vec<Vec<&'a Voxel>> {
+        &self.voxels
+    }
+    pub fn backward_voxels(&self) -> &Vec<Vec<&'a Voxel>> {
+        &self.voxels
+    }
+
     pub fn start_position(&self) -> &Point {
         &self.start.position
     }

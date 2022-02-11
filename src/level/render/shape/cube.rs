@@ -29,15 +29,14 @@ pub fn create_cube_bundle_batch(
 
     // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
     if top_side_visible || bottom_side_visible {
-        let material = merge_materials(
-            sequence.material(),
-            materials,
-            images,
-            width as u32,
-            height as u32,
-        );
-
         if top_side_visible {
+            let material = merge_materials(
+                &sequence.top_voxels(),
+                materials,
+                images,
+                width as u32,
+                height as u32,
+            );
             let mesh = get_or_create(meshes, width, height, false);
             bundles.push(PbrBundle {
                 mesh,
@@ -48,6 +47,13 @@ pub fn create_cube_bundle_batch(
         }
 
         if bottom_side_visible {
+            let material = merge_materials(
+                sequence.bottom_voxels(),
+                materials,
+                images,
+                width as u32,
+                height as u32,
+            );
             let mesh = get_or_create(meshes, width, height, true);
             bundles.push(PbrBundle {
                 mesh,
@@ -59,15 +65,14 @@ pub fn create_cube_bundle_batch(
     }
 
     if right_side_visible || left_side_visible {
-        let material = merge_materials(
-            sequence.material(),
-            materials,
-            images,
-            1,
-            height as u32,
-        );
-
         if right_side_visible {
+            let material = merge_materials(
+                sequence.right_voxels(),
+                materials,
+                images,
+                1,
+                height as u32,
+            );
             let mesh = get_or_create(meshes, 1.0, height, false);
             bundles.push(PbrBundle {
                 mesh,
@@ -79,6 +84,13 @@ pub fn create_cube_bundle_batch(
         }
 
         if left_side_visible {
+            let material = merge_materials(
+                sequence.left_voxels(),
+                materials,
+                images,
+                1,
+                height as u32,
+            );
             let mesh = get_or_create(meshes, 1.0, height, true);
             bundles.push(PbrBundle {
                 mesh,
@@ -91,15 +103,14 @@ pub fn create_cube_bundle_batch(
     }
 
     if forward_side_visible || back_side_visible {
-        let material = merge_materials(
-            sequence.material(),
-            materials,
-            images,
-            width as u32,
-            1,
-        );
-
         if forward_side_visible {
+            let material = merge_materials(
+                sequence.forward_voxels(),
+                materials,
+                images,
+                width as u32,
+                1,
+            );
             let mesh = get_or_create(meshes, width, 1.0, true);
             bundles.push(PbrBundle {
                 mesh,
@@ -111,6 +122,13 @@ pub fn create_cube_bundle_batch(
         }
 
         if back_side_visible {
+            let material = merge_materials(
+                sequence.backward_voxels(),
+                materials,
+                images,
+                width as u32,
+                1,
+            );
             let mesh = get_or_create(meshes, width, 1.0, false);
             bundles.push(PbrBundle {
                 mesh,
