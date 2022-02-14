@@ -67,7 +67,7 @@ pub fn create_cube_bundle_batch(
     if right_side_visible || left_side_visible {
         if right_side_visible {
             let material = merge_materials(
-                sequence.right_voxels(),
+                &sequence.right_voxels(),
                 materials,
                 images,
                 1,
@@ -85,7 +85,7 @@ pub fn create_cube_bundle_batch(
 
         if left_side_visible {
             let material = merge_materials(
-                sequence.left_voxels(),
+                &sequence.left_voxels(),
                 materials,
                 images,
                 1,
@@ -105,7 +105,7 @@ pub fn create_cube_bundle_batch(
     if forward_side_visible || back_side_visible {
         if forward_side_visible {
             let material = merge_materials(
-                sequence.forward_voxels(),
+                &sequence.forward_voxels(),
                 materials,
                 images,
                 width as u32,
@@ -123,7 +123,7 @@ pub fn create_cube_bundle_batch(
 
         if back_side_visible {
             let material = merge_materials(
-                sequence.backward_voxels(),
+                &sequence.backward_voxels(),
                 materials,
                 images,
                 width as u32,

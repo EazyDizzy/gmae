@@ -29,11 +29,6 @@ pub fn merge_materials(
     if number_of_images_wide == 1 && number_of_images_in_height == 1 {
         return materials.get_handle(generate_material_handle_id(voxels[0][0].material));
     }
-    // let handle_id = generate_dynamic_material_handle_id(material, number_of_images_wide, number_of_images_in_height);
-    //
-    // if materials.get(handle_id).is_some() {
-    //     return materials.get_handle(handle_id);
-    // }
 
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
     let new_texture_height = TEXTURE_SIZE * number_of_images_in_height;
@@ -42,11 +37,12 @@ pub fn merge_materials(
     let mut cached_images = HashMap::new();
 
     for y in 0..new_texture_height {
-        for x in 0..number_of_images_wide {
-            let voxel_y = y / TEXTURE_SIZE;
-            let original_y = y - voxel_y * TEXTURE_SIZE;
+        let voxel_y = y / TEXTURE_SIZE;
+        let original_y = y - voxel_y * TEXTURE_SIZE;
+        let row = &voxels[voxel_y as usize];
 
-            let voxel = voxels[voxel_y as usize][x as usize];
+        for x in 0..number_of_images_wide {
+            let voxel = row[x as usize];
             let original_image = cached_images.entry(voxel.material)
                 .or_insert_with(|| get_basic_image_pixels(voxel.material));
             let start = (original_y * BYTES_IN_ROW) as usize;

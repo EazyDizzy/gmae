@@ -7,7 +7,7 @@ use crate::entity::point::Point;
 use crate::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
 use crate::level::{DayPart, Level};
 
-const EXPORT_DIAPASON: usize = 1;
+const EXPORT_DIAPASON: usize = 8;
 const LVL_DIR: &str = "./src/level/lvls/";
 const CHUNK_SIZE: usize = 16;
 const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
