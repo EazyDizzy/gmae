@@ -80,7 +80,8 @@ fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSeque
         return false;
     }
 
-    let next_z_layer = get_next_z_layer(main_sequence, sequences, -1.0);
+    let height = main_sequence.start_position().z - 1.0;
+    let next_z_layer = get_next_z_layer(main_sequence, sequences, height);
 
     for y in main_sequence.covered_y() {
         for x in main_sequence.covered_x() {
@@ -94,7 +95,8 @@ fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSeque
 }
 
 fn is_top_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence]) -> bool {
-    let next_z_layer = get_next_z_layer(main_sequence, sequences, 1.0);
+    let height = main_sequence.end_position().z + 1.0;
+    let next_z_layer = get_next_z_layer(main_sequence, sequences, height);
 
     for y in main_sequence.covered_y() {
         for x in main_sequence.covered_x() {
@@ -107,9 +109,7 @@ fn is_top_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence
     false
 }
 
-fn get_next_z_layer<'a>(main_sequence: &'a VoxelSequence, all_sequences: &'a [VoxelSequence], z_bonus: f32) -> Vec<(usize, usize)> {
-    let height = main_sequence.height() + z_bonus;
-
+fn get_next_z_layer<'a>(main_sequence: &'a VoxelSequence, all_sequences: &'a [VoxelSequence], height: f32) -> Vec<(usize, usize)> {
     all_sequences.iter()
         .filter(|sequence| {
             sequence.has_height(height)

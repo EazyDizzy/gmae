@@ -83,7 +83,7 @@ pub fn merge_materials(
         ..original_material
     });
 
-    named_materials.add(material_name, handle.id, );
+    named_materials.add(material_name, handle.id);
 
     handle
 }

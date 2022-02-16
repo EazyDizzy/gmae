@@ -43,8 +43,35 @@ pub fn merge_voxels(voxels: &[Voxel], max_voxels_per_dimension: u32) -> Vec<Voxe
             plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, *y, max_voxels_per_dimension);
         }
 
-        all_sequences.extend(plane_sequences);
+        all_sequences = stretch_sequences_by_z(plane_sequences, all_sequences, *z);
     }
+
+    all_sequences
+}
+
+fn stretch_sequences_by_z<'a>(
+    mut plane_sequences: Vec<VoxelSequence<'a>>,
+    mut all_sequences: Vec<VoxelSequence<'a>>,
+    z: usize,
+) -> Vec<VoxelSequence<'a>> {
+    let needed_z = (z - 1) as f32;
+    let previous_layer_sequences = all_sequences.iter_mut()
+        .filter(|s| {
+            s.has_z_end_on(needed_z)
+        })
+        .collect::<Vec<&mut VoxelSequence<'a>>>();
+
+    for seq in previous_layer_sequences {
+        let same_new_seq = plane_sequences.iter().enumerate()
+            .find(|(_, s)| s.same_x_size(&seq) && s.same_y_size(&seq));
+
+        if let Some((i,..)) = same_new_seq {
+            let d = plane_sequences.remove(i);
+            seq.expand_z_end(d);
+        }
+    }
+
+    all_sequences.extend(plane_sequences);
 
     all_sequences
 }
@@ -65,13 +92,13 @@ fn stretch_sequences_by_y<'a>(
         let same_sequence = prev_row_sequences.iter_mut().find(|s| {
             s.same_x_size(&sequence)
                 && sequence.shape() == &Shape::Cube
-                && should_merge(sequence.material())
-                && can_merge_materials(sequence.material(), s.material())
+                && should_merge(sequence.example_material())
+                && can_merge_materials(sequence.example_material(), s.example_material())
         });
 
         if let Some(same) = same_sequence {
             if (same.y_height() as u32) + (sequence.y_height() as u32) < max_voxels_per_dimension {
-                same.expand_end(sequence);
+                same.expand_y_end(sequence);
             } else {
                 sequences_to_append.push(sequence);
             }

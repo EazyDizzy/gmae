@@ -17,7 +17,8 @@ pub fn create_cube_bundle_batch(
     merged_voxels: &Vec<VoxelSequence>,
 ) -> Vec<PbrBundle> {
     let mut bundles = vec![];
-    let pos = sequence.start_position();
+    let start_pos = sequence.start_position();
+    let end_pos = sequence.end_position();
     let width = sequence.x_width();
     let height = sequence.y_height();
 
@@ -44,7 +45,7 @@ pub fn create_cube_bundle_batch(
             bundles.push(PbrBundle {
                 mesh,
                 material: material.clone(),
-                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z),
+                transform: Transform::from_xyz(start_pos.x + width / 2.0, start_pos.y + height / 2.0, end_pos.z - 0.5),
                 ..Default::default()
             });
         }
@@ -62,12 +63,13 @@ pub fn create_cube_bundle_batch(
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height / 2.0, pos.z - 1.0),
+                transform: Transform::from_xyz(start_pos.x + width / 2.0, start_pos.y + height / 2.0, start_pos.z - 1.5),
                 ..Default::default()
             });
         }
     }
 
+    let z_height = sequence.z_height();
     if right_side_visible || left_side_visible {
         if right_side_visible {
             let material = merge_materials(
@@ -75,14 +77,14 @@ pub fn create_cube_bundle_batch(
                 named_materials,
                 materials,
                 images,
-                1,
+                z_height as u32,
                 height as u32,
             );
-            let mesh = get_or_create(meshes, 1.0, height, false);
+            let mesh = get_or_create(meshes, z_height, height, false);
             bundles.push(PbrBundle {
                 mesh,
                 material: material.clone(),
-                transform: Transform::from_xyz(pos.x + width, pos.y + height / 2.0, pos.z - 0.5)
+                transform: Transform::from_xyz(start_pos.x + width, start_pos.y + height / 2.0, end_pos.z - z_height / 2.0 - 0.5)
                     .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
                 ..Default::default()
             });
@@ -94,14 +96,14 @@ pub fn create_cube_bundle_batch(
                 named_materials,
                 materials,
                 images,
-                1,
+                z_height as u32,
                 height as u32,
             );
-            let mesh = get_or_create(meshes, 1.0, height, true);
+            let mesh = get_or_create(meshes, z_height, height, true);
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(pos.x, pos.y + height / 2.0, pos.z - 0.5)
+                transform: Transform::from_xyz(start_pos.x, start_pos.y + height / 2.0, end_pos.z - z_height / 2.0 - 0.5)
                     .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
                 ..Default::default()
             });
@@ -116,13 +118,13 @@ pub fn create_cube_bundle_batch(
                 materials,
                 images,
                 width as u32,
-                1,
+                z_height as u32,
             );
-            let mesh = get_or_create(meshes, width, 1.0, true);
+            let mesh = get_or_create(meshes, width, z_height, true);
             bundles.push(PbrBundle {
                 mesh,
                 material: material.clone(),
-                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y + height, pos.z - 0.5)
+                transform: Transform::from_xyz(start_pos.x + width / 2.0, start_pos.y + height, end_pos.z - z_height / 2.0 - 0.5)
                     .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
                 ..Default::default()
             });
@@ -135,13 +137,13 @@ pub fn create_cube_bundle_batch(
                 materials,
                 images,
                 width as u32,
-                1,
+                z_height as u32,
             );
-            let mesh = get_or_create(meshes, width, 1.0, false);
+            let mesh = get_or_create(meshes, width, z_height, false);
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(pos.x + width / 2.0, pos.y, pos.z - 0.5)
+                transform: Transform::from_xyz(start_pos.x + width / 2.0, start_pos.y, end_pos.z - z_height / 2.0 - 0.5)
                     .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
                 ..Default::default()
             });

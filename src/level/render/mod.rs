@@ -101,7 +101,7 @@ fn spawn_cube_sequence(
         let mut entity_commands = commands.spawn_bundle(bundle);
 
         if !light_spawned {
-            light_spawned = spawn_light(&mut entity_commands, sequence.material());
+            light_spawned = spawn_light(&mut entity_commands, sequence.example_material());
         }
     }
 }
