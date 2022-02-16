@@ -26,8 +26,15 @@ pub fn merge_materials(
     number_of_images_wide: u32,
     number_of_images_in_height: u32,
 ) -> Handle<StandardMaterial> {
+    let material = voxels[0][0].material;
     if number_of_images_wide == 1 && number_of_images_in_height == 1 {
-        return materials.get_handle(generate_material_handle_id(voxels[0][0].material));
+        return materials.get_handle(generate_material_handle_id(material));
+    }
+
+    let same_material = voxels.iter().all(|r| r.iter().all(|v| v.material == material));
+    let handle_id = generate_dynamic_material_handle_id(material, number_of_images_wide, number_of_images_in_height);
+    if same_material && materials.get(handle_id).is_some() {
+        return materials.get_handle(handle_id);
     }
 
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
@@ -64,14 +71,21 @@ pub fn merge_materials(
     );
 
     let image_handle = images.add(image);
-    let original_material = materials.get(generate_material_handle_id(voxels[0][0].material))
-        .expect(&format!("Cannot get material for {:?}", voxels[0][0].material))
+    let original_material = materials.get(generate_material_handle_id(material))
+        .expect(&format!("Cannot get material for {:?}", material))
         .clone();
 
-    materials.add(StandardMaterial {
-        base_color_texture: Some(image_handle),
-        ..original_material
-    })
+    if same_material {
+        materials.set(handle_id, StandardMaterial {
+            base_color_texture: Some(image_handle),
+            ..original_material
+        })
+    } else {
+        materials.add(StandardMaterial {
+            base_color_texture: Some(image_handle),
+            ..original_material
+        })
+    }
 }
 
 fn get_basic_image_pixels(material: Material) -> Vec<u8> {
