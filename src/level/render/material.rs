@@ -64,13 +64,13 @@ pub fn merge_materials(
     );
 
     let image_handle = images.add(image);
-    // let original_material = materials.get(generate_material_handle_id(material))
-    //     .expect(&format!("Cannot get material for {:?}", material))
-    //     .clone();
+    let original_material = materials.get(generate_material_handle_id(voxels[0][0].material))
+        .expect(&format!("Cannot get material for {:?}", voxels[0][0].material))
+        .clone();
 
     materials.add(StandardMaterial {
         base_color_texture: Some(image_handle),
-        ..Default::default()
+        ..original_material
     })
 }
 
@@ -127,6 +127,21 @@ fn generate_material_handle_id(voxel_material: Material) -> HandleId {
 
 fn generate_asset_path(material: Material) -> String {
     format!("texture/block/{}", get_material_file_name(material))
+}
+
+pub fn can_merge_materials(m1: Material, m2: Material) -> bool {
+    if m1 == m2 {
+        return true;
+    }
+
+    const NON_GROUPABLE: [Material; 4] = [
+        Material::OrangeLight,
+        Material::BlueLight,
+        Material::Glass,
+        Material::OakLeaves,
+    ];
+
+    !NON_GROUPABLE.contains(&m1) && !NON_GROUPABLE.contains(&m2)
 }
 
 #[allow(clippy::needless_pass_by_value)]
