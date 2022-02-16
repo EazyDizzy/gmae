@@ -10,6 +10,7 @@ use rand::distributions::Distribution;
 use rand::distributions::Uniform;
 
 use crate::entity::voxel::Voxel;
+use crate::level::render::named_materials::{generate_name_for_voxels, NamedMaterials};
 use crate::Material;
 
 pub const TEXTURE_SIZE: u32 = 64;
@@ -18,9 +19,11 @@ const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 const DEBUG_TEXTURES: bool = false;
 
+
 // TODO dynamically select texture size based on wgpu limits
 pub fn merge_materials(
     voxels: &Vec<Vec<&Voxel>>,
+    named_materials: &mut ResMut<NamedMaterials>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     number_of_images_wide: u32,
@@ -31,10 +34,10 @@ pub fn merge_materials(
         return materials.get_handle(generate_material_handle_id(material));
     }
 
-    let same_material = voxels.iter().all(|r| r.iter().all(|v| v.material == material));
-    let handle_id = generate_dynamic_material_handle_id(material, number_of_images_wide, number_of_images_in_height);
-    if same_material && materials.get(handle_id).is_some() {
-        return materials.get_handle(handle_id);
+    let material_name = generate_name_for_voxels(voxels);
+
+    if let Some(handle_id) = named_materials.get(&material_name) {
+        return materials.get_handle(handle_id.clone());
     }
 
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
@@ -75,17 +78,14 @@ pub fn merge_materials(
         .expect(&format!("Cannot get material for {:?}", material))
         .clone();
 
-    if same_material {
-        materials.set(handle_id, StandardMaterial {
-            base_color_texture: Some(image_handle),
-            ..original_material
-        })
-    } else {
-        materials.add(StandardMaterial {
-            base_color_texture: Some(image_handle),
-            ..original_material
-        })
-    }
+    let handle = materials.add(StandardMaterial {
+        base_color_texture: Some(image_handle),
+        ..original_material
+    });
+
+    named_materials.add(material_name, handle.id, );
+
+    handle
 }
 
 fn get_basic_image_pixels(material: Material) -> Vec<u8> {

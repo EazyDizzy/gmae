@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
-use crate::level::render::material::merge_materials;
+use crate::level::render::material::{merge_materials};
 use crate::level::render::mesh::get_or_create;
+use crate::level::render::named_materials::NamedMaterials;
 use crate::level::render::shape::{is_back_side_visible, is_bottom_side_visible, is_forward_side_visible, is_left_side_visible, is_right_side_visible, is_top_side_visible};
 use crate::level::render::voxel_sequence::VoxelSequence;
 
@@ -9,6 +10,7 @@ const PI: f32 = std::f32::consts::PI;
 
 pub fn create_cube_bundle_batch(
     meshes: &mut ResMut<Assets<Mesh>>,
+    named_materials: &mut ResMut<NamedMaterials>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
@@ -32,6 +34,7 @@ pub fn create_cube_bundle_batch(
         if top_side_visible {
             let material = merge_materials(
                 &sequence.top_voxels(),
+                named_materials,
                 materials,
                 images,
                 width as u32,
@@ -49,6 +52,7 @@ pub fn create_cube_bundle_batch(
         if bottom_side_visible {
             let material = merge_materials(
                 sequence.bottom_voxels(),
+                named_materials,
                 materials,
                 images,
                 width as u32,
@@ -68,6 +72,7 @@ pub fn create_cube_bundle_batch(
         if right_side_visible {
             let material = merge_materials(
                 &sequence.right_voxels(),
+                named_materials,
                 materials,
                 images,
                 1,
@@ -86,6 +91,7 @@ pub fn create_cube_bundle_batch(
         if left_side_visible {
             let material = merge_materials(
                 &sequence.left_voxels(),
+                named_materials,
                 materials,
                 images,
                 1,
@@ -106,6 +112,7 @@ pub fn create_cube_bundle_batch(
         if forward_side_visible {
             let material = merge_materials(
                 &sequence.forward_voxels(),
+                named_materials,
                 materials,
                 images,
                 width as u32,
@@ -124,6 +131,7 @@ pub fn create_cube_bundle_batch(
         if back_side_visible {
             let material = merge_materials(
                 &sequence.backward_voxels(),
+                named_materials,
                 materials,
                 images,
                 width as u32,

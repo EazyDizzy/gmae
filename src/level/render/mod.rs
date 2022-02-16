@@ -8,6 +8,7 @@ use crate::entity::voxel::Shape;
 use crate::level::Level;
 use crate::level::render::material::TEXTURE_SIZE;
 use crate::level::render::mesh::merge_voxels;
+use crate::level::render::named_materials::NamedMaterials;
 use crate::level::render::shape::cube::create_cube_bundle_batch;
 use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::Material;
@@ -17,11 +18,13 @@ pub mod material;
 mod mesh;
 mod voxel_sequence;
 pub mod shape;
+pub(super) mod named_materials;
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn init_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut named_materials: ResMut<NamedMaterials>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
     level: Res<Level>,
@@ -42,6 +45,7 @@ pub fn init_world(
                 spawn_cube_sequence(
                     &mut commands,
                     &mut meshes,
+                    &mut named_materials,
                     &mut materials,
                     &mut images,
                     sequence,
@@ -84,12 +88,13 @@ pub fn init_world(
 fn spawn_cube_sequence(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
+    named_materials: &mut ResMut<NamedMaterials>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
     merged_voxels: &Vec<VoxelSequence>,
 ) {
-    let batch = create_cube_bundle_batch(meshes, materials, images, sequence, merged_voxels);
+    let batch = create_cube_bundle_batch(meshes, named_materials, materials, images, sequence, merged_voxels);
     let mut light_spawned = false;
 
     for bundle in batch {

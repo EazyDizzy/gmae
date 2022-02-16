@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::entity::voxel::Voxel;
 use crate::level::porter::read_level;
 use crate::level::render::material::setup as setup_material;
+use crate::level::render::named_materials::NamedMaterials;
 
 mod render;
 mod porter;
@@ -14,6 +15,7 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app
             .insert_resource(self.get_level_resource())
+            .insert_resource(NamedMaterials::empty())
             .add_startup_system(setup_material)
             .add_startup_system_to_stage(StartupStage::PostStartup, render::init_world);
     }
@@ -21,7 +23,7 @@ impl Plugin for LevelPlugin {
 
 impl LevelPlugin {
     fn get_level_resource(&self) -> Level {
-        read_level("load_test")
+        read_level("debug")
     }
 }
 
