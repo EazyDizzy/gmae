@@ -1,42 +1,130 @@
 use std::ops::RangeInclusive;
 
 use crate::entity::point::Point;
-use crate::entity::voxel::Voxel;
+use crate::entity::voxel::{Shape, Voxel};
 use crate::Material;
 
 #[derive(Debug)]
 pub struct VoxelSequence<'a> {
-    pub start: &'a Voxel,
+    start: &'a Voxel,
     end: &'a Voxel,
+    voxels: Vec<Vec<Vec<&'a Voxel>>>,
 }
 
 impl<'a> VoxelSequence<'a> {
-    pub fn new(start: &'a Voxel, end: &'a Voxel) -> VoxelSequence<'a> {
+    pub fn new(voxels: Vec<&'a Voxel>) -> VoxelSequence<'a> {
         VoxelSequence {
-            start,
-            end,
+            start: voxels.first().unwrap(),
+            end: voxels.last().unwrap(),
+            voxels: vec![vec![voxels]],
         }
+    }
+
+    pub fn expand_z_end(&mut self, other: Self) {
+        self.end = other.end;
+        let only_plate = other.voxels[0].clone();
+        self.voxels.push(only_plate);
+    }
+
+    pub fn expand_y_end(&mut self, other: Self) {
+        self.end = other.end;
+        let only_row = other.voxels[0][0].clone();
+        self.voxels[0].push(only_row);
+    }
+
+    pub fn top_voxels(&self) -> Vec<Vec<&'a Voxel>> {
+        let mut voxels = self.voxels.last().unwrap().clone();
+        voxels.reverse();
+
+        voxels
+    }
+    pub fn bottom_voxels(&self) -> &Vec<Vec<&'a Voxel>> {
+        &self.voxels.first().unwrap()
+    }
+
+    pub fn right_voxels(&self) -> Vec<Vec<&'a Voxel>> {
+        let mut voxels: Vec<Vec<&'a Voxel>> = vec![];
+
+        for plate in &self.voxels {
+            let mut plate_voxels: Vec<&'a Voxel> = plate.iter()
+                .map(|row| *row.last().unwrap())
+                .collect();
+            plate_voxels.reverse();
+            for (i, voxel) in plate_voxels.into_iter().enumerate() {
+                if voxels.len() > i {
+                    voxels[i].insert(0, voxel);
+                } else {
+                    voxels.push(vec![voxel]);
+                }
+            }
+        }
+
+        voxels
+    }
+    pub fn left_voxels(&self) -> Vec<Vec<&'a Voxel>> {
+        let mut voxels: Vec<Vec<&'a Voxel>> = vec![];
+
+        for plate in &self.voxels {
+            let mut plate_voxels: Vec<&'a Voxel> = plate.iter()
+                .map(|row| row[0])
+                .collect();
+            plate_voxels.reverse();
+            for (i, voxel) in plate_voxels.into_iter().enumerate() {
+                if voxels.len() > i {
+                    voxels[i].insert(0, voxel);
+                } else {
+                    voxels.push(vec![voxel]);
+                }
+            }
+        }
+        voxels.reverse();
+
+        voxels
+    }
+
+    pub fn forward_voxels(&self) -> Vec<Vec<&'a Voxel>> {
+        let mut voxels = vec![];
+
+        for plate in &self.voxels {
+            voxels.push(plate.last().unwrap().clone())
+        }
+        voxels.reverse();
+
+        voxels
+    }
+    pub fn backward_voxels(&self) -> Vec<Vec<&'a Voxel>> {
+        let mut voxels = vec![];
+
+        for plate in &self.voxels {
+            voxels.push(plate.first().unwrap().clone())
+        }
+        voxels.reverse();
+
+        voxels
     }
 
     pub fn start_position(&self) -> &Point {
         &self.start.position
     }
 
-    pub fn same_x_size_and_material(&self, other: &Self) -> bool {
+    pub fn end_position(&self) -> &Point {
+        &self.end.position
+    }
+
+    pub fn same_x_size(&self, other: &Self) -> bool {
         other.start.position.x == self.start.position.x
             && other.end.position.x == self.end.position.x
-            && other.start.material == self.start.material
+    }
+    pub fn same_y_size(&self, other: &Self) -> bool {
+        other.start.position.y == self.start.position.y
+            && other.end.position.y == self.end.position.y
     }
 
-    pub fn expand_end(&mut self, other: &Self) {
-        self.end = other.end;
-    }
-
-    pub fn height(&self) -> f32 {
-        self.start.position.z
-    }
-    pub fn material(&self) -> Material {
+    pub fn example_material(&self) -> Material {
         self.start.material
+    }
+    pub fn shape(&self) -> &Shape {
+        &self.start.shape
     }
 
     pub fn is_not_transparent(&self) -> bool {
@@ -52,6 +140,17 @@ impl<'a> VoxelSequence<'a> {
         let (start_x, end_x) = other.x_borders();
 
         self.contains_x(start_x) || self.contains_x(end_x)
+    }
+
+    pub fn has_z_end_on(&self, z: f32) -> bool {
+        let (.., end_z) = self.z_borders();
+
+        end_z == z
+    }
+    pub fn z_height(&self) -> f32 {
+        let (start_z, end_z) = self.z_borders();
+
+        end_z - start_z + 1.0
     }
 
     pub fn has_x_start_on(&self, x: f32) -> bool {
@@ -123,6 +222,12 @@ impl<'a> VoxelSequence<'a> {
 
         (start_y, end_y)
     }
+    fn z_borders(&self) -> (f32, f32) {
+        let start_z = self.start.position.z;
+        let end_z = self.end.position.z;
+
+        (start_z, end_z)
+    }
 
     fn contains_y(&self, y: f32) -> bool {
         let (start_y, end_y) = self.y_borders();
@@ -143,17 +248,17 @@ mod tests {
     use crate::level::render::voxel_sequence::VoxelSequence;
     use crate::Material;
 
-    #[test]
-    fn one_block_y_borders() {
-        let start = Voxel::new(Point::new(0, 0, 0.0), Material::Unknown);
-        let seq = VoxelSequence::new(
-            &start,
-            &start,
-        );
-
-        assert_eq!(
-            seq.y_borders(),
-            (0.0, 0.0)
-        );
-    }
+// #[test]
+    // fn one_block_y_borders() {
+    //     let start = Voxel::new(Point::new(0, 0, 0.0), Material::Unknown);
+    //     let seq = VoxelSequence::new(
+    //         &start,
+    //         &start,
+    //     );
+    //
+    //     assert_eq!(
+    //         seq.y_borders(),
+    //         (0.0, 0.0)
+    //     );
+    // }
 }
