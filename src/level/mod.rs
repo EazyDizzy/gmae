@@ -1,6 +1,6 @@
 use bevy::prelude::*;
+use lib::entity::level::Level;
 
-use crate::entity::voxel::Voxel;
 use crate::level::porter::read_level;
 use crate::level::render::material::setup as setup_material;
 use crate::level::render::named_materials::NamedMaterials;
@@ -27,26 +27,3 @@ impl LevelPlugin {
     }
 }
 
-pub struct Level {
-    voxels: Vec<Voxel>,
-    day_part: DayPart,
-}
-
-#[derive(Copy, Clone, PartialEq)]
-pub enum DayPart {
-    Day,
-    Night,
-}
-
-impl Level {
-    pub fn new(voxels: Vec<Voxel>, day_part: DayPart) -> Level {
-        Level {
-            voxels,
-            day_part,
-        }
-    }
-
-    pub fn is_day(&self) -> bool {
-        self.day_part == DayPart::Day
-    }
-}

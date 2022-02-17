@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bevy::asset::HandleId;
 
-use crate::entity::voxel::Voxel;
+use lib::entity::voxel::Voxel;
 
 pub struct NamedMaterials {
     materials: HashMap<String, HandleId>,

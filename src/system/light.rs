@@ -1,7 +1,7 @@
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
-use crate::level::Level;
+use lib::entity::level::Level;
 
 pub fn setup(mut commands: Commands, level: Res<Level>) {
     if level.is_day() {

@@ -16,3 +16,17 @@ bevy-inspector-egui = "0.7.6"
 convert_case = "0.5.0"
 pad = "0.1.6"
 rand = "0.8.4"
+
+[dependencies.lib]
+version = "0.0.0"
+path = "./lib"
+
+[build-dependencies]
+fastnbt = "1"
+fastanvil = "0.24.0"
+serde_json = "1.0.79"
+
+
+[build-dependencies.lib]
+version = "0.0.0"
+path = "./lib"

@@ -1,11 +1,11 @@
 // use bevy::prelude::*;
 //
-// use crate::entity::point::Point;
-// use crate::entity::voxel::{Fastening, TrianglePrismProperties, WorldSide};
-// use crate::level::render::material::merge_materials;
-// use crate::level::render::mesh::get_or_create;
-// use crate::level::render::shape::{is_bottom_side_visible, is_top_side_visible};
-// use crate::level::render::voxel_sequence::VoxelSequence;
+// use lib::entity::point::Point;
+// use lib::entity::voxel::{Fastening, TrianglePrismProperties, WorldSide};
+// use lib::entity::level::render::material::merge_materials;
+// use lib::entity::level::render::mesh::get_or_create;
+// use lib::entity::level::render::shape::{is_bottom_side_visible, is_top_side_visible};
+// use lib::entity::level::render::voxel_sequence::VoxelSequence;
 //
 // const PI: f32 = std::f32::consts::PI;
 //

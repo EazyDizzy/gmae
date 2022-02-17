@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy::utils::Uuid;
 use pad::PadStr;
 
-use crate::entity::voxel::{Shape, Voxel};
+use lib::entity::voxel::{Shape, Voxel};
 use crate::level::render::material::can_merge_materials;
 use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::Material;

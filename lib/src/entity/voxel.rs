@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::entity::point::Point;
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
 pub enum Material {
     Unknown,
     Bedrock,
@@ -34,13 +36,13 @@ pub enum Material {
     StoneBricks,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Shape {
     Cube,
     TrianglePrism(TrianglePrismProperties),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct TrianglePrismProperties {
     pub fastening: Fastening,
     pub facing: WorldSide,
@@ -65,7 +67,7 @@ impl TrianglePrismProperties {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub enum Fastening {
     Top,
     Bottom,
@@ -81,7 +83,7 @@ impl Fastening {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub enum WorldSide {
     North,
     South,
@@ -120,7 +122,7 @@ impl WorldSide {
     // }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Voxel {
     pub position: Point,
     pub material: Material,

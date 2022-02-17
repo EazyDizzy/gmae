@@ -9,7 +9,7 @@ use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba};
 use rand::distributions::Distribution;
 use rand::distributions::Uniform;
 
-use crate::entity::voxel::Voxel;
+use lib::entity::voxel::Voxel;
 use crate::level::render::named_materials::{generate_name_for_voxels, NamedMaterials};
 use crate::Material;
 

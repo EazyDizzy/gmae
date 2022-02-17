@@ -1,7 +1,7 @@
 use std::ops::RangeInclusive;
 
-use crate::entity::point::Point;
-use crate::entity::voxel::{Shape, Voxel};
+use lib::entity::point::Point;
+use lib::entity::voxel::{Shape, Voxel};
 use crate::Material;
 
 #[derive(Debug)]
@@ -243,9 +243,9 @@ impl<'a> VoxelSequence<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::entity::point::Point;
-    use crate::entity::voxel::Voxel;
-    use crate::level::render::voxel_sequence::VoxelSequence;
+    use lib::entity::point::Point;
+    use lib::entity::voxel::Voxel;
+    use lib::entity::level::render::voxel_sequence::VoxelSequence;
     use crate::Material;
 
 // #[test]

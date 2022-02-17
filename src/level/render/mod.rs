@@ -4,8 +4,8 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
 
-use crate::entity::voxel::Shape;
-use crate::level::Level;
+use lib::entity::voxel::Shape;
+use lib::entity::level::Level;
 use crate::level::render::material::TEXTURE_SIZE;
 use crate::level::render::mesh::merge_voxels;
 use crate::level::render::named_materials::NamedMaterials;
