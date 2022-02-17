@@ -58,6 +58,7 @@ fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
     !main_sequence.covered_x().all(|x| adjoining_plane_x.contains(&x))
 }
 
+#[allow(unused)]
 fn is_forward_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
     let (.., end_y) = main_sequence.y_borders();
 
@@ -75,6 +76,7 @@ fn is_forward_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSeq
     !main_sequence.covered_x().all(|x| adjoining_plane_x.contains(&x))
 }
 
+#[allow(unused)]
 fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence]) -> bool {
     if main_sequence.has_height(0.0) {
         return false;

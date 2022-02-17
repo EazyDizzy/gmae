@@ -20,11 +20,18 @@ pub enum Material {
     MossyCobblestone,
     OakLeaves,
     OakLog,
+    SpruceLog,
+    StrippedSpruceLog,
+    SpruceLeaves,
     WhiteTerracotta,
     Farmland,
     StrippedOakLog,
+    StrippedDarkOakLog,
     Water,
     SmoothStone,
+    Podzol,
+    CoarseDirt,
+    StoneBricks,
 }
 
 #[derive(Debug, PartialEq, Clone)]

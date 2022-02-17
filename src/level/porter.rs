@@ -7,7 +7,7 @@ use crate::entity::point::Point;
 use crate::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
 use crate::level::{DayPart, Level};
 
-const EXPORT_DIAPASON: usize = 4;
+const EXPORT_DIAPASON: usize = 0;
 const LVL_DIR: &str = "./src/level/lvls/";
 const CHUNK_SIZE: usize = 16;
 const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
@@ -76,12 +76,19 @@ fn match_name_to_material(name: &str) -> Material {
         "minecraft:cobblestone" | "minecraft:cobblestone_stairs" => { Material::Cobblestone }
         "minecraft:mossy_cobblestone" => { Material::MossyCobblestone }
         "minecraft:oak_leaves" => { Material::OakLeaves }
+        "minecraft:spruce_log" | "minecraft:spruce_wood"=> { Material::SpruceLog }
+        "minecraft:stripped_spruce_wood" => { Material::StrippedSpruceLog }
         "minecraft:oak_log" => { Material::OakLog }
         "minecraft:white_terracotta" => { Material::WhiteTerracotta }
         "minecraft:farmland" => { Material::Farmland }
-        "minecraft:stripped_oak_log" => { Material::StrippedOakLog }
+        "minecraft:stripped_oak_wood" | "minecraft:stripped_oak_log" => { Material::StrippedOakLog }
         "minecraft:water" => { Material::Water }
         "minecraft:smooth_stone" => { Material::SmoothStone }
+        "minecraft:spruce_leaves" => { Material::SpruceLeaves }
+        "minecraft:stripped_dark_oak_wood" => { Material::StrippedDarkOakLog }
+        "minecraft:podzol" => { Material::Podzol }
+        "minecraft:coarse_dirt" | "minecraft:rooted_dirt" => { Material::CoarseDirt }
+        "minecraft:stone_bricks" => { Material::StoneBricks }
         &_ => {
             eprintln!("Unknown block name: {name}");
             Material::Unknown

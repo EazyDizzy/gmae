@@ -6,6 +6,7 @@ use crate::level::Level;
 pub fn setup(mut commands: Commands, level: Res<Level>) {
     if level.is_day() {
         commands.spawn_bundle(DirectionalLightBundle {
+            transform: Transform::from_xyz(0.0, 0.0, 100.0),
             directional_light: DirectionalLight {
                 color: Color::WHITE,
                 illuminance: 10000.0,

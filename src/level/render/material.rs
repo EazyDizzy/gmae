@@ -19,8 +19,7 @@ const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 const DEBUG_TEXTURES: bool = false;
 
-
-// TODO dynamically select texture size based on wgpu limits
+// TODO dynamically select texture based on graphic lvl settings
 pub fn merge_materials(
     voxels: &Vec<Vec<&Voxel>>,
     named_materials: &mut ResMut<NamedMaterials>,
@@ -148,11 +147,12 @@ pub fn can_merge_materials(m1: Material, m2: Material) -> bool {
         return true;
     }
 
-    const NON_GROUPABLE: [Material; 4] = [
+    const NON_GROUPABLE: [Material; 5] = [
         Material::OrangeLight,
         Material::BlueLight,
         Material::Glass,
         Material::OakLeaves,
+        Material::SpruceLeaves,
     ];
 
     !NON_GROUPABLE.contains(&m1) && !NON_GROUPABLE.contains(&m2)
@@ -190,12 +190,23 @@ pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<
             ..Default::default()
         },
     );
+    let _id = materials.set(
+        generate_material_handle_id(Material::SpruceLeaves),
+        StandardMaterial {
+            base_color: Color::DARK_GREEN,
+            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::SpruceLeaves))),
+            reflectance: 0.0,
+            ..Default::default()
+        },
+    );
 
     let default_material_names = vec![
         Material::SmoothStone, Material::Water, Material::StrippedOakLog, Material::Farmland,
         Material::WhiteTerracotta, Material::OakLog, Material::MossyCobblestone, Material::Cobblestone,
         Material::Unknown, Material::Pumpkin, Material::Hay, Material::DirtPath, Material::Grass,
-        Material::WoodenPlanks, Material::Bedrock, Material::Dirt, Material::Stone,
+        Material::WoodenPlanks, Material::Bedrock, Material::Dirt, Material::Stone, Material::SpruceLog,
+        Material::StrippedSpruceLog, Material::StrippedDarkOakLog, Material::Podzol, Material::CoarseDirt,
+        Material::StoneBricks,
     ];
     setup_default_materials(materials, asset_server, default_material_names);
 }

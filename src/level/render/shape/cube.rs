@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 
-use crate::level::render::material::{merge_materials};
+use crate::level::render::material::merge_materials;
 use crate::level::render::mesh::get_or_create;
 use crate::level::render::named_materials::NamedMaterials;
-use crate::level::render::shape::{is_back_side_visible, is_bottom_side_visible, is_forward_side_visible, is_left_side_visible, is_right_side_visible, is_top_side_visible};
+use crate::level::render::shape::{is_back_side_visible, is_left_side_visible, is_right_side_visible, is_top_side_visible};
 use crate::level::render::voxel_sequence::VoxelSequence;
 
 const PI: f32 = std::f32::consts::PI;
@@ -24,10 +24,10 @@ pub fn create_cube_bundle_batch(
 
     // TODO fix visibility near triangles
     let top_side_visible = is_top_side_visible(sequence, &merged_voxels);
-    let bottom_side_visible = is_bottom_side_visible(sequence, &merged_voxels);
+    let bottom_side_visible = false;
     let right_side_visible = is_right_side_visible(sequence, &merged_voxels);
     let left_side_visible = is_left_side_visible(sequence, &merged_voxels);
-    let forward_side_visible = is_forward_side_visible(sequence, &merged_voxels);
+    let forward_side_visible = false;
     let back_side_visible = is_back_side_visible(sequence, &merged_voxels);
 
     // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
