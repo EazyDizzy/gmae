@@ -23,7 +23,7 @@ impl Plugin for LevelPlugin {
 
 impl LevelPlugin {
     fn get_level_resource(&self) -> Level {
-        read_level("load_test")
+        read_level("debug")
     }
 }
 

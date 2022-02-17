@@ -63,9 +63,13 @@ fn stretch_sequences_by_z<'a>(
 
     for seq in previous_layer_sequences {
         let same_new_seq = plane_sequences.iter().enumerate()
-            .find(|(_, s)| s.same_x_size(&seq) && s.same_y_size(&seq));
+            .find(|(_, s)|
+                s.same_x_size(&seq)
+                    && s.same_y_size(&seq)
+                    && can_merge_materials(seq.example_material(), s.example_material())
+            );
 
-        if let Some((i,..)) = same_new_seq {
+        if let Some((i, ..)) = same_new_seq {
             let d = plane_sequences.remove(i);
             seq.expand_z_end(d);
         }

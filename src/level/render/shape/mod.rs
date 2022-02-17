@@ -47,7 +47,7 @@ fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
             sequence.has_same_height(main_sequence)
-                && sequence.has_y_end_on(start_y)
+                && sequence.has_y_end_on(start_y - 1.0)
                 && sequence.is_not_transparent()
                 // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)

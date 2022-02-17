@@ -52,8 +52,10 @@ pub fn merge_materials(
 
         for x in 0..number_of_images_wide {
             let voxel = row[x as usize];
-            let original_image = cached_images.entry(voxel.material)
-                .or_insert_with(|| get_basic_image_pixels(voxel.material));
+            let voxel_material = if DEBUG_TEXTURES { material } else { voxel.material };
+            let original_image = cached_images.entry(voxel_material)
+                .or_insert_with(|| get_basic_image_pixels(voxel_material));
+
             let start = (original_y * BYTES_IN_ROW) as usize;
             let end = start + BYTES_IN_ROW as usize;
             pixel_buf.extend(&original_image[start..end]);
