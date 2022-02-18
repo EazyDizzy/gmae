@@ -4,6 +4,8 @@ use std::io::Write;
 
 use fastanvil::{Block, Chunk, JavaChunk, RegionBuffer};
 use fastnbt::de::from_bytes;
+use flate2::Compression;
+use flate2::write::ZlibEncoder;
 use lib::entity::level::{DayPart, Level};
 use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
@@ -22,7 +24,7 @@ fn main() {
             let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
 
             if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
-                let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json", lvl_name.to_str().unwrap());
+                let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
                 let converted_metadata = fs::metadata(&serialized_lvl_path);
                 let should_rebuild = if let Ok(converted) = converted_metadata {
                     original_metadata.modified().unwrap() > converted.modified().unwrap()
@@ -33,8 +35,10 @@ fn main() {
                     let lvl = read_level(lvl_name.to_str().unwrap());
                     let lvl_data = serde_json::to_string(&lvl).unwrap();
 
-                    let mut file = File::create(serialized_lvl_path).unwrap();
-                    file.write_all(lvl_data.as_bytes()).unwrap();
+                    let file = File::create(serialized_lvl_path).unwrap();
+                    let mut e = ZlibEncoder::new(file, Compression::best());
+                    e.write_all(lvl_data.as_bytes()).unwrap();
+                    e.finish().unwrap();
                 }
             }
         }

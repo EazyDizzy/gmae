@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use lib::entity::level::Level;
 
-use crate::level::porter::read_level;
+use crate::level::reader::read_level;
 use crate::level::render::material::setup as setup_material;
 use crate::level::render::named_materials::NamedMaterials;
 
 mod render;
-mod porter;
+mod reader;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct LevelPlugin;
