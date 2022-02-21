@@ -88,6 +88,7 @@ fn read_level(lvl_name: &str) -> Level {
         &_ => DayPart::Day
     };
 
+    // TODO sort voxels here to remove sorting later
     Level::new(voxels, day_part)
 }
 

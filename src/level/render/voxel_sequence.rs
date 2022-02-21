@@ -2,6 +2,7 @@ use std::ops::RangeInclusive;
 
 use lib::entity::point::Point;
 use lib::entity::voxel::{Shape, Voxel};
+
 use crate::Material;
 
 #[derive(Debug)]
@@ -43,7 +44,7 @@ impl<'a> VoxelSequence<'a> {
     }
 
     pub fn right_voxels(&self) -> Vec<Vec<&'a Voxel>> {
-        let mut voxels: Vec<Vec<&'a Voxel>> = vec![];
+        let mut voxels: Vec<Vec<&'a Voxel>> = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
             let mut plate_voxels: Vec<&'a Voxel> = plate.iter()
@@ -62,7 +63,7 @@ impl<'a> VoxelSequence<'a> {
         voxels
     }
     pub fn left_voxels(&self) -> Vec<Vec<&'a Voxel>> {
-        let mut voxels: Vec<Vec<&'a Voxel>> = vec![];
+        let mut voxels: Vec<Vec<&'a Voxel>> = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
             let mut plate_voxels: Vec<&'a Voxel> = plate.iter()
@@ -83,7 +84,7 @@ impl<'a> VoxelSequence<'a> {
     }
 
     pub fn forward_voxels(&self) -> Vec<Vec<&'a Voxel>> {
-        let mut voxels = vec![];
+        let mut voxels = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
             voxels.push(plate.last().unwrap().clone())
@@ -93,7 +94,7 @@ impl<'a> VoxelSequence<'a> {
         voxels
     }
     pub fn backward_voxels(&self) -> Vec<Vec<&'a Voxel>> {
-        let mut voxels = vec![];
+        let mut voxels = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
             voxels.push(plate.first().unwrap().clone())
@@ -243,9 +244,10 @@ impl<'a> VoxelSequence<'a> {
 
 #[cfg(test)]
 mod tests {
+    use lib::entity::level::render::voxel_sequence::VoxelSequence;
     use lib::entity::point::Point;
     use lib::entity::voxel::Voxel;
-    use lib::entity::level::render::voxel_sequence::VoxelSequence;
+
     use crate::Material;
 
 // #[test]
