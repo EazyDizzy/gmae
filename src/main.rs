@@ -21,13 +21,12 @@ use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy_fly_camera::FlyCameraPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 
-use crate::entity::voxel::Material;
+use lib::entity::voxel::Material;
 use crate::level::LevelPlugin;
 use crate::system::camera::cursor_grab;
 
 mod system;
 mod level;
-mod entity;
 
 fn main() {
     App::new()
