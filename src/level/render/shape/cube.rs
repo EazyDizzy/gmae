@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use lib::util::game_settings::GameSettings;
 
 use crate::level::render::material::merge_materials;
 use crate::level::render::mesh::get_or_create;
@@ -15,6 +16,7 @@ pub fn create_cube_bundle_batch(
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
     merged_voxels: &Vec<VoxelSequence>,
+    settings: &Res<GameSettings>,
 ) -> Vec<PbrBundle> {
     let mut bundles = vec![];
     let start_pos = sequence.start_position();
@@ -40,6 +42,7 @@ pub fn create_cube_bundle_batch(
                 images,
                 width as u32,
                 height as u32,
+                settings,
             );
             let mesh = get_or_create(meshes, width, height, false);
             bundles.push(PbrBundle {
@@ -58,6 +61,7 @@ pub fn create_cube_bundle_batch(
                 images,
                 width as u32,
                 height as u32,
+                settings,
             );
             let mesh = get_or_create(meshes, width, height, true);
             bundles.push(PbrBundle {
@@ -79,6 +83,7 @@ pub fn create_cube_bundle_batch(
                 images,
                 z_height as u32,
                 height as u32,
+                settings,
             );
             let mesh = get_or_create(meshes, z_height, height, false);
             bundles.push(PbrBundle {
@@ -98,6 +103,7 @@ pub fn create_cube_bundle_batch(
                 images,
                 z_height as u32,
                 height as u32,
+                settings,
             );
             let mesh = get_or_create(meshes, z_height, height, true);
             bundles.push(PbrBundle {
@@ -119,6 +125,7 @@ pub fn create_cube_bundle_batch(
                 images,
                 width as u32,
                 z_height as u32,
+                settings,
             );
             let mesh = get_or_create(meshes, width, z_height, true);
             bundles.push(PbrBundle {
@@ -138,6 +145,7 @@ pub fn create_cube_bundle_batch(
                 images,
                 width as u32,
                 z_height as u32,
+                settings,
             );
             let mesh = get_or_create(meshes, width, z_height, false);
             bundles.push(PbrBundle {

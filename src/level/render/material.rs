@@ -6,10 +6,11 @@ use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::utils::Uuid;
 use convert_case::{Case, Casing};
 use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba};
+use lib::entity::voxel::Voxel;
+use lib::util::game_settings::GameSettings;
 use rand::distributions::Distribution;
 use rand::distributions::Uniform;
 
-use lib::entity::voxel::Voxel;
 use crate::level::render::named_materials::{generate_name_for_voxels, NamedMaterials};
 use crate::Material;
 
@@ -17,7 +18,6 @@ pub const TEXTURE_SIZE: u32 = 64;
 
 const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
-const DEBUG_TEXTURES: bool = false;
 
 // TODO dynamically select texture based on graphic lvl settings
 pub fn merge_materials(
@@ -27,6 +27,7 @@ pub fn merge_materials(
     images: &mut ResMut<Assets<Image>>,
     number_of_images_wide: u32,
     number_of_images_in_height: u32,
+    settings: &Res<GameSettings>,
 ) -> Handle<StandardMaterial> {
     let material = voxels[0][0].material;
     if number_of_images_wide == 1 && number_of_images_in_height == 1 {
@@ -52,9 +53,9 @@ pub fn merge_materials(
 
         for x in 0..number_of_images_wide {
             let voxel = row[x as usize];
-            let voxel_material = if DEBUG_TEXTURES { material } else { voxel.material };
+            let voxel_material = if settings.debug_textures { material } else { voxel.material };
             let original_image = cached_images.entry(voxel_material)
-                .or_insert_with(|| get_basic_image_pixels(voxel_material));
+                .or_insert_with(|| get_basic_image_pixels(voxel_material, settings));
 
             let start = (original_y * BYTES_IN_ROW) as usize;
             let end = start + BYTES_IN_ROW as usize;
@@ -89,15 +90,15 @@ pub fn merge_materials(
     handle
 }
 
-fn get_basic_image_pixels(material: Material) -> Vec<u8> {
-    get_basic_image_for_material(material)
+fn get_basic_image_pixels(material: Material, settings: &Res<GameSettings>) -> Vec<u8> {
+    get_basic_image_for_material(material, settings)
         .pixels()
         .flat_map(|(.., p)| p.0)
         .collect()
 }
 
-fn get_basic_image_for_material(voxel_material: Material) -> DynamicImage {
-    if DEBUG_TEXTURES {
+fn get_basic_image_for_material(voxel_material: Material, settings: &Res<GameSettings>) -> DynamicImage {
+    if settings.debug_textures {
         return generate_image_of_random_color();
     }
 

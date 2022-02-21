@@ -3,9 +3,10 @@ use std::time::Instant;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
-
-use lib::entity::voxel::Shape;
 use lib::entity::level::Level;
+use lib::entity::voxel::Shape;
+use lib::util::game_settings::GameSettings;
+
 use crate::level::render::material::TEXTURE_SIZE;
 use crate::level::render::mesh::merge_voxels;
 use crate::level::render::named_materials::NamedMaterials;
@@ -29,6 +30,7 @@ pub fn init_world(
     mut images: ResMut<Assets<Image>>,
     level: Res<Level>,
     render_device: Res<RenderDevice>,
+    settings: Res<GameSettings>,
 ) {
     let limits = render_device.limits().max_texture_dimension_2d;
     // This is needed because of wgpu limitation. It can't render a texture which breaks the limits in some dimension
@@ -50,6 +52,7 @@ pub fn init_world(
                     &mut images,
                     sequence,
                     &merged_voxels,
+                    &settings
                 );
             }
             Shape::TrianglePrism(..) => {
@@ -93,8 +96,17 @@ fn spawn_cube_sequence(
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
     merged_voxels: &Vec<VoxelSequence>,
+    settings: &Res<GameSettings>,
 ) {
-    let batch = create_cube_bundle_batch(meshes, named_materials, materials, images, sequence, merged_voxels);
+    let batch = create_cube_bundle_batch(
+        meshes,
+        named_materials,
+        materials,
+        images,
+        sequence,
+        merged_voxels,
+        settings,
+    );
     let mut light_spawned = false;
 
     for bundle in batch {

@@ -10,7 +10,6 @@ clippy::float_cmp,
 clippy::default_trait_access,
 )]
 
-
 extern crate core;
 
 use bevy::{
@@ -24,12 +23,16 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use lib::entity::voxel::Material;
 use crate::level::LevelPlugin;
 use crate::system::camera::cursor_grab;
+use lib::util::game_settings::GameSettings;
 
 mod system;
 mod level;
 
 fn main() {
+    let settings = GameSettings::from_file("settings.json");
+
     App::new()
+        .insert_resource(settings)
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
