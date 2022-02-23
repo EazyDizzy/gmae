@@ -1,4 +1,3 @@
-#![feature(int_abs_diff)]
 #![deny(clippy::all, clippy::pedantic, clippy::cognitive_complexity)]
 #![allow(
 clippy::expect_fun_call,
@@ -18,12 +17,11 @@ use bevy::{
 };
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy_fly_camera::FlyCameraPlugin;
-use bevy_inspector_egui::WorldInspectorPlugin;
-
 use lib::entity::voxel::Material;
+use lib::util::game_settings::GameSettings;
+
 use crate::level::LevelPlugin;
 use crate::system::camera::cursor_grab;
-use lib::util::game_settings::GameSettings;
 
 mod system;
 mod level;
@@ -37,7 +35,7 @@ fn main() {
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FlyCameraPlugin)
-        .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
         .add_startup_system(system::camera::setup.system())
         .add_startup_system(system::light::setup.system())
