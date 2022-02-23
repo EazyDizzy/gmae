@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 # TODO remove dynamic before release
-bevy = { version = "0.6.0", features = ["dynamic"] }
+bevy = { version = "0.6.1", features = ["dynamic"] }
 bevy_fly_camera = "0.8.0"
 image = "0.23.14"
 bevy-inspector-egui = "0.7.6"
