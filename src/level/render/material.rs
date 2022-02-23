@@ -150,12 +150,16 @@ pub fn can_merge_materials(m1: Material, m2: Material) -> bool {
         return true;
     }
 
-    const NON_GROUPABLE: [Material; 5] = [
+    const NON_GROUPABLE: [Material; 9] = [
         Material::OrangeLight,
         Material::BlueLight,
         Material::Glass,
-        Material::OakLeaves,
+        Material::JungleLeaves,
+        Material::AcaciaLeaves,
+        Material::BirchLeaves,
+        Material::DarkOakLeaves,
         Material::SpruceLeaves,
+        Material::OakLeaves,
     ];
 
     !NON_GROUPABLE.contains(&m1) && !NON_GROUPABLE.contains(&m2)
@@ -184,45 +188,80 @@ pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<
         alpha_mode: AlphaMode::Blend,
         ..Default::default()
     });
-    let _id = materials.set(
-        generate_material_handle_id(Material::OakLeaves),
-        StandardMaterial {
-            base_color: Color::DARK_GREEN,
-            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::OakLeaves))),
-            reflectance: 0.0,
-            ..Default::default()
-        },
-    );
-    let _id = materials.set(
-        generate_material_handle_id(Material::SpruceLeaves),
-        StandardMaterial {
-            base_color: Color::DARK_GREEN,
-            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::SpruceLeaves))),
-            reflectance: 0.0,
-            ..Default::default()
-        },
-    );
+
+    let leaves_material_names = vec![
+        Material::OakLeaves,
+        Material::SpruceLeaves,
+        Material::AcaciaLeaves,
+        Material::BirchLeaves,
+        Material::JungleLeaves,
+        Material::DarkOakLeaves,
+        Material::SpruceLeaves,
+    ];
+    setup_leaves_materials(&mut materials, &asset_server, leaves_material_names);
 
     let default_material_names = vec![
-        Material::SmoothStone, Material::Water, Material::StrippedOakLog, Material::Farmland,
-        Material::WhiteTerracotta, Material::OakLog, Material::MossyCobblestone, Material::Cobblestone,
+        Material::SmoothStone, Material::Water, Material::Farmland,
+        Material::WhiteTerracotta,
         Material::Unknown, Material::Pumpkin, Material::Hay, Material::DirtPath, Material::Grass,
-        Material::WoodenPlanks, Material::Bedrock, Material::Dirt, Material::Stone, Material::SpruceLog,
-        Material::StrippedSpruceLog, Material::StrippedDarkOakLog, Material::Podzol, Material::CoarseDirt,
+        Material::Bedrock, Material::Dirt,
+        Material::Podzol, Material::CoarseDirt,
         Material::StoneBricks,
+        Material::MossyStoneBricks,
+        Material::MossyCobblestone,
+        Material::CrackedStoneBricks,
+        Material::ChiseledStoneBricks,
+        Material::Cobblestone,
+        Material::Stone,
+        Material::OakLog,
+        Material::OakPlanks,
+        Material::StrippedOakLog,
+        Material::AcaciaLog,
+        Material::AcaciaPlanks,
+        Material::StrippedAcaciaLog,
+        Material::BirchLog,
+        Material::BirchPlanks,
+        Material::StrippedBirchLog,
+        Material::JungleLog,
+        Material::JunglePlanks,
+        Material::StrippedJungleLog,
+        Material::DarkOakLog,
+        Material::DarkOakPlanks,
+        Material::StrippedDarkOakLog,
+        Material::SpruceLog,
+        Material::SprucePlanks,
+        Material::StrippedSpruceLog,
     ];
-    setup_default_materials(materials, asset_server, default_material_names);
+    setup_default_materials(&mut materials, &asset_server, default_material_names);
 }
 
 pub fn setup_default_materials(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    asset_server: &Res<AssetServer>,
     material_names: Vec<Material>,
 ) {
     for material in material_names {
         let _id = materials.set(
             generate_material_handle_id(material),
             create_default_material(asset_server.load(&generate_asset_path(material))),
+        );
+    }
+}
+
+pub fn setup_leaves_materials(
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    asset_server: &Res<AssetServer>,
+    material_names: Vec<Material>,
+) {
+    for material in material_names {
+        let _id = materials.set(
+            generate_material_handle_id(material),
+            StandardMaterial {
+                base_color: Color::DARK_GREEN,
+                base_color_texture: Some(asset_server.load(&generate_asset_path(material))),
+                reflectance: 0.0,
+                ..Default::default()
+            },
         );
     }
 }

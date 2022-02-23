@@ -28,6 +28,7 @@ fn main() {
                 let converted_metadata = fs::metadata(&serialized_lvl_path);
                 let should_rebuild = if let Ok(converted) = converted_metadata {
                     original_metadata.modified().unwrap() > converted.modified().unwrap()
+                        // || lvl_name == "debug"
                 } else { true };
 
                 if should_rebuild {
@@ -84,7 +85,7 @@ fn read_level(lvl_name: &str) -> Level {
         .expect("Cannot proceed chunks");
 
     let day_part = match lvl_name {
-        "debug" | "village" => DayPart::Night,
+        "village" => DayPart::Night,
         &_ => DayPart::Day
     };
 
@@ -94,36 +95,57 @@ fn read_level(lvl_name: &str) -> Level {
 
 fn match_name_to_material(name: &str) -> Material {
     match name {
-        "minecraft:bedrock" => { Material::Bedrock }
-        "minecraft:grass_block" => { Material::Grass }
-        "minecraft:dirt" => { Material::Dirt }
-        "minecraft:stone" => { Material::Stone }
-        "minecraft:oak_planks" | "minecraft:oak_stairs" => { Material::WoodenPlanks }
-        "minecraft:glowstone" => { Material::OrangeLight }
-        "minecraft:sea_lantern" => { Material::BlueLight }
-        "minecraft:dirt_path" => { Material::DirtPath }
-        // TODO change?
-        "minecraft:glass_pane" => { Material::Glass }
-        "minecraft:glass" => { Material::Glass }
-        "minecraft:hay_block" => { Material::Hay }
-        "minecraft:pumpkin" => { Material::Pumpkin }
-        "minecraft:cobblestone" | "minecraft:cobblestone_stairs" => { Material::Cobblestone }
-        "minecraft:mossy_cobblestone" => { Material::MossyCobblestone }
-        "minecraft:oak_leaves" => { Material::OakLeaves }
-        "minecraft:spruce_log" | "minecraft:spruce_wood" => { Material::SpruceLog }
-        "minecraft:stripped_spruce_wood" => { Material::StrippedSpruceLog }
-        "minecraft:oak_log" => { Material::OakLog }
-        "minecraft:white_terracotta" => { Material::WhiteTerracotta }
-        "minecraft:farmland" => { Material::Farmland }
-        "minecraft:stripped_oak_wood" | "minecraft:stripped_oak_log" => { Material::StrippedOakLog }
-        "minecraft:water" => { Material::Water }
-        "minecraft:smooth_stone" => { Material::SmoothStone }
-        "minecraft:spruce_leaves" => { Material::SpruceLeaves }
-        "minecraft:stripped_dark_oak_wood" => { Material::StrippedDarkOakLog }
-        "minecraft:podzol" => { Material::Podzol }
-        "minecraft:coarse_dirt" | "minecraft:rooted_dirt" => { Material::CoarseDirt }
-        "minecraft:stone_bricks" => { Material::StoneBricks }
-        &_ => {
+        "minecraft:glass" | "minecraft:glass_pane" => Material::Glass,
+        "minecraft:hay_block" => Material::Hay,
+        "minecraft:pumpkin" => Material::Pumpkin,
+        "minecraft:white_terracotta" => Material::WhiteTerracotta,
+        "minecraft:water" => Material::Water,
+        // Light
+        "minecraft:glowstone" => Material::OrangeLight,
+        "minecraft:sea_lantern" => Material::BlueLight,
+        // Ground
+        "minecraft:dirt_path" => Material::DirtPath,
+        "minecraft:coarse_dirt" | "minecraft:rooted_dirt" => Material::CoarseDirt,
+        "minecraft:farmland" => Material::Farmland,
+        "minecraft:podzol" => Material::Podzol,
+        "minecraft:grass_block" => Material::Grass,
+        "minecraft:dirt" => Material::Dirt,
+        // Stone
+        "minecraft:bedrock" => Material::Bedrock,
+        "minecraft:stone" => Material::Stone,
+        "minecraft:stone_bricks" => Material::StoneBricks,
+        "minecraft:smooth_stone" => Material::SmoothStone,
+        "minecraft:mossy_cobblestone" => Material::MossyCobblestone,
+        "minecraft:mossy_stone_bricks" => Material::MossyStoneBricks,
+        "minecraft:cracked_stone_bricks" => Material::CrackedStoneBricks,
+        "minecraft:chiseled_stone_bricks" => Material::ChiseledStoneBricks,
+        "minecraft:cobblestone" | "minecraft:cobblestone_stairs" => Material::Cobblestone,
+        // Wood + Leaves
+        "minecraft:stripped_oak_wood" | "minecraft:stripped_oak_log" => Material::StrippedOakLog,
+        "minecraft:oak_planks" | "minecraft:oak_stairs" => Material::OakPlanks,
+        "minecraft:oak_leaves" => Material::OakLeaves,
+        "minecraft:oak_log" => Material::OakLog,
+        "minecraft:stripped_spruce_wood" | "minecraft:stripped_spruce_log" => Material::StrippedSpruceLog,
+        "minecraft:spruce_leaves" => Material::SpruceLeaves,
+        "minecraft:spruce_log" | "minecraft:spruce_wood" => Material::SpruceLog,
+        "minecraft:spruce_planks" => Material::SprucePlanks,
+        "minecraft:stripped_dark_oak_wood" | "minecraft:stripped_dark_oak_log" => Material::StrippedDarkOakLog,
+        "minecraft:dark_oak_leaves" => Material::DarkOakLeaves,
+        "minecraft:dark_oak_log" => Material::DarkOakLog,
+        "minecraft:dark_oak_planks" => Material::DarkOakPlanks,
+        "minecraft:stripped_birch_log" => Material::StrippedBirchLog,
+        "minecraft:birch_leaves" => Material::BirchLeaves,
+        "minecraft:birch_log" => Material::BirchLog,
+        "minecraft:birch_planks" => Material::BirchPlanks,
+        "minecraft:stripped_acacia_log" => Material::StrippedAcaciaLog,
+        "minecraft:acacia_leaves" => Material::AcaciaLeaves,
+        "minecraft:acacia_log" => Material::AcaciaLog,
+        "minecraft:acacia_planks" => Material::AcaciaPlanks,
+        "minecraft:stripped_jungle_log" => Material::StrippedJungleLog,
+        "minecraft:jungle_leaves" => Material::JungleLeaves,
+        "minecraft:jungle_log" => Material::JungleLog,
+        "minecraft:jungle_planks" => Material::JunglePlanks,
+        _ => {
             eprintln!("Unknown block name: {name}");
             Material::Unknown
         }
