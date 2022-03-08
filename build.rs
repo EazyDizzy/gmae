@@ -28,7 +28,7 @@ fn main() {
                 let converted_metadata = fs::metadata(&serialized_lvl_path);
                 let should_rebuild = if let Ok(converted) = converted_metadata {
                     original_metadata.modified().unwrap() > converted.modified().unwrap()
-                        // || lvl_name == "debug"
+                        || lvl_name == "debug"
                 } else { true };
 
                 if should_rebuild {
@@ -113,7 +113,7 @@ fn match_name_to_material(name: &str) -> Material {
         // Stone
         "minecraft:bedrock" => Material::Bedrock,
         "minecraft:stone" => Material::Stone,
-        "minecraft:stone_bricks" => Material::StoneBricks,
+        "minecraft:stone_bricks" | "minecraft:stone_brick_stairs" => Material::StoneBricks,
         "minecraft:smooth_stone" => Material::SmoothStone,
         "minecraft:mossy_cobblestone" => Material::MossyCobblestone,
         "minecraft:mossy_stone_bricks" => Material::MossyStoneBricks,
@@ -154,7 +154,7 @@ fn match_name_to_material(name: &str) -> Material {
 
 fn detect_shape(block: &Block) -> Shape {
     // render everything as a cube until support for custom polygons added
-    if block.name().ends_with("_stairs") && false {
+    if block.name().ends_with("_stairs") {
         let properties = TrianglePrismProperties::from_properties(block.properties());
         Shape::TrianglePrism(properties)
     } else {

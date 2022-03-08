@@ -19,6 +19,10 @@ pub const TEXTURE_SIZE: u32 = 64;
 const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 
+pub fn get_material_for( materials: &ResMut<Assets<StandardMaterial>>, material_name: Material) -> Handle<StandardMaterial> {
+    materials.get_handle(generate_material_handle_id(material_name))
+}
+
 // TODO dynamically select texture based on graphic lvl settings
 pub fn merge_materials(
     voxels: &Vec<Vec<&Voxel>>,
@@ -31,7 +35,7 @@ pub fn merge_materials(
 ) -> Handle<StandardMaterial> {
     let material = voxels[0][0].material;
     if number_of_images_wide == 1 && number_of_images_in_height == 1 {
-        return materials.get_handle(generate_material_handle_id(material));
+        return get_material_for(materials, material);
     }
 
     let material_name = generate_name_for_voxels(voxels);
