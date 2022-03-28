@@ -4,20 +4,16 @@ use bevy::prelude::*;
 use lib::entity::point::Point;
 use lib::entity::voxel::{Fastening, TrianglePrismProperties, WorldSide};
 
-use crate::level::render::material::get_material_for;
 use crate::level::render::voxel_sequence::VoxelSequence;
 
 pub fn create_triangle(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
     sequence: &VoxelSequence,
     properties: &TrianglePrismProperties,
 ) {
     let mesh = asset_server.load("mesh/triangle.glb#Scene0");
     let position = sequence.start_position();
-    let material = get_material_for(materials, sequence.example_material());
-
     commands.spawn_bundle((
         get_transform(properties, position),
         GlobalTransform::identity(),

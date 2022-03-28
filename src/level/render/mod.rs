@@ -61,7 +61,6 @@ pub fn init_world(
                 create_triangle(
                     &mut commands,
                     &asset_server,
-                    &mut materials,
                     sequence,
                     properties,
                 );
