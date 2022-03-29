@@ -21,10 +21,12 @@ use lib::entity::voxel::Material;
 use lib::util::game_settings::GameSettings;
 
 use crate::level::LevelPlugin;
+use crate::player::PlayerPlugin;
 use crate::system::camera::cursor_grab;
 
 mod system;
 mod level;
+mod player;
 
 fn main() {
     let settings = GameSettings::from_file("settings.json");
@@ -37,6 +39,7 @@ fn main() {
         .add_plugin(FlyCameraPlugin)
         // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
+        .add_plugin(PlayerPlugin)
         .add_startup_system(system::camera::setup.system())
         .add_startup_system(system::light::setup.system())
         .add_system(cursor_grab)
