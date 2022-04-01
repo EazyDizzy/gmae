@@ -10,15 +10,16 @@ pub fn keyboard_interaction(
     mut transforms: Query<&mut Transform>,
     audio: Res<Audio>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::Up) {
-        player.move_forward();
-    } else if keyboard_input.just_pressed(KeyCode::Down) {
-        player.move_back();
-    } else if keyboard_input.just_pressed(KeyCode::Right) {
-        player.move_right();
-    } else if keyboard_input.just_pressed(KeyCode::Left) {
-        player.move_left();
-    }
+    keyboard_input.get_pressed()
+        .for_each(|k| {
+            match k {
+                KeyCode::Up => player.move_forward(),
+                KeyCode::Down => player.move_back(),
+                KeyCode::Right => player.move_right(),
+                KeyCode::Left => player.move_left(),
+                _ => {}
+            }
+        });
 
     player.move_model(transforms);
 

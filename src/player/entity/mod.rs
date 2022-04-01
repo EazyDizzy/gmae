@@ -8,6 +8,8 @@ pub struct Player {
     position: Point,
 }
 
+const MOVEMENT_SPEED: f32 = 0.1;
+
 impl Player {
     pub fn new(id: Entity) -> Player {
         Player {
@@ -17,16 +19,16 @@ impl Player {
     }
 
     pub fn move_back(&mut self) {
-        self.position.y -= 1.0;
+        self.position.y -= MOVEMENT_SPEED;
     }
     pub fn move_forward(&mut self) {
-        self.position.y += 1.0;
+        self.position.y += MOVEMENT_SPEED;
     }
     pub fn move_left(&mut self) {
-        self.position.x -= 1.0;
+        self.position.x -= MOVEMENT_SPEED;
     }
     pub fn move_right(&mut self) {
-        self.position.x += 1.0;
+        self.position.x += MOVEMENT_SPEED;
     }
 
     pub fn move_model(&self, mut transforms: Query<&mut Transform>) {
