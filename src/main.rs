@@ -28,6 +28,12 @@ mod system;
 mod level;
 mod player;
 
+#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+enum GameState {
+    Playing,
+    Pause,
+}
+
 fn main() {
     let settings = GameSettings::from_file("settings.json");
 
@@ -39,6 +45,7 @@ fn main() {
         .add_plugin(FlyCameraPlugin)
         // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
+        .add_state(GameState::Playing)
         .add_plugin(PlayerPlugin)
         .add_startup_system(system::camera::setup.system())
         .add_startup_system(system::light::setup.system())

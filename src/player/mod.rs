@@ -1,9 +1,13 @@
 use std::f32::consts::PI;
+
 use bevy::prelude::*;
+use crate::GameState;
 
 use crate::player::entity::Player;
+use crate::player::system::keyboard_interaction::keyboard_interaction;
 
 mod entity;
+mod system;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct PlayerPlugin;
@@ -11,7 +15,12 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system(setup);
+            .add_startup_system(setup)
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(keyboard_interaction.system()),
+            )
+        ;
     }
 }
 
