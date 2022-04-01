@@ -21,9 +21,7 @@ pub fn get_or_create(meshes: &mut ResMut<Assets<Mesh>>, width: f32, height: f32,
     }
 }
 
-pub fn merge_voxels(voxels: &[Voxel], max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
-    let grouped_voxels = group_voxels_by_coordinates(voxels);
-
+pub fn merge_voxels(grouped_voxels: &HashMap<usize, HashMap<usize, Vec<Voxel>>>, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
     let mut all_sequences = vec![];
 
     let mut z_keys: Vec<&usize> = grouped_voxels.keys().into_iter().collect();
@@ -37,7 +35,7 @@ pub fn merge_voxels(voxels: &[Voxel], max_voxels_per_dimension: u32) -> Vec<Voxe
         let mut plane_sequences = vec![];
 
         for y in y_keys {
-            let row = plate[y].clone();
+            let row: Vec<&Voxel> = plate[y].iter().collect();
             let row_sequences = merge_voxels_row(row, max_voxels_per_dimension);
 
             plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, *y, max_voxels_per_dimension);
@@ -146,22 +144,6 @@ fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<
     x_sequences.push(VoxelSequence::new(row[start_voxel_index..=prev_voxel_index].to_vec()));
 
     x_sequences
-}
-
-fn group_voxels_by_coordinates(voxels: &[Voxel]) -> HashMap<usize, HashMap<usize, Vec<&Voxel>>> {
-    let mut grouping = HashMap::new();
-
-    for voxel in voxels {
-        let z = voxel.position.z.round() as usize;
-        let z_plane = grouping.entry(z).or_insert_with(HashMap::new);
-
-        let y = voxel.position.y.round() as usize;
-        let y_row = z_plane.entry(y).or_insert_with(Vec::new);
-
-        y_row.push(voxel);
-    }
-
-    grouping
 }
 
 fn should_merge(material: Material) -> bool {

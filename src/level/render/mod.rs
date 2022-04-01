@@ -39,7 +39,7 @@ pub fn init_world(
     let max_voxels_per_dimension = limits / TEXTURE_SIZE;
     dbg!(max_voxels_per_dimension);
 
-    let merged_voxels = merge_voxels(&level.voxels, max_voxels_per_dimension);
+    let merged_voxels = merge_voxels(level.grouped_voxels(), max_voxels_per_dimension);
 
     let start = Instant::now();
 

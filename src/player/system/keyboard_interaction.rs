@@ -1,22 +1,23 @@
 use bevy::prelude::*;
+use lib::entity::level::Level;
 
 use crate::player::entity::Player;
 
 pub fn keyboard_interaction(
     keyboard_input: Res<Input<KeyCode>>,
-    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut player: ResMut<Player>,
+    lvl: Res<Level>,
     mut transforms: Query<&mut Transform>,
     audio: Res<Audio>,
 ) {
     keyboard_input.get_pressed()
         .for_each(|k| {
             match k {
-                KeyCode::Up => player.move_forward(),
-                KeyCode::Down => player.move_back(),
-                KeyCode::Right => player.move_right(),
-                KeyCode::Left => player.move_left(),
+                KeyCode::Up => player.move_forward(&lvl),
+                KeyCode::Down => player.move_back(&lvl),
+                KeyCode::Right => player.move_right(&lvl),
+                KeyCode::Left => player.move_left(&lvl),
                 _ => {}
             }
         });
