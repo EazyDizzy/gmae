@@ -4,6 +4,7 @@ use std::str::FromStr;
 use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::utils::Uuid;
+use lib::entity::level::voxel_stack::VoxelStack;
 use pad::PadStr;
 
 use lib::entity::voxel::{Shape, Voxel};
@@ -21,27 +22,20 @@ pub fn get_or_create(meshes: &mut ResMut<Assets<Mesh>>, width: f32, height: f32,
     }
 }
 
-pub fn merge_voxels(grouped_voxels: &HashMap<usize, HashMap<usize, Vec<Voxel>>>, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
+pub fn merge_voxels(voxel_stack: &VoxelStack, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
     let mut all_sequences = vec![];
 
-    let mut z_keys: Vec<&usize> = grouped_voxels.keys().into_iter().collect();
-    z_keys.sort_by(|z1, z2| { z1.cmp(z2) });
-
-    for z in z_keys {
-        let plate = &grouped_voxels[z];
-        let mut y_keys: Vec<&usize> = plate.keys().into_iter().collect();
-        y_keys.sort_by(|y1, y2| { y1.cmp(y2) });
-
+    for (z, plate) in voxel_stack.plates() {
         let mut plane_sequences = vec![];
 
-        for y in y_keys {
-            let row: Vec<&Voxel> = plate[y].iter().collect();
+        for (y, row) in plate.rows() {
+            let row: Vec<&Voxel> = row.iter().collect();
             let row_sequences = merge_voxels_row(row, max_voxels_per_dimension);
 
-            plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, *y, max_voxels_per_dimension);
+            plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, y, max_voxels_per_dimension);
         }
 
-        all_sequences = stretch_sequences_by_z(plane_sequences, all_sequences, *z);
+        all_sequences = stretch_sequences_by_z(plane_sequences, all_sequences, z);
     }
 
     all_sequences

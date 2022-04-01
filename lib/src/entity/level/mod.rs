@@ -1,16 +1,18 @@
-use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::entity::level::voxel_stack::VoxelStack;
 use crate::entity::point::Point;
 use crate::entity::voxel::Voxel;
+
+pub mod voxel_plate;
+pub mod voxel_stack;
 
 #[derive(Serialize, Deserialize)]
 pub struct Level {
     day_part: DayPart,
 
-    #[serde(skip_serializing, skip_deserializing)]
-    grouped_voxels: HashMap<usize, HashMap<usize, Vec<Voxel>>>,
+    voxel_stack: VoxelStack,
 }
 
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
@@ -23,7 +25,7 @@ impl Level {
     pub fn new(voxels: Vec<Voxel>, day_part: DayPart) -> Level {
         Level {
             day_part,
-            grouped_voxels: group_voxels_by_coordinates(voxels),
+            voxel_stack: VoxelStack::from(voxels),
         }
     }
 
@@ -31,23 +33,11 @@ impl Level {
         self.day_part == DayPart::Day
     }
 
-    pub fn grouped_voxels(&self) -> &HashMap<usize, HashMap<usize, Vec<Voxel>>> {
-        &self.grouped_voxels
-    }
-}
-
-fn group_voxels_by_coordinates(voxels: Vec<Voxel>) -> HashMap<usize, HashMap<usize, Vec<Voxel>>> {
-    let mut grouping = HashMap::new();
-
-    for voxel in voxels {
-        let z = voxel.position.z.round() as usize;
-        let z_plane = grouping.entry(z).or_insert_with(HashMap::new);
-
-        let y = voxel.position.y.round() as usize;
-        let y_row = z_plane.entry(y).or_insert_with(Vec::new);
-
-        y_row.push(voxel);
+    pub fn voxel_stack(&self) -> &VoxelStack {
+        &self.voxel_stack
     }
 
-    grouping
+    pub fn get_voxel_by_point(&self, point: Point) -> Option<&Voxel> {
+        self.voxel_stack.get_voxel_by_point(point)
+    }
 }
