@@ -28,7 +28,7 @@ fn main() {
                 let converted_metadata = fs::metadata(&serialized_lvl_path);
                 let should_rebuild = if let Ok(converted) = converted_metadata {
                     original_metadata.modified().unwrap() > converted.modified().unwrap()
-                        || lvl_name == "debug"
+                        // || lvl_name == "debug"
                 } else { true };
 
                 if should_rebuild {
