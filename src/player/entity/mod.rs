@@ -8,6 +8,7 @@ use lib::entity::point::Point;
 use once_cell::sync::Lazy;
 
 use crate::{Entity, Query, Transform};
+use crate::util::round_based;
 
 pub struct Player {
     id: Entity,
@@ -15,6 +16,7 @@ pub struct Player {
 }
 
 const MOVEMENT_SPEED: f32 = 0.1;
+const MODEL_RADIUS: f32 = 0.5;
 static DEFAULT_ROTATION: Lazy<Quat> = Lazy::new(|| {
     Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)
 });
@@ -28,28 +30,28 @@ impl Player {
     }
 
     pub fn move_back(&mut self, lvl: &Res<Level>) {
-        let future_y = (self.position.y - MOVEMENT_SPEED - 0.5).floor();
+        let future_y = (self.position.y - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
 
         if self.no_x_obstacles(future_y, lvl) {
             self.position.y -= MOVEMENT_SPEED;
         }
     }
     pub fn move_forward(&mut self, lvl: &Res<Level>) {
-        let future_y = (self.position.y + MOVEMENT_SPEED + 0.5).floor();
+        let future_y = (self.position.y + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
 
         if self.no_x_obstacles(future_y, lvl) {
             self.position.y += MOVEMENT_SPEED;
         }
     }
     pub fn move_left(&mut self, lvl: &Res<Level>) {
-        let future_x = (self.position.x - MOVEMENT_SPEED - 0.5).floor();
+        let future_x = (self.position.x - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
 
         if self.no_y_obstacles(future_x, lvl) {
             self.position.x -= MOVEMENT_SPEED;
         }
     }
     pub fn move_right(&mut self, lvl: &Res<Level>) {
-        let future_x = (self.position.x + MOVEMENT_SPEED + 0.5).floor();
+        let future_x = (self.position.x + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
 
         if self.no_y_obstacles(future_x, lvl) {
             self.position.x += MOVEMENT_SPEED;
@@ -67,19 +69,19 @@ impl Player {
 // obstacles checks
 impl Player {
     fn no_x_obstacles(&self, future_y: f32, lvl: &Res<Level>) -> bool {
-        let x_gap = self.position.x - self.position.x.floor();
+        let x_gap = round_based(self.position.x - self.position.x.floor(), 2);
 
-        let obstacles = if x_gap > 0.5 {
-            vec![
-                Point::new((self.position.x + 0.5).round(), future_y, self.position.z + 1.0),
-                Point::new((self.position.x + 0.5).round(), future_y, self.position.z + 2.0),
+        let obstacles = if x_gap > MODEL_RADIUS {
+            [
+                Point::new((self.position.x + MODEL_RADIUS).round(), future_y, self.position.z + 1.0),
+                Point::new((self.position.x + MODEL_RADIUS).round(), future_y, self.position.z + 2.0),
                 Point::new(self.position.x.floor(), future_y, self.position.z + 1.0),
                 Point::new(self.position.x.floor(), future_y, self.position.z + 2.0),
             ]
         } else {
-            vec![
-                Point::new((self.position.x - 0.5).floor(), future_y, self.position.z + 1.0),
-                Point::new((self.position.x - 0.5).floor(), future_y, self.position.z + 2.0),
+            [
+                Point::new((self.position.x - MODEL_RADIUS).floor(), future_y, self.position.z + 1.0),
+                Point::new((self.position.x - MODEL_RADIUS).floor(), future_y, self.position.z + 2.0),
                 Point::new(self.position.x.floor(), future_y, self.position.z + 1.0),
                 Point::new(self.position.x.floor(), future_y, self.position.z + 2.0),
             ]
@@ -89,19 +91,19 @@ impl Player {
     }
 
     fn no_y_obstacles(&self, future_x: f32, lvl: &Res<Level>) -> bool {
-        let y_gap = self.position.y - self.position.y.floor();
+        let y_gap = round_based(self.position.y - self.position.y.floor(), 2);
 
-        let obstacles = if y_gap > 0.5 {
+        let obstacles = if y_gap > MODEL_RADIUS {
             [
-                Point::new(future_x, (self.position.y + 0.5).round(), self.position.z + 1.0),
-                Point::new(future_x, (self.position.y + 0.5).round(), self.position.z + 2.0),
+                Point::new(future_x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 1.0),
+                Point::new(future_x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 2.0),
                 Point::new(future_x, self.position.y.floor(), self.position.z + 1.0),
                 Point::new(future_x, self.position.y.floor(), self.position.z + 2.0),
             ]
         } else {
             [
-                Point::new(future_x, (self.position.y - 0.5).floor(), self.position.z + 1.0),
-                Point::new(future_x, (self.position.y - 0.5).floor(), self.position.z + 2.0),
+                Point::new(future_x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 1.0),
+                Point::new(future_x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 2.0),
                 Point::new(future_x, self.position.y.floor(), self.position.z + 1.0),
                 Point::new(future_x, self.position.y.floor(), self.position.z + 2.0),
             ]

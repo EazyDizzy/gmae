@@ -27,6 +27,7 @@ use crate::system::camera::cursor_grab;
 mod system;
 mod level;
 mod player;
+mod util;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
