@@ -32,7 +32,6 @@ mod util;
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
     Playing,
-    Pause,
 }
 
 fn main() {

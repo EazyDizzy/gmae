@@ -8,7 +8,7 @@ pub fn keyboard_interaction(
     asset_server: Res<AssetServer>,
     mut player: ResMut<Player>,
     lvl: Res<Level>,
-    mut transforms: Query<&mut Transform>,
+    transforms: Query<&mut Transform>,
     audio: Res<Audio>,
 ) {
     keyboard_input.get_pressed()
@@ -22,6 +22,7 @@ pub fn keyboard_interaction(
             }
         });
 
+    player.gravity_move(&lvl);
     player.move_model(transforms);
 
     // let music = asset_server.load("sounds/heartbeat.wav");

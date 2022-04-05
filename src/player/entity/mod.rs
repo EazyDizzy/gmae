@@ -1,6 +1,5 @@
 use std::f32::consts::PI;
 
-use bevy::ecs::system::EntityCommands;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::entity::level::Level;
@@ -16,6 +15,7 @@ pub struct Player {
 }
 
 const MOVEMENT_SPEED: f32 = 0.1;
+const GRAVITY_SPEED: f32 = MOVEMENT_SPEED;
 const MODEL_RADIUS: f32 = 0.5;
 static DEFAULT_ROTATION: Lazy<Quat> = Lazy::new(|| {
     Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)
@@ -25,7 +25,7 @@ impl Player {
     pub fn new(id: Entity) -> Player {
         Player {
             id,
-            position: Point::new(3.0, 3.0, 0.0),
+            position: Point::new(10.0, 11.5, 3.0),
         }
     }
 
@@ -55,6 +55,19 @@ impl Player {
 
         if self.no_y_obstacles(future_x, lvl) {
             self.position.x += MOVEMENT_SPEED;
+        }
+    }
+
+    pub fn gravity_move(&mut self, lvl: &Res<Level>) {
+        let z_gap = self.position.z - self.position.z.floor();
+        let current_position = Point::new(self.position.x.round(), self.position.y.round(), self.position.z.floor());
+        let voxel_fundament = lvl.get_voxel_by_point(current_position);
+
+        if voxel_fundament.is_none() {
+            self.position.z -= GRAVITY_SPEED;
+        } else if z_gap > 0.0 {
+            let gravity_speed = if z_gap > GRAVITY_SPEED { GRAVITY_SPEED } else { z_gap };
+            self.position.z -= gravity_speed;
         }
     }
 
