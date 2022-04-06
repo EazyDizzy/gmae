@@ -18,6 +18,7 @@ pub fn keyboard_interaction(
                 KeyCode::Down => player.move_back(&lvl),
                 KeyCode::Right => player.move_right(&lvl),
                 KeyCode::Left => player.move_left(&lvl),
+                KeyCode::Space | KeyCode::Apostrophe => player.jump(&lvl),
                 _ => {}
             }
         });
