@@ -122,11 +122,12 @@ impl Player {
     }
 
     fn no_z_obstacles(&self, z: f32, lvl: &Res<Level>) -> bool {
+        const FALLING_MODEL_RADIUS: f32 = MODEL_RADIUS * 0.9;
         let obstacles = [
-            Point::new((self.position.x + MODEL_RADIUS).floor(), (self.position.y + MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x + MODEL_RADIUS).floor(), (self.position.y - MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x - MODEL_RADIUS).floor(), (self.position.y + MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x - MODEL_RADIUS).floor(), (self.position.y - MODEL_RADIUS).floor(), z),
+            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), (self.position.y + FALLING_MODEL_RADIUS).floor(), z),
+            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), (self.position.y - FALLING_MODEL_RADIUS).floor(), z),
+            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), (self.position.y + FALLING_MODEL_RADIUS).floor(), z),
+            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), (self.position.y - FALLING_MODEL_RADIUS).floor(), z),
         ];
 
         self.all_air(obstacles, lvl)
