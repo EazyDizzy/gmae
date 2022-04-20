@@ -130,20 +130,25 @@ impl Player {
             Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), (self.position.y - FALLING_MODEL_RADIUS).floor(), z),
         ];
 
-        self.all_air(obstacles, lvl)
+        self.all_air(&obstacles, lvl)
     }
     fn no_x_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
         let x_gap = round_based(self.position.x - self.position.x.floor(), 2);
 
-        let obstacles = if x_gap > MODEL_RADIUS {
-            [
+        let obstacles = if x_gap == MODEL_RADIUS {
+            vec![
+                Point::new(self.position.x.floor(), y, self.position.z + 1.0),
+                Point::new(self.position.x.floor(), y, self.position.z + 2.0),
+            ]
+        } else if x_gap > MODEL_RADIUS {
+            vec![
                 Point::new((self.position.x + MODEL_RADIUS).round(), y, self.position.z + 1.0),
                 Point::new((self.position.x + MODEL_RADIUS).round(), y, self.position.z + 2.0),
                 Point::new(self.position.x.floor(), y, self.position.z + 1.0),
                 Point::new(self.position.x.floor(), y, self.position.z + 2.0),
             ]
         } else {
-            [
+            vec![
                 Point::new((self.position.x - MODEL_RADIUS).floor(), y, self.position.z + 1.0),
                 Point::new((self.position.x - MODEL_RADIUS).floor(), y, self.position.z + 2.0),
                 Point::new(self.position.x.floor(), y, self.position.z + 1.0),
@@ -151,20 +156,25 @@ impl Player {
             ]
         };
 
-        self.all_air(obstacles, lvl)
+        self.all_air(&obstacles, lvl)
     }
     fn no_y_obstacles(&self, x: f32, lvl: &Res<Level>) -> bool {
         let y_gap = round_based(self.position.y - self.position.y.floor(), 2);
 
-        let obstacles = if y_gap > MODEL_RADIUS {
-            [
+        let obstacles = if y_gap == MODEL_RADIUS {
+            vec![
+                Point::new(x, self.position.y.floor(), self.position.z + 1.0),
+                Point::new(x, self.position.y.floor(), self.position.z + 2.0),
+            ]
+        } else if y_gap > MODEL_RADIUS {
+            vec![
                 Point::new(x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 1.0),
                 Point::new(x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 2.0),
                 Point::new(x, self.position.y.floor(), self.position.z + 1.0),
                 Point::new(x, self.position.y.floor(), self.position.z + 2.0),
             ]
         } else {
-            [
+            vec![
                 Point::new(x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 1.0),
                 Point::new(x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 2.0),
                 Point::new(x, self.position.y.floor(), self.position.z + 1.0),
@@ -172,12 +182,12 @@ impl Player {
             ]
         };
 
-        self.all_air(obstacles, lvl)
+        self.all_air(&obstacles, lvl)
     }
 
-    fn all_air(&self, points: [Point; 4], lvl: &Res<Level>) -> bool {
+    fn all_air(&self, points: &[Point], lvl: &Res<Level>) -> bool {
         points.into_iter()
-            .all(|p| lvl.get_voxel_by_point(p).is_none())
+            .all(|p| lvl.get_voxel_by_point(p.clone()).is_none())
     }
 }
 
