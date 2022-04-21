@@ -37,7 +37,7 @@ impl Level {
         &self.voxel_stack
     }
 
-    pub fn get_voxel_by_point(&self, point: Point) -> Option<&Voxel> {
+    pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
         self.voxel_stack.get_voxel_by_point(point)
     }
 }
