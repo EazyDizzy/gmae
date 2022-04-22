@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use std::str::FromStr;
 
 use bevy::asset::HandleId;
 use bevy::prelude::*;
 use bevy::utils::Uuid;
+use lib::entity::level::voxel_stack::VoxelStack;
 use pad::PadStr;
 
 use lib::entity::voxel::{Shape, Voxel};
@@ -21,29 +21,20 @@ pub fn get_or_create(meshes: &mut ResMut<Assets<Mesh>>, width: f32, height: f32,
     }
 }
 
-pub fn merge_voxels(voxels: &[Voxel], max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
-    let grouped_voxels = group_voxels_by_coordinates(voxels);
-
+pub fn merge_voxels(voxel_stack: &VoxelStack, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
     let mut all_sequences = vec![];
 
-    let mut z_keys: Vec<&usize> = grouped_voxels.keys().into_iter().collect();
-    z_keys.sort_by(|z1, z2| { z1.cmp(z2) });
-
-    for z in z_keys {
-        let plate = &grouped_voxels[z];
-        let mut y_keys: Vec<&usize> = plate.keys().into_iter().collect();
-        y_keys.sort_by(|y1, y2| { y1.cmp(y2) });
-
+    for (z, plate) in voxel_stack.plates() {
         let mut plane_sequences = vec![];
 
-        for y in y_keys {
-            let row = plate[y].clone();
+        for (y, row) in plate.rows() {
+            let row: Vec<&Voxel> = row.iter().collect();
             let row_sequences = merge_voxels_row(row, max_voxels_per_dimension);
 
-            plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, *y, max_voxels_per_dimension);
+            plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, y, max_voxels_per_dimension);
         }
 
-        all_sequences = stretch_sequences_by_z(plane_sequences, all_sequences, *z);
+        all_sequences = stretch_sequences_by_z(plane_sequences, all_sequences, z);
     }
 
     all_sequences
@@ -64,8 +55,8 @@ fn stretch_sequences_by_z<'a>(
     for seq in previous_layer_sequences {
         let same_new_seq = plane_sequences.iter().enumerate()
             .find(|(_, s)|
-                s.same_x_size(&seq)
-                    && s.same_y_size(&seq)
+                s.same_x_size(seq)
+                    && s.same_y_size(seq)
                     && can_merge_materials(seq.example_material(), s.example_material())
             );
 
@@ -148,22 +139,6 @@ fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<
     x_sequences
 }
 
-fn group_voxels_by_coordinates(voxels: &[Voxel]) -> HashMap<usize, HashMap<usize, Vec<&Voxel>>> {
-    let mut grouping = HashMap::new();
-
-    for voxel in voxels {
-        let z = voxel.position.z.round() as usize;
-        let z_plane = grouping.entry(z).or_insert_with(HashMap::new);
-
-        let y = voxel.position.y.round() as usize;
-        let y_row = z_plane.entry(y).or_insert_with(Vec::new);
-
-        y_row.push(voxel);
-    }
-
-    grouping
-}
-
 fn should_merge(material: Material) -> bool {
     ![
         Material::BlueLight,
@@ -174,8 +149,8 @@ fn should_merge(material: Material) -> bool {
 fn generate_mesh_handle_id(width: f32, height: f32, flip: bool) -> HandleId {
     // requirement of uuid
     let hash = format!("{}{}{}",
-                       width.to_string().pad_to_width_with_char(8, 'A').replace(".", "B"),
-                       height.to_string().pad_to_width_with_char(8, 'A').replace(".", "B"),
+                       width.to_string().pad_to_width_with_char(8, 'A').replace('.', "B"),
+                       height.to_string().pad_to_width_with_char(8, 'A').replace('.', "B"),
                        u8::from(flip).to_string().pad_to_width_with_char(8, 'A'),
     ).pad_to_width_with_char(32, 'A');
 

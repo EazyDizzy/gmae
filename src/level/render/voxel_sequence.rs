@@ -40,7 +40,7 @@ impl<'a> VoxelSequence<'a> {
         voxels
     }
     pub fn bottom_voxels(&self) -> &Vec<Vec<&'a Voxel>> {
-        &self.voxels.first().unwrap()
+        self.voxels.first().unwrap()
     }
 
     pub fn right_voxels(&self) -> Vec<Vec<&'a Voxel>> {
@@ -87,7 +87,7 @@ impl<'a> VoxelSequence<'a> {
         let mut voxels = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
-            voxels.push(plate.last().unwrap().clone())
+            voxels.push(plate.last().unwrap().clone());
         }
         voxels.reverse();
 
@@ -97,7 +97,7 @@ impl<'a> VoxelSequence<'a> {
         let mut voxels = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
-            voxels.push(plate.first().unwrap().clone())
+            voxels.push(plate.first().unwrap().clone());
         }
         voxels.reverse();
 

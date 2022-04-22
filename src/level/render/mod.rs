@@ -39,7 +39,7 @@ pub fn init_world(
     let max_voxels_per_dimension = limits / TEXTURE_SIZE;
     dbg!(max_voxels_per_dimension);
 
-    let merged_voxels = merge_voxels(&level.voxels, max_voxels_per_dimension);
+    let merged_voxels = merge_voxels(level.voxel_stack(), max_voxels_per_dimension);
 
     let start = Instant::now();
 
@@ -95,7 +95,7 @@ fn spawn_cube_sequence(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
-    merged_voxels: &Vec<VoxelSequence>,
+    merged_voxels: &[VoxelSequence],
     settings: &Res<GameSettings>,
 ) {
     let batch = create_cube_bundle_batch(

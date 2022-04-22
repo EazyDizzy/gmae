@@ -5,13 +5,13 @@ pub fn setup(mut commands: Commands, windows: ResMut<Windows>) {
     commands
         .spawn()
         .insert_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(20.0, -15.0, 30.0),
+            transform: Transform::from_xyz(5.0, 8.0, 20.0),
             ..Default::default()
         })
         // TODO disable "roll" camera rotation
         .insert(FlyCamera {
             sensitivity: 6.0,
-            pitch: -45.0,
+            pitch: 0.0,
             yaw: 0.0,
             max_speed: 2.0,
             key_forward: KeyCode::LShift,

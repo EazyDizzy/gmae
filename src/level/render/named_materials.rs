@@ -24,7 +24,7 @@ impl NamedMaterials {
     }
 }
 
-pub fn generate_name_for_voxels(voxels: &Vec<Vec<&Voxel>>) -> String {
+pub fn generate_name_for_voxels(voxels: &[Vec<&Voxel>]) -> String {
     voxels.iter()
         .map(|row| {
             row.iter()

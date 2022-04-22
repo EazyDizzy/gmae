@@ -7,6 +7,7 @@ clippy::cast_possible_wrap,
 clippy::cast_possible_truncation,
 clippy::float_cmp,
 clippy::default_trait_access,
+clippy::needless_pass_by_value,
 )]
 
 extern crate core;
@@ -21,10 +22,18 @@ use lib::entity::voxel::Material;
 use lib::util::game_settings::GameSettings;
 
 use crate::level::LevelPlugin;
+use crate::player::PlayerPlugin;
 use crate::system::camera::cursor_grab;
 
 mod system;
 mod level;
+mod player;
+mod util;
+
+#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+enum GameState {
+    Playing,
+}
 
 fn main() {
     let settings = GameSettings::from_file("settings.json");
@@ -37,6 +46,8 @@ fn main() {
         .add_plugin(FlyCameraPlugin)
         // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
+        .add_state(GameState::Playing)
+        .add_plugin(PlayerPlugin)
         .add_startup_system(system::camera::setup.system())
         .add_startup_system(system::light::setup.system())
         .add_system(cursor_grab)

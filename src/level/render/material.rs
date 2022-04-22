@@ -19,13 +19,13 @@ pub const TEXTURE_SIZE: u32 = 64;
 const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 
-pub fn get_material_for( materials: &ResMut<Assets<StandardMaterial>>, material_name: Material) -> Handle<StandardMaterial> {
+pub fn get_material_for(materials: &ResMut<Assets<StandardMaterial>>, material_name: Material) -> Handle<StandardMaterial> {
     materials.get_handle(generate_material_handle_id(material_name))
 }
 
 // TODO dynamically select texture based on graphic lvl settings
 pub fn merge_materials(
-    voxels: &Vec<Vec<&Voxel>>,
+    voxels: &[Vec<&Voxel>],
     named_materials: &mut ResMut<NamedMaterials>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
@@ -41,7 +41,7 @@ pub fn merge_materials(
     let material_name = generate_name_for_voxels(voxels);
 
     if let Some(handle_id) = named_materials.get(&material_name) {
-        return materials.get_handle(handle_id.clone());
+        return materials.get_handle(*handle_id);
     }
 
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
@@ -102,11 +102,11 @@ fn get_basic_image_pixels(material: Material, settings: &Res<GameSettings>) -> V
 }
 
 fn get_basic_image_for_material(voxel_material: Material, settings: &Res<GameSettings>) -> DynamicImage {
+    const TEXTURE_PATH: &str = "./assets/texture/block/";
     if settings.debug_textures {
         return generate_image_of_random_color();
     }
 
-    const TEXTURE_PATH: &str = "./assets/texture/block/";
     let material_name = get_material_file_name(voxel_material);
     let material_id = format!("{TEXTURE_PATH}{material_name}");
 
@@ -124,7 +124,7 @@ fn generate_image_of_random_color() -> DynamicImage {
     let mut img = DynamicImage::new_rgba8(TEXTURE_SIZE, TEXTURE_SIZE);
     for x in 0..TEXTURE_SIZE {
         for y in 0..TEXTURE_SIZE {
-            img.put_pixel(x, y, color.clone());
+            img.put_pixel(x, y, color);
         }
     }
 
@@ -150,10 +150,6 @@ fn generate_asset_path(material: Material) -> String {
 }
 
 pub fn can_merge_materials(m1: Material, m2: Material) -> bool {
-    if m1 == m2 {
-        return true;
-    }
-
     const NON_GROUPABLE: [Material; 9] = [
         Material::OrangeLight,
         Material::BlueLight,
@@ -165,6 +161,10 @@ pub fn can_merge_materials(m1: Material, m2: Material) -> bool {
         Material::SpruceLeaves,
         Material::OakLeaves,
     ];
+
+    if m1 == m2 {
+        return true;
+    }
 
     !NON_GROUPABLE.contains(&m1) && !NON_GROUPABLE.contains(&m2)
 }
