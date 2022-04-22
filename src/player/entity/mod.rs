@@ -133,16 +133,17 @@ impl Player {
 
     fn has_fundament(&self, lvl: &Res<Level>) -> bool {
         let mut points = vec![
-            Point::new(self.position.x.floor(), self.position.y.round(), self.position.z.floor()),
-            Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.floor()),
+            Point::new(self.position.x.floor(), self.position.y.floor(), self.position.z.floor()),
         ];
-        let y_gap = round_based(self.position.y - self.position.y.floor(), 2);
-        let x_gap = round_based(self.position.x - self.position.x.floor(), 2);
+
+        let x_gap = round_based(self.position.x - self.position.x.floor(), 1);
         if x_gap > MODEL_RADIUS {
             points.push(Point::new(self.position.x.round(), self.position.y.round(), self.position.z.floor()));
         } else if x_gap < MODEL_RADIUS {
             points.push(Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y.round(), self.position.z.floor()));
         }
+
+        let y_gap = round_based(self.position.y - self.position.y.floor(), 1);
         if y_gap > MODEL_RADIUS {
             points.push(Point::new(self.position.x.round(), self.position.y.round(), self.position.z.floor()));
         } else if y_gap < MODEL_RADIUS {
