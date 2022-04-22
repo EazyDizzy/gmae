@@ -1,29 +1,15 @@
 use bevy::prelude::*;
 use bevy_fly_camera::FlyCamera;
 
-pub fn setup(mut commands: Commands, windows: ResMut<Windows>) {
-    commands
-        .spawn()
-        .insert_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(5.0, 8.0, 20.0),
-            ..Default::default()
-        })
-        // TODO disable "roll" camera rotation
-        .insert(FlyCamera {
-            sensitivity: 6.0,
-            pitch: 0.0,
-            yaw: 0.0,
-            max_speed: 2.0,
-            key_forward: KeyCode::LShift,
-            key_backward: KeyCode::Space,
-            key_left: KeyCode::A,
-            key_right: KeyCode::D,
-            key_up: KeyCode::W,
-            key_down: KeyCode::S,
-            ..Default::default()
-        });
+pub struct MenuPlugin;
 
-    initial_grab_cursor(windows);
+impl Plugin for MenuPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_startup_system(initial_grab_cursor)
+            .add_system(cursor_grab)
+        ;
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]

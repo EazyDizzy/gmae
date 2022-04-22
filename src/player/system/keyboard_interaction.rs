@@ -5,10 +5,10 @@ use crate::player::entity::Player;
 
 pub fn keyboard_interaction(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player: ResMut<Player>,
     lvl: Res<Level>,
-    transforms: Query<&mut Transform>,
+    mut player_query: Query<(&mut Player, &mut Transform)>,
 ) {
+    let (mut player, mut position) = player_query.iter_mut().next().unwrap();
     keyboard_input.get_pressed()
         .for_each(|k| {
             match k {
@@ -22,7 +22,7 @@ pub fn keyboard_interaction(
         });
 
     player.gravity_move(&lvl);
-    player.move_model(transforms);
+    player.move_model(&mut position);
 
     // let music = asset_server.load("sounds/heartbeat.wav");
     // audio.play(music);

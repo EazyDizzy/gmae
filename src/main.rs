@@ -17,13 +17,12 @@ use bevy::{
     prelude::*,
 };
 use bevy::diagnostic::LogDiagnosticsPlugin;
-use bevy_fly_camera::FlyCameraPlugin;
 use lib::entity::voxel::Material;
 use lib::util::game_settings::GameSettings;
 
 use crate::level::LevelPlugin;
 use crate::player::PlayerPlugin;
-use crate::system::camera::cursor_grab;
+use crate::system::menu::MenuPlugin;
 
 mod system;
 mod level;
@@ -40,16 +39,15 @@ fn main() {
 
     App::new()
         .insert_resource(settings)
+        .add_state(GameState::Playing)
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FlyCameraPlugin)
+        // .add_plugin(FlyCameraPlugin)
         // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
-        .add_state(GameState::Playing)
         .add_plugin(PlayerPlugin)
-        .add_startup_system(system::camera::setup.system())
+        .add_plugin(MenuPlugin)
         .add_startup_system(system::light::setup.system())
-        .add_system(cursor_grab)
         .run();
 }
