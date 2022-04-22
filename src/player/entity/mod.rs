@@ -6,7 +6,7 @@ use lib::entity::level::Level;
 use lib::entity::point::Point;
 use once_cell::sync::Lazy;
 
-use crate::{Entity, Query, Transform};
+use crate::Transform;
 use crate::util::round_based;
 
 #[derive(Copy, Clone, Debug)]
@@ -15,8 +15,8 @@ enum MovementState {
     Jumping(u8),
 }
 
+#[derive(Component, Debug)]
 pub struct Player {
-    id: Entity,
     position: Point,
     movement_state: Option<MovementState>,
 }
@@ -29,12 +29,15 @@ static DEFAULT_ROTATION: Lazy<Quat> = Lazy::new(|| {
 });
 
 impl Player {
-    pub fn new(id: Entity) -> Player {
+    pub fn new() -> Player {
         Player {
-            id,
             position: Point::new(10.0, 11.5, 3.0),
             movement_state: None,
         }
+    }
+
+    pub fn position(&self) -> &Point {
+        &self.position
     }
 
     pub fn move_back(&mut self, lvl: &Res<Level>) {
@@ -66,7 +69,6 @@ impl Player {
         }
     }
     pub fn jump(&mut self, lvl: &Res<Level>) {
-        dbg!(&self.movement_state, self.can_jump(lvl));
         if self.movement_state.is_none() && self.can_jump(lvl) {
             self.movement_state = Some(MovementState::Jumping(0));
         }
@@ -91,7 +93,6 @@ impl Player {
                     self.position.z -= gravity_speed;
                 }
 
-                dbg!(self.should_fall(lvl));
                 if !self.should_fall(lvl) {
                     self.movement_state = None;
                 }
@@ -108,8 +109,7 @@ impl Player {
         }
     }
 
-    pub fn move_model(&self, mut transforms: Query<&mut Transform>) {
-        let mut position = transforms.get_mut(self.id).unwrap();
+    pub fn move_model(&self, position: &mut Transform) {
         *position = Transform::from_xyz(self.position.x, self.position.y, self.position.z + 0.5)
             .with_scale(vec3(0.5, 0.5, 0.5))
             .with_rotation(*DEFAULT_ROTATION);
