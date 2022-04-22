@@ -7,6 +7,7 @@ clippy::cast_possible_wrap,
 clippy::cast_possible_truncation,
 clippy::float_cmp,
 clippy::default_trait_access,
+clippy::needless_pass_by_value,
 )]
 
 extern crate core;

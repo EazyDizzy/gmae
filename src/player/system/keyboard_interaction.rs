@@ -5,11 +5,9 @@ use crate::player::entity::Player;
 
 pub fn keyboard_interaction(
     keyboard_input: Res<Input<KeyCode>>,
-    asset_server: Res<AssetServer>,
     mut player: ResMut<Player>,
     lvl: Res<Level>,
     transforms: Query<&mut Transform>,
-    audio: Res<Audio>,
 ) {
     keyboard_input.get_pressed()
         .for_each(|k| {

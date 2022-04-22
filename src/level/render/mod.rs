@@ -95,7 +95,7 @@ fn spawn_cube_sequence(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
-    merged_voxels: &Vec<VoxelSequence>,
+    merged_voxels: &[VoxelSequence],
     settings: &Res<GameSettings>,
 ) {
     let batch = create_cube_bundle_batch(

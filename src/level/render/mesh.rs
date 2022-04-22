@@ -55,8 +55,8 @@ fn stretch_sequences_by_z<'a>(
     for seq in previous_layer_sequences {
         let same_new_seq = plane_sequences.iter().enumerate()
             .find(|(_, s)|
-                s.same_x_size(&seq)
-                    && s.same_y_size(&seq)
+                s.same_x_size(seq)
+                    && s.same_y_size(seq)
                     && can_merge_materials(seq.example_material(), s.example_material())
             );
 
@@ -149,8 +149,8 @@ fn should_merge(material: Material) -> bool {
 fn generate_mesh_handle_id(width: f32, height: f32, flip: bool) -> HandleId {
     // requirement of uuid
     let hash = format!("{}{}{}",
-                       width.to_string().pad_to_width_with_char(8, 'A').replace(".", "B"),
-                       height.to_string().pad_to_width_with_char(8, 'A').replace(".", "B"),
+                       width.to_string().pad_to_width_with_char(8, 'A').replace('.', "B"),
+                       height.to_string().pad_to_width_with_char(8, 'A').replace('.', "B"),
                        u8::from(flip).to_string().pad_to_width_with_char(8, 'A'),
     ).pad_to_width_with_char(32, 'A');
 

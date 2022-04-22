@@ -15,7 +15,7 @@ pub fn create_cube_bundle_batch(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
-    merged_voxels: &Vec<VoxelSequence>,
+    merged_voxels: &[VoxelSequence],
     settings: &Res<GameSettings>,
 ) -> Vec<PbrBundle> {
     let mut bundles = vec![];
@@ -25,12 +25,12 @@ pub fn create_cube_bundle_batch(
     let height = sequence.y_height();
 
     // TODO fix visibility near triangles
-    let top_side_visible = is_top_side_visible(sequence, &merged_voxels);
+    let top_side_visible = is_top_side_visible(sequence, merged_voxels);
     let bottom_side_visible = false;
-    let right_side_visible = is_right_side_visible(sequence, &merged_voxels);
-    let left_side_visible = is_left_side_visible(sequence, &merged_voxels);
+    let right_side_visible = is_right_side_visible(sequence, merged_voxels);
+    let left_side_visible = is_left_side_visible(sequence, merged_voxels);
     let forward_side_visible = false;
-    let back_side_visible = is_back_side_visible(sequence, &merged_voxels);
+    let back_side_visible = is_back_side_visible(sequence, merged_voxels);
 
     // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
     if top_side_visible || bottom_side_visible {
@@ -47,7 +47,7 @@ pub fn create_cube_bundle_batch(
             let mesh = get_or_create(meshes, width, height, false);
             bundles.push(PbrBundle {
                 mesh,
-                material: material.clone(),
+                material,
                 transform: Transform::from_xyz(start_pos.x + width / 2.0, start_pos.y + height / 2.0, end_pos.z - 0.5),
                 ..Default::default()
             });
@@ -88,7 +88,7 @@ pub fn create_cube_bundle_batch(
             let mesh = get_or_create(meshes, z_height, height, false);
             bundles.push(PbrBundle {
                 mesh,
-                material: material.clone(),
+                material,
                 transform: Transform::from_xyz(start_pos.x + width, start_pos.y + height / 2.0, end_pos.z - z_height / 2.0 - 0.5)
                     .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0)),
                 ..Default::default()
@@ -130,7 +130,7 @@ pub fn create_cube_bundle_batch(
             let mesh = get_or_create(meshes, width, z_height, true);
             bundles.push(PbrBundle {
                 mesh,
-                material: material.clone(),
+                material,
                 transform: Transform::from_xyz(start_pos.x + width / 2.0, start_pos.y + height, end_pos.z - z_height / 2.0 - 0.5)
                     .with_rotation(Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)),
                 ..Default::default()

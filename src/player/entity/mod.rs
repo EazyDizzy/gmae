@@ -224,7 +224,7 @@ impl Player {
     }
 
     fn all_air(&self, points: &[Point], lvl: &Res<Level>) -> bool {
-        points.into_iter()
+        points.iter()
             .all(|p| lvl.get_voxel_by_point(p).is_none())
     }
 }
