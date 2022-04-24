@@ -8,7 +8,7 @@ pub fn keyboard_interaction(
     lvl: Res<Level>,
     mut player_query: Query<(&mut Player, &mut Transform)>,
 ) {
-    let (mut player, mut position) = player_query.iter_mut().next().unwrap();
+    let (mut player, mut transform) = player_query.iter_mut().next().unwrap();
     keyboard_input.get_pressed()
         .for_each(|k| {
             match k {
@@ -22,11 +22,7 @@ pub fn keyboard_interaction(
         });
 
     player.gravity_move(&lvl);
-    player.move_model(&mut position);
-
-    // let music = asset_server.load("sounds/heartbeat.wav");
-    // audio.play(music);
-    //
+    player.move_model(&mut transform);
 
     if keyboard_input.just_pressed(KeyCode::Space) {}
 }

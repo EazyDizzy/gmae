@@ -104,8 +104,7 @@ impl Player {
     }
 
     pub fn move_model(&self, position: &mut Transform) {
-        *position = Transform::from_xyz(self.position.x, self.position.y + 1.0, self.position.z)
-            .with_scale(vec3(0.5, 0.5, 0.5));
+        position.translation = vec3(self.position.x, self.position.y + 1.0, self.position.z);
     }
 }
 
