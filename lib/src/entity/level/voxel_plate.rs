@@ -12,8 +12,8 @@ pub struct VoxelPlate {
 
 impl VoxelPlate {
     pub fn add_voxel(&mut self, voxel: Voxel) {
-        let y = voxel.position.y.round() as usize;
-        self.internal.entry(y)
+        let z = voxel.position.z as usize;
+        self.internal.entry(z)
             .or_insert_with(Vec::new)
             .push(voxel);
     }
@@ -28,10 +28,14 @@ impl VoxelPlate {
     }
 
     pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
-        self.internal.get(&(point.y as usize))
-            .and_then(|row|
+        // println!("Posiible z {:?}", self.internal.keys().into_iter().map(|k| *k).collect::<Vec<usize>>());
+        // println!("search z {} {}", point.z, point.z as usize);
+        self.internal.get(&(point.z as usize))
+            .and_then(|row| {
+                // println!("row found {} {}", point.z, point.z as usize);
+
                 row.iter()
                     .find(|v| v.position.x == point.x)
-            )
+            })
     }
 }

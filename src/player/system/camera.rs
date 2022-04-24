@@ -1,6 +1,8 @@
 use bevy::input::mouse::MouseMotion;
 use bevy::math::vec3;
 use bevy::prelude::*;
+use bevy_fly_camera::FlyCamera;
+use lib::util::game_settings::GameSettings;
 
 use crate::player::entity::Player;
 
@@ -46,7 +48,6 @@ fn mouse_motion_system(
 
         let yaw_radians = options.yaw.to_radians();
         let pitch_radians = options.pitch.to_radians();
-        dbg!(yaw_radians, pitch_radians);
 
         transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw_radians)
             * Quat::from_axis_angle(-Vec3::X, pitch_radians);
@@ -57,29 +58,51 @@ fn camera_movement_system(
     mut camera_query: Query<(&mut PlayerCamera, &mut Transform)>,
     player_query: Query<&Player>,
 ) {
-    let (options, mut transform) = camera_query.iter_mut().next().unwrap();
-    let player_position = player_query.iter().next().unwrap().position();
-    transform.translation = vec3(player_position.x, player_position.y - 10.0, player_position.z + 15.0);
+    for (options, mut transform) in camera_query.iter_mut() {
+        let player_position = player_query.iter().next().unwrap().position();
+        transform.translation = vec3(player_position.x, player_position.y - 10.0, player_position.z + 15.0);
 
-    let yaw_radians = options.yaw.to_radians();
-    let pitch_radians = options.pitch.to_radians();
+        let yaw_radians = options.yaw.to_radians();
+        let pitch_radians = options.pitch.to_radians();
 
-    transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw_radians)
-        * Quat::from_axis_angle(-Vec3::X, pitch_radians);
+        transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw_radians)
+            * Quat::from_axis_angle(-Vec3::X, pitch_radians);
+    }
 }
 
-fn setup_player_camera(mut commands: Commands) {
-    commands
-        .spawn()
-        .insert_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(5.0, 8.0, 20.0),
-            ..Default::default()
-        })
-        .insert(PlayerCamera {
-            pitch: 0.0,
-            yaw: 0.0,
-            ..Default::default()
-        });
+fn setup_player_camera(mut commands: Commands, settings: Res<GameSettings>) {
+    if settings.fly_camera {
+        commands
+            .spawn()
+            .insert_bundle(PerspectiveCameraBundle {
+                transform: Transform::from_xyz(5.0, 8.0, 20.0),
+                ..Default::default()
+            })
+            .insert(FlyCamera {
+                sensitivity: 6.0,
+                pitch: 0.0,
+                yaw: 0.0,
+                max_speed: 2.0,
+                // key_forward: KeyCode::LShift,
+                // key_backward: KeyCode::Space,
+                // key_left: KeyCode::A,
+                // key_right: KeyCode::D,
+                // key_up: KeyCode::W,
+                // key_down: KeyCode::S,
+                ..Default::default()
+            });
+    } else {
+        commands
+            .spawn()
+            .insert_bundle(PerspectiveCameraBundle {
+                ..Default::default()
+            })
+            .insert(PlayerCamera {
+                pitch: 0.0,
+                yaw: 0.0,
+                ..Default::default()
+            });
+    }
 }
 
 pub struct CameraPlugin;

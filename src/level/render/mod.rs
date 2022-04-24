@@ -71,23 +71,6 @@ pub fn init_world(
     println!("world initialization: {:?}", start.elapsed());
 }
 
-// fn spawn_triangle_sequence(
-//     commands: &mut Commands,
-//     asset_server: &Res<AssetServer>,
-//     materials: &mut ResMut<Assets<StandardMaterial>>,
-//     sequence: &VoxelSequence,
-//     properties: &TrianglePrismProperties,
-// ) {
-//     let bundle = create_triangle(
-//         asset_server,
-//         materials,
-//         sequence,
-//         properties,
-//     );
-//     let _entity_commands = commands.spawn_bundle(bundle);
-//     dbg!(_entity_commands.id());
-// }
-
 fn spawn_cube_sequence(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,

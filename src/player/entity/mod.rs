@@ -1,13 +1,10 @@
-use std::f32::consts::PI;
-
 use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
-use once_cell::sync::Lazy;
+use lib::util::math::round_based;
 
 use crate::Transform;
-use crate::util::round_based;
 
 #[derive(Copy, Clone, Debug)]
 enum MovementState {
@@ -24,14 +21,11 @@ pub struct Player {
 const MOVEMENT_SPEED: f32 = 0.1;
 const GRAVITY_SPEED: f32 = MOVEMENT_SPEED;
 const MODEL_RADIUS: f32 = 0.5;
-static DEFAULT_ROTATION: Lazy<Quat> = Lazy::new(|| {
-    Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)
-});
 
 impl Player {
     pub fn new() -> Player {
         Player {
-            position: Point::new(10.0, 11.5, 3.0),
+            position: Point::new(10.0, 3.0, 11.0),
             movement_state: None,
         }
     }
@@ -40,31 +34,31 @@ impl Player {
         &self.position
     }
 
-    pub fn move_back(&mut self, lvl: &Res<Level>) {
-        let future_y = (self.position.y - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
+    pub fn move_forward(&mut self, lvl: &Res<Level>) {
+        let future_z = (self.position.z - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
 
-        if self.no_x_obstacles(future_y, lvl) {
-            self.position.y -= MOVEMENT_SPEED;
+        if self.no_x_obstacles(future_z, lvl) {
+            self.position.z -= MOVEMENT_SPEED;
         }
     }
-    pub fn move_forward(&mut self, lvl: &Res<Level>) {
-        let future_y = (self.position.y + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
+    pub fn move_back(&mut self, lvl: &Res<Level>) {
+        let future_z = (self.position.z + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
 
-        if self.no_x_obstacles(future_y, lvl) {
-            self.position.y += MOVEMENT_SPEED;
+        if self.no_x_obstacles(future_z, lvl) {
+            self.position.z += MOVEMENT_SPEED;
         }
     }
     pub fn move_left(&mut self, lvl: &Res<Level>) {
         let future_x = (self.position.x - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
 
-        if self.no_y_obstacles(future_x, lvl) {
+        if self.no_z_obstacles(future_x, lvl) {
             self.position.x -= MOVEMENT_SPEED;
         }
     }
     pub fn move_right(&mut self, lvl: &Res<Level>) {
         let future_x = (self.position.x + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
 
-        if self.no_y_obstacles(future_x, lvl) {
+        if self.no_z_obstacles(future_x, lvl) {
             self.position.x += MOVEMENT_SPEED;
         }
     }
@@ -85,12 +79,12 @@ impl Player {
 
         match self.movement_state.unwrap() {
             MovementState::Falling => {
-                let z_gap = self.position.z - self.position.z.floor();
+                let y_gap = self.position.y - self.position.y.floor();
                 if self.can_fall(lvl) {
-                    self.position.z -= GRAVITY_SPEED;
-                } else if z_gap > 0.0 {
-                    let gravity_speed = if z_gap > GRAVITY_SPEED { GRAVITY_SPEED } else { z_gap };
-                    self.position.z -= gravity_speed;
+                    self.position.go_down(GRAVITY_SPEED);
+                } else if y_gap > 0.0 {
+                    let gravity_speed = if y_gap > GRAVITY_SPEED { GRAVITY_SPEED } else { y_gap };
+                    self.position.go_down(gravity_speed);
                 }
 
                 if !self.should_fall(lvl) {
@@ -98,7 +92,7 @@ impl Player {
                 }
             }
             MovementState::Jumping(tick) => {
-                self.position.z += GRAVITY_SPEED;
+                self.position.go_up(GRAVITY_SPEED);
 
                 if tick == 10 {
                     self.movement_state = None;
@@ -110,9 +104,8 @@ impl Player {
     }
 
     pub fn move_model(&self, position: &mut Transform) {
-        *position = Transform::from_xyz(self.position.x, self.position.y, self.position.z + 0.5)
-            .with_scale(vec3(0.5, 0.5, 0.5))
-            .with_rotation(*DEFAULT_ROTATION);
+        *position = Transform::from_xyz(self.position.x, self.position.y + 1.0, self.position.z)
+            .with_scale(vec3(0.5, 0.5, 0.5));
     }
 }
 
@@ -123,12 +116,12 @@ impl Player {
     }
 
     fn should_fall(&self, lvl: &Res<Level>) -> bool {
-        self.position.z - self.position.z.floor() != 0.0 || !self.has_fundament(lvl)
+        self.position.y - self.position.y.floor() != 0.0 || !self.has_fundament(lvl)
     }
     fn can_fall(&self, lvl: &Res<Level>) -> bool {
-        let future_z = self.position.z.floor();
+        let future_y = self.position.y.floor();
 
-        self.no_z_obstacles(future_z, lvl)
+        self.no_y_obstacles(future_y, lvl)
     }
 
     fn has_fundament(&self, lvl: &Res<Level>) -> bool {
@@ -138,85 +131,85 @@ impl Player {
 
         let x_gap = round_based(self.position.x - self.position.x.floor(), 1);
         if x_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.round(), self.position.z.floor()));
+            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.round()));
         } else if x_gap < MODEL_RADIUS {
-            points.push(Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y.round(), self.position.z.floor()));
+            points.push(Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y.floor(), self.position.z.round()));
         }
 
-        let y_gap = round_based(self.position.y - self.position.y.floor(), 1);
-        if y_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.round(), self.position.z.floor()));
-        } else if y_gap < MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), (self.position.y - MODEL_RADIUS).floor(), self.position.z.floor()));
+        let z_gap = round_based(self.position.z - self.position.z.floor(), 1);
+        if z_gap > MODEL_RADIUS {
+            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.round()));
+        } else if z_gap < MODEL_RADIUS {
+            points.push(Point::new(self.position.x.round(), self.position.y.floor(), (self.position.z - MODEL_RADIUS).floor()));
         }
 
         !self.all_air(&points, lvl)
     }
     fn has_ceil(&self, lvl: &Res<Level>) -> bool {
-        let future_position = Point::new(self.position.x.round(), self.position.y.round(), (self.position.z + 3.0).floor());
+        let future_position = Point::new(self.position.x.round(), (self.position.y + 3.0).floor(), self.position.z.round());
         let voxel_ceil = lvl.get_voxel_by_point(&future_position);
 
         voxel_ceil.is_some()
     }
 
-    fn no_z_obstacles(&self, z: f32, lvl: &Res<Level>) -> bool {
+    fn no_y_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
         const FALLING_MODEL_RADIUS: f32 = MODEL_RADIUS * 0.9;
         let obstacles = [
-            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), (self.position.y + FALLING_MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), (self.position.y - FALLING_MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), (self.position.y + FALLING_MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), (self.position.y - FALLING_MODEL_RADIUS).floor(), z),
+            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), y, (self.position.z + FALLING_MODEL_RADIUS).floor()),
+            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), y, (self.position.z - FALLING_MODEL_RADIUS).floor()),
+            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), y, (self.position.z + FALLING_MODEL_RADIUS).floor()),
+            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), y, (self.position.z - FALLING_MODEL_RADIUS).floor()),
         ];
 
         self.all_air(&obstacles, lvl)
     }
-    fn no_x_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
+    fn no_x_obstacles(&self, z: f32, lvl: &Res<Level>) -> bool {
         let x_gap = round_based(self.position.x - self.position.x.floor(), 2);
 
         let obstacles = if x_gap == MODEL_RADIUS {
             vec![
-                Point::new(self.position.x.floor(), y, self.position.z + 1.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 2.0),
+                Point::new(self.position.x.floor(), self.position.y + 1.0, z),
+                Point::new(self.position.x.floor(), self.position.y + 2.0, z),
             ]
         } else if x_gap > MODEL_RADIUS {
             vec![
-                Point::new((self.position.x + MODEL_RADIUS).round(), y, self.position.z + 1.0),
-                Point::new((self.position.x + MODEL_RADIUS).round(), y, self.position.z + 2.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 1.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 2.0),
+                Point::new((self.position.x + MODEL_RADIUS).round(), self.position.y + 1.0, z),
+                Point::new((self.position.x + MODEL_RADIUS).round(), self.position.y + 2.0, z),
+                Point::new(self.position.x.floor(), self.position.y + 1.0, z),
+                Point::new(self.position.x.floor(), self.position.y + 2.0, z),
             ]
         } else {
             vec![
-                Point::new((self.position.x - MODEL_RADIUS).floor(), y, self.position.z + 1.0),
-                Point::new((self.position.x - MODEL_RADIUS).floor(), y, self.position.z + 2.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 1.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 2.0),
+                Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y + 1.0, z),
+                Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y + 2.0, z),
+                Point::new(self.position.x.floor(), self.position.y + 1.0, z),
+                Point::new(self.position.x.floor(), self.position.y + 2.0, z),
             ]
         };
 
         self.all_air(&obstacles, lvl)
     }
-    fn no_y_obstacles(&self, x: f32, lvl: &Res<Level>) -> bool {
-        let y_gap = round_based(self.position.y - self.position.y.floor(), 2);
+    fn no_z_obstacles(&self, x: f32, lvl: &Res<Level>) -> bool {
+        let z_gap = round_based(self.position.z - self.position.z.floor(), 2);
 
-        let obstacles = if y_gap == MODEL_RADIUS {
+        let obstacles = if z_gap == MODEL_RADIUS {
             vec![
-                Point::new(x, self.position.y.floor(), self.position.z + 1.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 2.0),
+                Point::new(x, self.position.y + 1.0, self.position.z.floor()),
+                Point::new(x, self.position.y + 2.0, self.position.z.floor()),
             ]
-        } else if y_gap > MODEL_RADIUS {
+        } else if z_gap > MODEL_RADIUS {
             vec![
-                Point::new(x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 1.0),
-                Point::new(x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 2.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 1.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 2.0),
+                Point::new(x, self.position.y + 1.0, (self.position.z + MODEL_RADIUS).round()),
+                Point::new(x, self.position.y + 2.0, (self.position.z + MODEL_RADIUS).round()),
+                Point::new(x, self.position.y + 1.0, self.position.z.floor()),
+                Point::new(x, self.position.y + 2.0, self.position.z.floor()),
             ]
         } else {
             vec![
-                Point::new(x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 1.0),
-                Point::new(x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 2.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 1.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 2.0),
+                Point::new(x, self.position.y + 1.0, (self.position.z - MODEL_RADIUS).floor()),
+                Point::new(x, self.position.y + 2.0, (self.position.z - MODEL_RADIUS).floor()),
+                Point::new(x, self.position.y + 1.0, self.position.z.floor()),
+                Point::new(x, self.position.y + 2.0, self.position.z.floor()),
             ]
         };
 

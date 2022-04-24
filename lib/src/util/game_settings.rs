@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameSettings {
     pub debug_textures: bool,
+    pub fly_camera: bool,
+    pub inspector: bool,
 }
 
 impl GameSettings {
