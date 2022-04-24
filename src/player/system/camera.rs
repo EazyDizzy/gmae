@@ -17,8 +17,7 @@ pub struct PlayerCamera {
     /// The sensitivity of the Camera's motion based on mouse movement. Defaults to `3.0`
     pub sensitivity: f32,
 
-    x_shift: f32,
-    z_shift: f32,
+    angle: f32,
 }
 
 impl Default for PlayerCamera {
@@ -27,8 +26,7 @@ impl Default for PlayerCamera {
             pitch: 0.0,
             yaw: 0.0,
             sensitivity: 3.0,
-            x_shift: 0.0,
-            z_shift: 10.0,
+            angle: 0.0,
         }
     }
 }
@@ -48,48 +46,16 @@ fn mouse_motion_system(
     }
 
     for (mut options, mut transform) in query.iter_mut() {
+        options.angle += delta.x * options.sensitivity * time.delta_seconds();
+
         let player_position = player_query.iter().next().unwrap().position();
-        let change: f32 = delta.x * options.sensitivity * time.delta_seconds();
-        if options.z_shift <= 0.0 {
-            options.x_shift += change;
-        } else {
-            options.x_shift -= change;
-        }
-        if options.x_shift <= 0.0 {
-            options.z_shift -= change;
-        } else {
-            options.z_shift += change;
-        }
+        let x =  player_position.x + CAMERA_DISTANCE * options.angle.cos();
+        let z = player_position.z + CAMERA_DISTANCE * options.angle.sin();
+        transform.translation = vec3(x, player_position.y + CAMERA_DISTANCE, z);
 
-        options.x_shift = options.x_shift.clamp(-10.0, 10.0);
-        options.z_shift = options.z_shift.clamp(-10.0, 10.0);
-
-        options.yaw -= change * 9.0;
-
-        let yaw_radians = options.yaw.to_radians();
-        let pitch_radians = options.pitch.to_radians();
-
-        transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw_radians)
-            * Quat::from_axis_angle(-Vec3::X, pitch_radians);
-        // let a = Vec3::new(player_position.x, player_position.y, player_position.z);
-        // transform.look_at(a, a);
-        transform.translation = vec3(player_position.x + options.x_shift, player_position.y + CAMERA_DISTANCE, player_position.z + options.z_shift);
-    }
-}
-
-fn camera_movement_system(
-    mut camera_query: Query<(&mut PlayerCamera, &mut Transform)>,
-    player_query: Query<&Player>,
-) {
-    for (options, mut transform) in camera_query.iter_mut() {
-        let player_position = player_query.iter().next().unwrap().position();
-        transform.translation = vec3(player_position.x + options.x_shift, player_position.y + CAMERA_DISTANCE, player_position.z + options.z_shift);
-
-        let yaw_radians = options.yaw.to_radians();
-        let pitch_radians = options.pitch.to_radians();
-
-        transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw_radians)
-            * Quat::from_axis_angle(-Vec3::X, pitch_radians);
+        let target = Vec3::new(player_position.x, player_position.y, player_position.z);
+        let up_target = Vec3::new(player_position.x, player_position.y + 200.0, player_position.z);
+        transform.look_at(target, up_target);
     }
 }
 
@@ -128,7 +94,6 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(setup_player_camera)
-            .add_system(camera_movement_system)
             .add_system(mouse_motion_system);
     }
 }
