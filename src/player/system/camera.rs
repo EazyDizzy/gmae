@@ -10,23 +10,17 @@ const CAMERA_DISTANCE: f32 = 10.0;
 
 #[derive(Component)]
 pub struct PlayerCamera {
-    /// The current pitch of the Camera in degrees.
-    pub pitch: f32,
-    /// The current pitch of the Camera in degrees.
-    pub yaw: f32,
     /// The sensitivity of the Camera's motion based on mouse movement. Defaults to `3.0`
     pub sensitivity: f32,
 
-    angle: f32,
+    rotation_angle: f32,
 }
 
 impl Default for PlayerCamera {
     fn default() -> Self {
         Self {
-            pitch: 0.0,
-            yaw: 0.0,
             sensitivity: 3.0,
-            angle: 0.0,
+            rotation_angle: 0.0,
         }
     }
 }
@@ -69,8 +63,6 @@ fn setup_player_camera(mut commands: Commands, settings: Res<GameSettings>) {
             })
             .insert(FlyCamera {
                 sensitivity: 6.0,
-                pitch: 0.0,
-                yaw: 0.0,
                 max_speed: 2.0,
                 ..Default::default()
             });
@@ -80,11 +72,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<GameSettings>) {
             .insert_bundle(PerspectiveCameraBundle {
                 ..Default::default()
             })
-            .insert(PlayerCamera {
-                pitch: 45.0,
-                yaw: 0.0,
-                ..Default::default()
-            });
+            .insert(PlayerCamera::default());
     }
 }
 
