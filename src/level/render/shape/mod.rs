@@ -14,7 +14,6 @@ fn is_left_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
                 && sequence.intersects_by_z(main_sequence)
                 && sequence.has_x_end_on(start_x)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_z)
@@ -32,7 +31,6 @@ fn is_right_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSeque
                 && sequence.intersects_by_z(main_sequence)
                 && sequence.has_x_start_on(end_x)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_z)
@@ -47,9 +45,8 @@ fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
             sequence.has_same_height(main_sequence)
-                && sequence.has_z_end_on(start_z - 1.0)
+                && sequence.has_z_end_on(start_z + 1.0)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_x)
@@ -67,7 +64,6 @@ fn is_forward_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSeq
             sequence.has_same_height(main_sequence)
                 && sequence.has_z_start_on(end_z)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_x)

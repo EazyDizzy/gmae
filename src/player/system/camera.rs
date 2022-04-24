@@ -60,7 +60,7 @@ fn camera_movement_system(
 ) {
     for (options, mut transform) in camera_query.iter_mut() {
         let player_position = player_query.iter().next().unwrap().position();
-        transform.translation = vec3(player_position.x, player_position.y - 10.0, player_position.z + 15.0);
+        transform.translation = vec3(player_position.x, player_position.y + 15.0, player_position.z + 10.0);
 
         let yaw_radians = options.yaw.to_radians();
         let pitch_radians = options.pitch.to_radians();
@@ -83,12 +83,6 @@ fn setup_player_camera(mut commands: Commands, settings: Res<GameSettings>) {
                 pitch: 0.0,
                 yaw: 0.0,
                 max_speed: 2.0,
-                // key_forward: KeyCode::LShift,
-                // key_backward: KeyCode::Space,
-                // key_left: KeyCode::A,
-                // key_right: KeyCode::D,
-                // key_up: KeyCode::W,
-                // key_down: KeyCode::S,
                 ..Default::default()
             });
     } else {
@@ -98,7 +92,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<GameSettings>) {
                 ..Default::default()
             })
             .insert(PlayerCamera {
-                pitch: 0.0,
+                pitch: 45.0,
                 yaw: 0.0,
                 ..Default::default()
             });

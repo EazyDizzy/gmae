@@ -31,7 +31,6 @@ pub fn create_cube_bundle_batch(
     let left_side_visible = is_left_side_visible(sequence, merged_voxels);
     let forward_side_visible = is_forward_side_visible(sequence, merged_voxels);
     let back_side_visible = is_back_side_visible(sequence, merged_voxels);
-    let back_side_visible = true;
 
     // Quad shapes use transform translation coordinates as their center. That's why a bonus of size/2 is added
     if top_side_visible || bottom_side_visible {
