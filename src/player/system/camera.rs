@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::f32::consts::{PI, TAU};
 
 use bevy::input::mouse::MouseMotion;
 use bevy::math::vec3;
@@ -13,9 +13,13 @@ const CAMERA_DISTANCE: f32 = 10.0;
 #[derive(Component)]
 pub struct PlayerCamera {
     /// The sensitivity of the Camera's motion based on mouse movement. Defaults to `3.0`
-    pub sensitivity: f32,
+    sensitivity: f32,
 
     rotation_angle: f32,
+}
+
+impl PlayerCamera {
+    pub fn angle(&self) -> f32 { self.rotation_angle }
 }
 
 impl Default for PlayerCamera {
@@ -27,7 +31,7 @@ impl Default for PlayerCamera {
     }
 }
 
-fn player_rotation_system(
+fn player_model_rotation_system(
     camera_query: Query<&PlayerCamera>,
     mut player_query: Query<(&mut Player, &mut Transform)>,
 ) {
@@ -53,8 +57,11 @@ fn camera_rotation_system(
     }
 
     for (mut options, mut transform) in query.iter_mut() {
-        let new_angle = options.rotation_angle + delta.x * options.sensitivity * time.delta_seconds();
-        let clamped_angle: f32 = new_angle.clamp(-PI * 2.0, PI * 2.0);
+        let mut new_angle = options.rotation_angle + delta.x * options.sensitivity * time.delta_seconds();
+        if new_angle < 0.0 {
+            new_angle = TAU + new_angle;
+        }
+        let clamped_angle: f32 = new_angle.clamp(0.0, PI * 2.0);
         options.rotation_angle = if clamped_angle.abs() == PI * 2.0 {
             0.0
         } else {
@@ -102,7 +109,7 @@ impl Plugin for CameraPlugin {
         app
             .add_startup_system(setup_player_camera)
             .add_system(camera_rotation_system)
-            .add_system(player_rotation_system)
+            .add_system(player_model_rotation_system)
         ;
     }
 }

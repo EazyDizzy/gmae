@@ -1,9 +1,12 @@
+use std::f32::consts::{FRAC_PI_2, PI};
+
 use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
 use lib::util::math::round_based;
 
+use crate::player::entity::PiePiece::{BottomLeft, BottomRight, TopLeft, TopRight};
 use crate::Transform;
 
 #[derive(Copy, Clone, Debug)]
@@ -22,6 +25,14 @@ const MOVEMENT_SPEED: f32 = 0.1;
 const GRAVITY_SPEED: f32 = MOVEMENT_SPEED;
 const MODEL_RADIUS: f32 = 0.5;
 
+#[derive(Copy, Clone, Debug)]
+enum PiePiece {
+    TopRight,
+    TopLeft,
+    BottomRight,
+    BottomLeft,
+}
+
 impl Player {
     pub fn new() -> Player {
         Player {
@@ -34,12 +45,45 @@ impl Player {
         &self.position
     }
 
-    pub fn move_forward(&mut self, lvl: &Res<Level>) {
-        let future_z = (self.position.z - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
+    pub fn move_forward(&mut self, lvl: &Res<Level>, angle: f32) {
+        let (diff, piece) = if angle <= FRAC_PI_2 {
+            (angle, PiePiece::BottomLeft)
+        } else if angle <= PI {
+            (angle - FRAC_PI_2, TopLeft)
+        } else if angle <= PI + FRAC_PI_2 {
+            (angle - PI, TopRight)
+        } else {
+            (angle - (PI + FRAC_PI_2), BottomRight)
+        };
 
-        if self.no_x_obstacles(future_z, lvl) {
-            self.position.z -= MOVEMENT_SPEED;
-        }
+        let (x, z) = match piece {
+            TopRight => {
+                let z = diff / FRAC_PI_2;
+                ((1.0 - z), z)
+            }
+            TopLeft => {
+                let x = diff / FRAC_PI_2;
+                (x, -(1.0 - x))
+            }
+            BottomRight => {
+                let x = diff / FRAC_PI_2;
+                (-x, (1.0 - x))
+            }
+            BottomLeft => {
+                let z = diff / FRAC_PI_2;
+                (-(1.0 - z), -z)
+            }
+        };
+
+        dbg!(diff, piece, x, z);
+        self.position.x += x * MOVEMENT_SPEED;
+        self.position.z += z * MOVEMENT_SPEED;
+
+        // let future_z = (self.position.z - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
+        //
+        // if self.no_x_obstacles(future_z, lvl) {
+        //     self.position.z -= MOVEMENT_SPEED;
+        // }
     }
     pub fn move_back(&mut self, lvl: &Res<Level>) {
         let future_z = (self.position.z + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
@@ -49,10 +93,11 @@ impl Player {
         }
     }
     pub fn move_left(&mut self, lvl: &Res<Level>) {
-        let future_x = (self.position.x - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
+        let movement_speed = MOVEMENT_SPEED / 2.0;
+        let future_x = (self.position.x - movement_speed - MODEL_RADIUS).floor();
 
         if self.no_z_obstacles(future_x, lvl) {
-            self.position.x -= MOVEMENT_SPEED;
+            self.position.x -= movement_speed;
         }
     }
     pub fn move_right(&mut self, lvl: &Res<Level>) {
