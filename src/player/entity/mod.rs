@@ -148,14 +148,14 @@ impl Player {
 
         let x_gap = round_based(self.position.x - self.position.x.floor(), 1);
         if x_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.round()));
+            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.floor()));
         } else if x_gap < MODEL_RADIUS {
-            points.push(Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y.floor(), self.position.z.round()));
+            points.push(Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y.floor(), self.position.z.floor()));
         }
 
         let z_gap = round_based(self.position.z - self.position.z.floor(), 1);
         if z_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.round()));
+            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.floor()));
         } else if z_gap < MODEL_RADIUS {
             points.push(Point::new(self.position.x.round(), self.position.y.floor(), (self.position.z - MODEL_RADIUS).floor()));
         }
