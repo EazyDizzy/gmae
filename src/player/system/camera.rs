@@ -8,7 +8,7 @@ use lib::util::game_settings::GameSettings;
 
 use crate::player::entity::Player;
 
-const CAMERA_DISTANCE: f32 = 10.0;
+const CAMERA_HEIGHT: f32 = 10.0;
 
 #[derive(Component)]
 pub struct PlayerCamera {
@@ -25,7 +25,7 @@ impl PlayerCamera {
 impl Default for PlayerCamera {
     fn default() -> Self {
         Self {
-            sensitivity: 3.0,
+            sensitivity: 0.3,
             rotation_angle: 0.0,
         }
     }
@@ -69,12 +69,12 @@ fn camera_rotation_system(
         };
 
         let player_position = player_query.iter().next().unwrap().position();
-        let x = player_position.x + CAMERA_DISTANCE * options.rotation_angle.cos();
-        let z = player_position.z + CAMERA_DISTANCE * options.rotation_angle.sin();
-        transform.translation = vec3(x, player_position.y + CAMERA_DISTANCE, z);
+        let x = player_position.x + CAMERA_HEIGHT * options.rotation_angle.cos();
+        let z = player_position.z + CAMERA_HEIGHT * options.rotation_angle.sin();
+        transform.translation = vec3(x, player_position.y + CAMERA_HEIGHT, z);
 
-        let target = Vec3::new(player_position.x, player_position.y, player_position.z);
-        let up_target = Vec3::new(player_position.x, player_position.y + 200.0, player_position.z);
+        let target = Vec3::new(player_position.x, player_position.y + 3.0, player_position.z);
+        let up_target = Vec3::new(player_position.x, 10000.0, player_position.z);
         transform.look_at(target, up_target);
     }
 }
