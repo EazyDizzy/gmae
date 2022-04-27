@@ -16,7 +16,7 @@ pub fn keyboard_interaction(
         .for_each(|k| {
             match k {
                 KeyCode::Up => player.move_forward(&lvl, angle),
-                KeyCode::Down => player.move_back(&lvl),
+                KeyCode::Down => player.move_back(&lvl, angle),
                 KeyCode::Right => player.move_right(&lvl),
                 KeyCode::Left => player.move_left(&lvl),
                 KeyCode::Space | KeyCode::Apostrophe => player.jump(&lvl),

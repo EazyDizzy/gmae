@@ -26,7 +26,7 @@ impl Plugin for PlayerPlugin {
 }
 
 pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
-    let mesh = asset_server.load("mesh/player2.glb#Scene0");
+    let mesh = asset_server.load("mesh/player.glb#Scene0");
 
     commands.spawn_bundle((
         Transform::default()

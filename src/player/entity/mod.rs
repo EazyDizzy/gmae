@@ -36,7 +36,7 @@ enum PiePiece {
 impl Player {
     pub fn new() -> Player {
         Player {
-            position: Point::new(10.0, 3.0, 11.0),
+            position: Point::new(9.5, 1.0, 3.0),
             movement_state: None,
         }
     }
@@ -46,50 +46,23 @@ impl Player {
     }
 
     pub fn move_forward(&mut self, lvl: &Res<Level>, angle: f32) {
-        let (diff, piece) = if angle <= FRAC_PI_2 {
-            (angle, PiePiece::BottomLeft)
-        } else if angle <= PI {
-            (angle - FRAC_PI_2, TopLeft)
-        } else if angle <= PI + FRAC_PI_2 {
-            (angle - PI, TopRight)
-        } else {
-            (angle - (PI + FRAC_PI_2), BottomRight)
-        };
+        let (x_modifier, z_modifier) = angle_to_forward_x_z_modifiers(angle);
+        let future_x = self.position.x + x_modifier * MOVEMENT_SPEED;
+        let future_z = self.position.z + z_modifier * MOVEMENT_SPEED;
 
-        let (x, z) = match piece {
-            TopRight => {
-                let z = diff / FRAC_PI_2;
-                ((1.0 - z), z)
-            }
-            TopLeft => {
-                let x = diff / FRAC_PI_2;
-                (x, -(1.0 - x))
-            }
-            BottomRight => {
-                let x = diff / FRAC_PI_2;
-                (-x, (1.0 - x))
-            }
-            BottomLeft => {
-                let z = diff / FRAC_PI_2;
-                (-(1.0 - z), -z)
-            }
-        };
-
-        dbg!(diff, piece, x, z);
-        self.position.x += x * MOVEMENT_SPEED;
-        self.position.z += z * MOVEMENT_SPEED;
-
-        // let future_z = (self.position.z - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
-        //
-        // if self.no_x_obstacles(future_z, lvl) {
-        //     self.position.z -= MOVEMENT_SPEED;
-        // }
+        if self.can_stay_on(future_x, future_z, lvl) {
+            self.position.x = future_x;
+            self.position.z = future_z;
+        }
     }
-    pub fn move_back(&mut self, lvl: &Res<Level>) {
-        let future_z = (self.position.z + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
+    pub fn move_back(&mut self, lvl: &Res<Level>, angle: f32) {
+        let (x_modifier, z_modifier) = angle_to_forward_x_z_modifiers(angle);
+        let future_x = self.position.x - x_modifier * MOVEMENT_SPEED;
+        let future_z = self.position.z - z_modifier * MOVEMENT_SPEED;
 
-        if self.no_x_obstacles(future_z, lvl) {
-            self.position.z += MOVEMENT_SPEED;
+        if self.can_stay_on(future_x, future_z, lvl) {
+            self.position.x = future_x;
+            self.position.z = future_z;
         }
     }
     pub fn move_left(&mut self, lvl: &Res<Level>) {
@@ -196,6 +169,33 @@ impl Player {
         voxel_ceil.is_some()
     }
 
+    fn can_stay_on(&self, x: f32, z: f32, lvl: &Res<Level>) -> bool {
+        let y = self.position.y;
+        let mut obstacles: Vec<Point> = vec![
+            Point::new(x.floor(), y, z),
+            Point::new(x, y, z.floor()),
+        ];
+
+        let x_gap = round_based(x - x.floor(), 1);
+        if x_gap > MODEL_RADIUS {
+            obstacles.push(Point::new((x + MODEL_RADIUS).floor(), y, z.floor()));
+        } else if x_gap < MODEL_RADIUS {
+            obstacles.push(Point::new((x - MODEL_RADIUS).floor(), y, z.floor()));
+        };
+
+        let z_gap = round_based(z - z.floor(), 1);
+        if z_gap > MODEL_RADIUS {
+            obstacles.push(Point::new(x.floor(), y, (z + MODEL_RADIUS).floor()));
+        } else if z_gap < MODEL_RADIUS {
+            obstacles.push(Point::new(x.floor(), y, (z - MODEL_RADIUS).floor()));
+        };
+
+        obstacles = obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect();
+        obstacles.extend(obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect::<Vec<Point>>());
+
+        self.all_air(&obstacles, lvl)
+    }
+
     fn no_y_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
         const FALLING_MODEL_RADIUS: f32 = MODEL_RADIUS * 0.9;
         let obstacles = [
@@ -266,3 +266,37 @@ impl Player {
     }
 }
 
+fn angle_to_pie_piece(angle: f32) -> (f32, PiePiece) {
+    if angle <= FRAC_PI_2 {
+        (angle, BottomLeft)
+    } else if angle <= PI {
+        (angle - FRAC_PI_2, TopLeft)
+    } else if angle <= PI + FRAC_PI_2 {
+        (angle - PI, TopRight)
+    } else {
+        (angle - (PI + FRAC_PI_2), BottomRight)
+    }
+}
+
+fn angle_to_forward_x_z_modifiers(angle: f32) -> (f32, f32) {
+    let (diff, piece) = angle_to_pie_piece(angle);
+
+    match piece {
+        TopRight => {
+            let z = diff / FRAC_PI_2;
+            ((1.0 - z), z)
+        }
+        TopLeft => {
+            let x = diff / FRAC_PI_2;
+            (x, -(1.0 - x))
+        }
+        BottomRight => {
+            let x = diff / FRAC_PI_2;
+            (-x, (1.0 - x))
+        }
+        BottomLeft => {
+            let z = diff / FRAC_PI_2;
+            (-(1.0 - z), -z)
+        }
+    }
+}
