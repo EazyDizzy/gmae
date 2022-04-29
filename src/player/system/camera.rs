@@ -74,6 +74,7 @@ fn camera_rotation_system(
         transform.translation = vec3(x, player_position.y + CAMERA_HEIGHT, z);
 
         let target = Vec3::new(player_position.x, player_position.y + 3.0, player_position.z);
+        // idk how it works, but big Y fixes the camera angle problem
         let up_target = Vec3::new(player_position.x, 10000.0, player_position.z);
         transform.look_at(target, up_target);
     }

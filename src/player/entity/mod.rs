@@ -142,22 +142,23 @@ impl Player {
     }
 
     fn has_fundament(&self, lvl: &Res<Level>) -> bool {
+        let Point { x, y, z } = &self.position;
         let mut points = vec![
-            Point::new(self.position.x.floor(), self.position.y.floor(), self.position.z.floor()),
+            Point::new(x.floor(), y.floor(), z.floor()),
         ];
 
-        let x_gap = round_based(self.position.x - self.position.x.floor(), 1);
+        let x_gap = round_based(x - x.floor(), 1);
         if x_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.floor()));
+            points.push(Point::new(x.round(), y.floor(), z.floor()));
         } else if x_gap < MODEL_RADIUS {
-            points.push(Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y.floor(), self.position.z.floor()));
+            points.push(Point::new((x - MODEL_RADIUS).floor(), y.floor(), z.floor()));
         }
 
-        let z_gap = round_based(self.position.z - self.position.z.floor(), 1);
+        let z_gap = round_based(z - z.floor(), 1);
         if z_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.floor(), self.position.z.floor()));
+            points.push(Point::new(x.round(), y.floor(), z.floor()));
         } else if z_gap < MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.floor(), (self.position.z - MODEL_RADIUS).floor()));
+            points.push(Point::new(x.round(), y.floor(), (z - MODEL_RADIUS).floor()));
         }
 
         !self.all_air(&points, lvl)
@@ -189,6 +190,16 @@ impl Player {
         } else if z_gap < MODEL_RADIUS {
             obstacles.push(Point::new(x.floor(), y, (z - MODEL_RADIUS).floor()));
         };
+
+        if x_gap > MODEL_RADIUS && z_gap > MODEL_RADIUS {
+            obstacles.push(Point::new((x + MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+        } else if x_gap < MODEL_RADIUS && z_gap < MODEL_RADIUS {
+            obstacles.push(Point::new((x - MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+        } else if x_gap > MODEL_RADIUS && z_gap < MODEL_RADIUS {
+            obstacles.push(Point::new((x + MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+        }else if x_gap < MODEL_RADIUS && z_gap > MODEL_RADIUS {
+            obstacles.push(Point::new((x - MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+        }
 
         obstacles = obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect();
         obstacles.extend(obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect::<Vec<Point>>());
