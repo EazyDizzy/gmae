@@ -142,26 +142,7 @@ impl Player {
     }
 
     fn has_fundament(&self, lvl: &Res<Level>) -> bool {
-        let Point { x, y, z } = &self.position;
-        let mut points = vec![
-            Point::new(x.floor(), y.floor(), z.floor()),
-        ];
-
-        let x_gap = round_based(x - x.floor(), 1);
-        if x_gap > MODEL_RADIUS {
-            points.push(Point::new(x.round(), y.floor(), z.floor()));
-        } else if x_gap < MODEL_RADIUS {
-            points.push(Point::new((x - MODEL_RADIUS).floor(), y.floor(), z.floor()));
-        }
-
-        let z_gap = round_based(z - z.floor(), 1);
-        if z_gap > MODEL_RADIUS {
-            points.push(Point::new(x.round(), y.floor(), z.floor()));
-        } else if z_gap < MODEL_RADIUS {
-            points.push(Point::new(x.round(), y.floor(), (z - MODEL_RADIUS).floor()));
-        }
-
-        !self.all_air(&points, lvl)
+        !self.no_y_obstacles(self.position.y, lvl)
     }
     fn has_ceil(&self, lvl: &Res<Level>) -> bool {
         let future_position = Point::new(self.position.x.round(), (self.position.y + 3.0).floor(), self.position.z.round());
@@ -170,36 +151,41 @@ impl Player {
         voxel_ceil.is_some()
     }
 
-    fn can_stay_on(&self, x: f32, z: f32, lvl: &Res<Level>) -> bool {
-        let y = self.position.y;
-        let mut obstacles: Vec<Point> = vec![
+    fn get_touched_points(&self, x: f32, y: f32, z: f32) -> Vec<Point> {
+        let mut points: Vec<Point> = vec![
             Point::new(x.floor(), y, z),
             Point::new(x, y, z.floor()),
         ];
 
         let x_gap = round_based(x - x.floor(), 1);
         if x_gap > MODEL_RADIUS {
-            obstacles.push(Point::new((x + MODEL_RADIUS).floor(), y, z.floor()));
+            points.push(Point::new((x + MODEL_RADIUS).floor(), y, z.floor()));
         } else if x_gap < MODEL_RADIUS {
-            obstacles.push(Point::new((x - MODEL_RADIUS).floor(), y, z.floor()));
+            points.push(Point::new((x - MODEL_RADIUS).floor(), y, z.floor()));
         };
 
         let z_gap = round_based(z - z.floor(), 1);
         if z_gap > MODEL_RADIUS {
-            obstacles.push(Point::new(x.floor(), y, (z + MODEL_RADIUS).floor()));
+            points.push(Point::new(x.floor(), y, (z + MODEL_RADIUS).floor()));
         } else if z_gap < MODEL_RADIUS {
-            obstacles.push(Point::new(x.floor(), y, (z - MODEL_RADIUS).floor()));
+            points.push(Point::new(x.floor(), y, (z - MODEL_RADIUS).floor()));
         };
 
         if x_gap > MODEL_RADIUS && z_gap > MODEL_RADIUS {
-            obstacles.push(Point::new((x + MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+            points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
         } else if x_gap < MODEL_RADIUS && z_gap < MODEL_RADIUS {
-            obstacles.push(Point::new((x - MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+            points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
         } else if x_gap > MODEL_RADIUS && z_gap < MODEL_RADIUS {
-            obstacles.push(Point::new((x + MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
-        }else if x_gap < MODEL_RADIUS && z_gap > MODEL_RADIUS {
-            obstacles.push(Point::new((x - MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+            points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+        } else if x_gap < MODEL_RADIUS && z_gap > MODEL_RADIUS {
+            points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
         }
+
+        points
+    }
+
+    fn can_stay_on(&self, x: f32, z: f32, lvl: &Res<Level>) -> bool {
+        let mut obstacles: Vec<Point> = self.get_touched_points(x, self.position.y, z);
 
         obstacles = obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect();
         obstacles.extend(obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect::<Vec<Point>>());
@@ -208,13 +194,7 @@ impl Player {
     }
 
     fn no_y_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
-        const FALLING_MODEL_RADIUS: f32 = MODEL_RADIUS * 0.9;
-        let obstacles = [
-            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), y, (self.position.z + FALLING_MODEL_RADIUS).floor()),
-            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), y, (self.position.z - FALLING_MODEL_RADIUS).floor()),
-            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), y, (self.position.z + FALLING_MODEL_RADIUS).floor()),
-            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), y, (self.position.z - FALLING_MODEL_RADIUS).floor()),
-        ];
+        let obstacles: Vec<Point> = self.get_touched_points(self.position.x, y, self.position.z);
 
         self.all_air(&obstacles, lvl)
     }
