@@ -59,7 +59,8 @@ fn camera_rotation_system(
     for (mut options, mut transform) in query.iter_mut() {
         let mut new_angle = options.rotation_angle + delta.x * options.sensitivity * time.delta_seconds();
         if new_angle < 0.0 {
-            new_angle = TAU + new_angle;
+            // angle should always be positive. -1.28 === 5.0
+            new_angle += TAU;
         }
         let clamped_angle: f32 = new_angle.clamp(0.0, PI * 2.0);
         options.rotation_angle = if clamped_angle.abs() == PI * 2.0 {

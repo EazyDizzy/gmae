@@ -11,7 +11,7 @@ pub fn keyboard_interaction(
     camera_query: Query<&PlayerCamera>,
 ) {
     let (mut player, mut transform) = player_query.iter_mut().next().unwrap();
-    let angle = camera_query.iter().next().map_or(0.0, |c| c.angle());
+    let angle = camera_query.iter().next().map_or(0.0, PlayerCamera::angle);
     keyboard_input.get_pressed()
         .for_each(|k| {
             match k {

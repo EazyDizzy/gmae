@@ -18,29 +18,27 @@ const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
 fn main() {
     let lvls = fs::read_dir(LVL_DIR).unwrap();
 
-    for lvl in lvls {
-        if let Ok(dir) = lvl {
-            let lvl_name = dir.file_name();
-            let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
+    for dir in lvls.flatten() {
+        let lvl_name = dir.file_name();
+        let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
 
-            if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
-                let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
-                let converted_metadata = fs::metadata(&serialized_lvl_path);
-                let should_rebuild = if let Ok(converted) = converted_metadata {
-                    original_metadata.modified().unwrap() > converted.modified().unwrap()
-                        // || lvl_name == "debug"
-                } else { true };
+        if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
+            let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
+            let converted_metadata = fs::metadata(&serialized_lvl_path);
+            let should_rebuild = if let Ok(converted) = converted_metadata {
+                original_metadata.modified().unwrap() > converted.modified().unwrap()
+                // || lvl_name == "debug"
+            } else { true };
 
-                if should_rebuild {
-                    println!("converting {original_lvl_path}");
-                    let lvl = read_level(lvl_name.to_str().unwrap());
-                    let lvl_data = serde_json::to_string(&lvl).unwrap();
+            if should_rebuild {
+                println!("converting {original_lvl_path}");
+                let lvl = read_level(lvl_name.to_str().unwrap());
+                let lvl_data = serde_json::to_string(&lvl).unwrap();
 
-                    let file = File::create(serialized_lvl_path).unwrap();
-                    let mut e = ZlibEncoder::new(file, Compression::best());
-                    e.write_all(lvl_data.as_bytes()).unwrap();
-                    e.finish().unwrap();
-                }
+                let file = File::create(serialized_lvl_path).unwrap();
+                let mut e = ZlibEncoder::new(file, Compression::best());
+                e.write_all(lvl_data.as_bytes()).unwrap();
+                e.finish().unwrap();
             }
         }
     }

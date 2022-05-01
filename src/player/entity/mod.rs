@@ -151,57 +151,19 @@ impl Player {
         voxel_ceil.is_some()
     }
 
-    fn get_touched_points(&self, x: f32, y: f32, z: f32) -> Vec<Point> {
-        let mut points: Vec<Point> = vec![
-            Point::new(x.floor(), y, z),
-            Point::new(x, y, z.floor()),
-        ];
-
-        let x_gap = round_based(x - x.floor(), 1);
-        if x_gap > MODEL_RADIUS {
-            points.push(Point::new((x + MODEL_RADIUS).floor(), y, z.floor()));
-        } else if x_gap < MODEL_RADIUS {
-            points.push(Point::new((x - MODEL_RADIUS).floor(), y, z.floor()));
-        };
-
-        let z_gap = round_based(z - z.floor(), 1);
-        if z_gap > MODEL_RADIUS {
-            points.push(Point::new(x.floor(), y, (z + MODEL_RADIUS).floor()));
-        } else if z_gap < MODEL_RADIUS {
-            points.push(Point::new(x.floor(), y, (z - MODEL_RADIUS).floor()));
-        };
-
-        if x_gap > MODEL_RADIUS && z_gap > MODEL_RADIUS {
-            points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
-        } else if x_gap < MODEL_RADIUS && z_gap < MODEL_RADIUS {
-            points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
-        } else if x_gap > MODEL_RADIUS && z_gap < MODEL_RADIUS {
-            points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
-        } else if x_gap < MODEL_RADIUS && z_gap > MODEL_RADIUS {
-            points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
-        }
-
-        points
-    }
-
     fn can_stay_on(&self, x: f32, z: f32, lvl: &Res<Level>) -> bool {
-        let mut obstacles: Vec<Point> = self.get_touched_points(x, self.position.y, z);
+        let mut obstacles: Vec<Point> = get_touched_points(x, self.position.y, z);
 
         obstacles = obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect();
         obstacles.extend(obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect::<Vec<Point>>());
 
-        self.all_air(&obstacles, lvl)
+        lvl.points_are_empty(&obstacles)
     }
 
     fn no_y_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
-        let obstacles: Vec<Point> = self.get_touched_points(self.position.x, y, self.position.z);
+        let obstacles: Vec<Point> = get_touched_points(self.position.x, y, self.position.z);
 
-        self.all_air(&obstacles, lvl)
-    }
-
-    fn all_air(&self, points: &[Point], lvl: &Res<Level>) -> bool {
-        points.iter()
-            .all(|p| lvl.get_voxel_by_point(p).is_none())
+        lvl.points_are_empty(&obstacles)
     }
 }
 
@@ -261,4 +223,37 @@ fn angle_to_left_x_z_modifiers(angle: f32) -> (f32, f32) {
             (-x, (1.0 - x))
         }
     }
+}
+
+fn get_touched_points(x: f32, y: f32, z: f32) -> Vec<Point> {
+    let mut points: Vec<Point> = vec![
+        Point::new(x.floor(), y, z),
+        Point::new(x, y, z.floor()),
+    ];
+
+    let x_gap = round_based(x - x.floor(), 1);
+    if x_gap > MODEL_RADIUS {
+        points.push(Point::new((x + MODEL_RADIUS).floor(), y, z.floor()));
+    } else if x_gap < MODEL_RADIUS {
+        points.push(Point::new((x - MODEL_RADIUS).floor(), y, z.floor()));
+    };
+
+    let z_gap = round_based(z - z.floor(), 1);
+    if z_gap > MODEL_RADIUS {
+        points.push(Point::new(x.floor(), y, (z + MODEL_RADIUS).floor()));
+    } else if z_gap < MODEL_RADIUS {
+        points.push(Point::new(x.floor(), y, (z - MODEL_RADIUS).floor()));
+    };
+
+    if x_gap > MODEL_RADIUS && z_gap > MODEL_RADIUS {
+        points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+    } else if x_gap < MODEL_RADIUS && z_gap < MODEL_RADIUS {
+        points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+    } else if x_gap > MODEL_RADIUS && z_gap < MODEL_RADIUS {
+        points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+    } else if x_gap < MODEL_RADIUS && z_gap > MODEL_RADIUS {
+        points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+    }
+
+    points
 }
