@@ -8,48 +8,45 @@ pub mod triangle_prism;
 fn is_left_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
     let (start_x, ..) = main_sequence.x_borders();
 
-    let adjoining_plane_y: Vec<usize> = all_shapes.iter()
+    let adjoining_plane_z: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
             sequence.has_same_height(main_sequence)
-                && sequence.intersects_by_y(main_sequence)
+                && sequence.intersects_by_z(main_sequence)
                 && sequence.has_x_end_on(start_x)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
-        .flat_map(VoxelSequence::covered_y)
+        .flat_map(VoxelSequence::covered_z)
         .collect();
 
-    !main_sequence.covered_y().all(|y| adjoining_plane_y.contains(&y))
+    !main_sequence.covered_z().all(|z| adjoining_plane_z.contains(&z))
 }
 
 fn is_right_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
     let (.., end_x) = main_sequence.x_borders();
 
-    let adjoining_plane_y: Vec<usize> = all_shapes.iter()
+    let adjoining_plane_z: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
             sequence.has_same_height(main_sequence)
-                && sequence.intersects_by_y(main_sequence)
+                && sequence.intersects_by_z(main_sequence)
                 && sequence.has_x_start_on(end_x)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
-        .flat_map(VoxelSequence::covered_y)
+        .flat_map(VoxelSequence::covered_z)
         .collect();
 
-    !main_sequence.covered_y().all(|y| adjoining_plane_y.contains(&y))
+    !main_sequence.covered_z().all(|z| adjoining_plane_z.contains(&z))
 }
 
 fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
-    let (start_y, ..) = main_sequence.y_borders();
+    let (start_z, ..) = main_sequence.z_borders();
 
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
             sequence.has_same_height(main_sequence)
-                && sequence.has_y_end_on(start_y - 1.0)
+                && sequence.has_z_end_on(start_z + 1.0)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_x)
@@ -60,14 +57,13 @@ fn is_back_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequen
 
 #[allow(unused)]
 fn is_forward_side_visible(main_sequence: &VoxelSequence, all_shapes: &[VoxelSequence]) -> bool {
-    let (.., end_y) = main_sequence.y_borders();
+    let (.., end_z) = main_sequence.z_borders();
 
     let adjoining_plane_x: Vec<usize> = all_shapes.iter()
         .filter(|sequence| {
             sequence.has_same_height(main_sequence)
-                && sequence.has_y_start_on(end_y)
+                && sequence.has_z_start_on(end_z)
                 && sequence.is_not_transparent()
-                // checking if it is not the same sequence
                 && !is_same_sequence(*sequence, main_sequence)
         })
         .flat_map(VoxelSequence::covered_x)
@@ -82,12 +78,12 @@ fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSeque
         return false;
     }
 
-    let height = main_sequence.start_position().z - 1.0;
-    let next_z_layer = get_next_z_layer(main_sequence, sequences, height);
+    let height = main_sequence.start_position().y - 1.0;
+    let next_y_layer = get_next_y_layer(main_sequence, sequences, height);
 
-    for y in main_sequence.covered_y() {
+    for z in main_sequence.covered_z() {
         for x in main_sequence.covered_x() {
-            if !next_z_layer.contains(&(x, y)) {
+            if !next_y_layer.contains(&(x, z)) {
                 return true;
             }
         }
@@ -97,12 +93,12 @@ fn is_bottom_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSeque
 }
 
 fn is_top_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence]) -> bool {
-    let height = main_sequence.end_position().z + 1.0;
-    let next_z_layer = get_next_z_layer(main_sequence, sequences, height);
+    let height = main_sequence.end_position().y + 1.0;
+    let next_y_layer = get_next_y_layer(main_sequence, sequences, height);
 
-    for y in main_sequence.covered_y() {
+    for z in main_sequence.covered_z() {
         for x in main_sequence.covered_x() {
-            if !next_z_layer.contains(&(x, y)) {
+            if !next_y_layer.contains(&(x, z)) {
                 return true;
             }
         }
@@ -111,11 +107,11 @@ fn is_top_side_visible(main_sequence: &VoxelSequence, sequences: &[VoxelSequence
     false
 }
 
-fn get_next_z_layer<'a>(main_sequence: &'a VoxelSequence, all_sequences: &'a [VoxelSequence], height: f32) -> Vec<(usize, usize)> {
+fn get_next_y_layer<'a>(main_sequence: &'a VoxelSequence, all_sequences: &'a [VoxelSequence], height: f32) -> Vec<(usize, usize)> {
     all_sequences.iter()
         .filter(|sequence| {
             sequence.has_height(height)
-                && sequence.intersects_by_y(main_sequence)
+                && sequence.intersects_by_z(main_sequence)
                 && sequence.intersects_by_x(main_sequence)
                 && sequence.is_not_transparent()
         })

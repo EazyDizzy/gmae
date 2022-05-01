@@ -8,6 +8,7 @@ clippy::cast_possible_truncation,
 clippy::float_cmp,
 clippy::default_trait_access,
 clippy::needless_pass_by_value,
+clippy::module_name_repetitions,
 )]
 
 extern crate core;
@@ -17,6 +18,8 @@ use bevy::{
     prelude::*,
 };
 use bevy::diagnostic::LogDiagnosticsPlugin;
+use bevy_fly_camera::FlyCameraPlugin;
+use bevy_inspector_egui::WorldInspectorPlugin;
 use lib::entity::voxel::Material;
 use lib::util::game_settings::GameSettings;
 
@@ -27,7 +30,6 @@ use crate::system::menu::MenuPlugin;
 mod system;
 mod level;
 mod player;
-mod util;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
@@ -37,17 +39,24 @@ enum GameState {
 fn main() {
     let settings = GameSettings::from_file("settings.json");
 
-    App::new()
-        .insert_resource(settings)
-        .add_state(GameState::Playing)
+    let mut app = App::new();
+    app.add_state(GameState::Playing)
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
-        // .add_plugin(FlyCameraPlugin)
-        // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(LevelPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(MenuPlugin)
-        .add_startup_system(system::light::setup.system())
-        .run();
+        .add_startup_system(system::light::setup.system());
+
+    if settings.fly_camera {
+        app.add_plugin(FlyCameraPlugin);
+    }
+    if settings.inspector {
+        app.add_plugin(WorldInspectorPlugin::new());
+    }
+
+    app.insert_resource(settings);
+
+    app.run();
 }

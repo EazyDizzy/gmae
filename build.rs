@@ -18,29 +18,27 @@ const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
 fn main() {
     let lvls = fs::read_dir(LVL_DIR).unwrap();
 
-    for lvl in lvls {
-        if let Ok(dir) = lvl {
-            let lvl_name = dir.file_name();
-            let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
+    for dir in lvls.flatten() {
+        let lvl_name = dir.file_name();
+        let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
 
-            if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
-                let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
-                let converted_metadata = fs::metadata(&serialized_lvl_path);
-                let should_rebuild = if let Ok(converted) = converted_metadata {
-                    original_metadata.modified().unwrap() > converted.modified().unwrap()
-                        // || lvl_name == "debug"
-                } else { true };
+        if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
+            let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
+            let converted_metadata = fs::metadata(&serialized_lvl_path);
+            let should_rebuild = if let Ok(converted) = converted_metadata {
+                original_metadata.modified().unwrap() > converted.modified().unwrap()
+                // || lvl_name == "debug"
+            } else { true };
 
-                if should_rebuild {
-                    println!("converting {original_lvl_path}");
-                    let lvl = read_level(lvl_name.to_str().unwrap());
-                    let lvl_data = serde_json::to_string(&lvl).unwrap();
+            if should_rebuild {
+                println!("converting {original_lvl_path}");
+                let lvl = read_level(lvl_name.to_str().unwrap());
+                let lvl_data = serde_json::to_string(&lvl).unwrap();
 
-                    let file = File::create(serialized_lvl_path).unwrap();
-                    let mut e = ZlibEncoder::new(file, Compression::best());
-                    e.write_all(lvl_data.as_bytes()).unwrap();
-                    e.finish().unwrap();
-                }
+                let file = File::create(serialized_lvl_path).unwrap();
+                let mut e = ZlibEncoder::new(file, Compression::best());
+                e.write_all(lvl_data.as_bytes()).unwrap();
+                e.finish().unwrap();
             }
         }
     }
@@ -54,25 +52,25 @@ fn read_level(lvl_name: &str) -> Level {
 
     let mut region = RegionBuffer::new(file);
 
-    region.for_each_chunk(|chunk_y, chunk_x, data| {
-        if chunk_y > EXPORT_DIAPASON || chunk_x > EXPORT_DIAPASON {
+    region.for_each_chunk(|chunk_x, chunk_z, data| {
+        if chunk_x > EXPORT_DIAPASON || chunk_z > EXPORT_DIAPASON {
             return;
         }
         let chunk: JavaChunk = from_bytes(data.as_slice()).unwrap();
 
         for x in 0..CHUNK_SIZE {
-            for y in 0..CHUNK_SIZE {
-                for height in chunk.y_range() {
-                    if let Some(block) = chunk.block(x, height, y) {
+            for z in 0..CHUNK_SIZE {
+                for y in chunk.y_range() {
+                    if let Some(block) = chunk.block(x, y, z) {
                         if block.name() != "minecraft:air" {
-                            let voxel_y = (chunk_y * CHUNK_SIZE) + x;
-                            let voxel_x = (chunk_x * CHUNK_SIZE) + y;
+                            let voxel_x = (chunk_x * CHUNK_SIZE) + x;
+                            let voxel_z = (chunk_z * CHUNK_SIZE) + z;
                             let material = match_name_to_material(block.name());
                             let shape = detect_shape(block);
-                            let voxel_z = height as f32 + MAX_NEGATIVE_HEIGHT;
+                            let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
 
                             voxels.push(Voxel::new(
-                                Point::new(voxel_x as f32, voxel_y as f32, voxel_z),
+                                Point::new(voxel_x as f32, voxel_y, voxel_z as f32),
                                 material,
                                 shape,
                             ));

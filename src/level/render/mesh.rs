@@ -24,31 +24,31 @@ pub fn get_or_create(meshes: &mut ResMut<Assets<Mesh>>, width: f32, height: f32,
 pub fn merge_voxels(voxel_stack: &VoxelStack, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
     let mut all_sequences = vec![];
 
-    for (z, plate) in voxel_stack.plates() {
+    for (y, plate) in voxel_stack.plates() {
         let mut plane_sequences = vec![];
 
-        for (y, row) in plate.rows() {
+        for (z, row) in plate.rows() {
             let row: Vec<&Voxel> = row.iter().collect();
-            let row_sequences = merge_voxels_row(row, max_voxels_per_dimension);
+            let row_sequences = merge_voxels_x_row(row, max_voxels_per_dimension);
 
-            plane_sequences = stretch_sequences_by_y(row_sequences, plane_sequences, y, max_voxels_per_dimension);
+            plane_sequences = stretch_sequences_by_z(row_sequences, plane_sequences, z, max_voxels_per_dimension);
         }
 
-        all_sequences = stretch_sequences_by_z(plane_sequences, all_sequences, z);
+        all_sequences = stretch_sequences_by_y(plane_sequences, all_sequences, y);
     }
 
     all_sequences
 }
 
-fn stretch_sequences_by_z<'a>(
+fn stretch_sequences_by_y<'a>(
     mut plane_sequences: Vec<VoxelSequence<'a>>,
     mut all_sequences: Vec<VoxelSequence<'a>>,
-    z: usize,
+    y: usize,
 ) -> Vec<VoxelSequence<'a>> {
-    let needed_z = (z - 1) as f32;
+    let needed_y = (y - 1) as f32;
     let previous_layer_sequences = all_sequences.iter_mut()
         .filter(|s| {
-            s.has_z_end_on(needed_z)
+            s.has_y_end_on(needed_y)
         })
         .collect::<Vec<&mut VoxelSequence<'a>>>();
 
@@ -56,13 +56,13 @@ fn stretch_sequences_by_z<'a>(
         let same_new_seq = plane_sequences.iter().enumerate()
             .find(|(_, s)|
                 s.same_x_size(seq)
-                    && s.same_y_size(seq)
+                    && s.same_z_size(seq)
                     && can_merge_materials(seq.example_material(), s.example_material())
             );
 
         if let Some((i, ..)) = same_new_seq {
             let d = plane_sequences.remove(i);
-            seq.expand_z_end(d);
+            seq.expand_y_end(d);
         }
     }
 
@@ -71,16 +71,16 @@ fn stretch_sequences_by_z<'a>(
     all_sequences
 }
 
-fn stretch_sequences_by_y<'a>(
+fn stretch_sequences_by_z<'a>(
     row_sequences: Vec<VoxelSequence<'a>>,
     mut plane_sequences: Vec<VoxelSequence<'a>>,
-    y: usize,
+    z: usize,
     max_voxels_per_dimension: u32,
 ) -> Vec<VoxelSequence<'a>> {
     let mut sequences_to_append = vec![];
     let mut prev_row_sequences: Vec<&mut VoxelSequence> = plane_sequences.iter_mut()
         .filter(|s: &&mut VoxelSequence| {
-            s.has_y_end_on(y as f32 - 1.0)
+            s.has_z_end_on(z as f32 - 1.0)
         }).collect();
 
     for sequence in row_sequences {
@@ -92,8 +92,8 @@ fn stretch_sequences_by_y<'a>(
         });
 
         if let Some(same) = same_sequence {
-            if (same.y_height() as u32) + (sequence.y_height() as u32) < max_voxels_per_dimension {
-                same.expand_y_end(sequence);
+            if (same.z_width() as u32) + (sequence.z_width() as u32) < max_voxels_per_dimension {
+                same.expand_z_end(sequence);
             } else {
                 sequences_to_append.push(sequence);
             }
@@ -107,7 +107,7 @@ fn stretch_sequences_by_y<'a>(
     plane_sequences
 }
 
-fn merge_voxels_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
+fn merge_voxels_x_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
     row.sort_by(|a, b| {
         a.position.x.partial_cmp(&b.position.x).unwrap()
     });

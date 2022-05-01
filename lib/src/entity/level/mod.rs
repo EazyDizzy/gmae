@@ -40,4 +40,9 @@ impl Level {
     pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
         self.voxel_stack.get_voxel_by_point(point)
     }
+
+    pub fn points_are_empty(&self, points: &[Point]) -> bool {
+        points.iter()
+            .all(|p| self.get_voxel_by_point(p).is_none())
+    }
 }

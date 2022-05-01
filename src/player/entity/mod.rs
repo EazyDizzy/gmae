@@ -1,13 +1,13 @@
-use std::f32::consts::PI;
+use std::f32::consts::{FRAC_PI_2, PI};
 
 use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
-use once_cell::sync::Lazy;
+use lib::util::math::round_based;
 
+use crate::player::entity::PiePiece::{BottomLeft, BottomRight, TopLeft, TopRight};
 use crate::Transform;
-use crate::util::round_based;
 
 #[derive(Copy, Clone, Debug)]
 enum MovementState {
@@ -24,14 +24,19 @@ pub struct Player {
 const MOVEMENT_SPEED: f32 = 0.1;
 const GRAVITY_SPEED: f32 = MOVEMENT_SPEED;
 const MODEL_RADIUS: f32 = 0.5;
-static DEFAULT_ROTATION: Lazy<Quat> = Lazy::new(|| {
-    Quat::from_euler(EulerRot::XYZ, PI / 2.0, 0.0, 0.0)
-});
+
+#[derive(Copy, Clone, Debug)]
+enum PiePiece {
+    TopRight,
+    TopLeft,
+    BottomRight,
+    BottomLeft,
+}
 
 impl Player {
     pub fn new() -> Player {
         Player {
-            position: Point::new(10.0, 11.5, 3.0),
+            position: Point::new(9.5, 1.0, 3.0),
             movement_state: None,
         }
     }
@@ -40,33 +45,33 @@ impl Player {
         &self.position
     }
 
-    pub fn move_back(&mut self, lvl: &Res<Level>) {
-        let future_y = (self.position.y - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
+    pub fn move_forward(&mut self, lvl: &Res<Level>, angle: f32) {
+        let (x_modifier, z_modifier) = angle_to_forward_x_z_modifiers(angle);
+        let future_x = self.position.x + x_modifier * MOVEMENT_SPEED;
+        let future_z = self.position.z + z_modifier * MOVEMENT_SPEED;
 
-        if self.no_x_obstacles(future_y, lvl) {
-            self.position.y -= MOVEMENT_SPEED;
-        }
+        self.go_to(future_x, future_z, lvl);
     }
-    pub fn move_forward(&mut self, lvl: &Res<Level>) {
-        let future_y = (self.position.y + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
+    pub fn move_back(&mut self, lvl: &Res<Level>, angle: f32) {
+        let (x_modifier, z_modifier) = angle_to_forward_x_z_modifiers(angle);
+        let future_x = self.position.x - x_modifier * MOVEMENT_SPEED;
+        let future_z = self.position.z - z_modifier * MOVEMENT_SPEED;
 
-        if self.no_x_obstacles(future_y, lvl) {
-            self.position.y += MOVEMENT_SPEED;
-        }
+        self.go_to(future_x, future_z, lvl);
     }
-    pub fn move_left(&mut self, lvl: &Res<Level>) {
-        let future_x = (self.position.x - MOVEMENT_SPEED / 2.0 - MODEL_RADIUS).floor();
+    pub fn move_left(&mut self, lvl: &Res<Level>, angle: f32) {
+        let (x_modifier, z_modifier) = angle_to_left_x_z_modifiers(angle);
+        let future_x = self.position.x + x_modifier * MOVEMENT_SPEED;
+        let future_z = self.position.z + z_modifier * MOVEMENT_SPEED;
 
-        if self.no_y_obstacles(future_x, lvl) {
-            self.position.x -= MOVEMENT_SPEED;
-        }
+        self.go_to(future_x, future_z, lvl);
     }
-    pub fn move_right(&mut self, lvl: &Res<Level>) {
-        let future_x = (self.position.x + MOVEMENT_SPEED / 2.0 + MODEL_RADIUS).floor();
+    pub fn move_right(&mut self, lvl: &Res<Level>, angle: f32) {
+        let (x_modifier, z_modifier) = angle_to_left_x_z_modifiers(angle);
+        let future_x = self.position.x - x_modifier * MOVEMENT_SPEED;
+        let future_z = self.position.z - z_modifier * MOVEMENT_SPEED;
 
-        if self.no_y_obstacles(future_x, lvl) {
-            self.position.x += MOVEMENT_SPEED;
-        }
+        self.go_to(future_x, future_z, lvl);
     }
     pub fn jump(&mut self, lvl: &Res<Level>) {
         if self.movement_state.is_none() && self.can_jump(lvl) {
@@ -85,12 +90,12 @@ impl Player {
 
         match self.movement_state.unwrap() {
             MovementState::Falling => {
-                let z_gap = self.position.z - self.position.z.floor();
+                let y_gap = self.position.y - self.position.y.floor();
                 if self.can_fall(lvl) {
-                    self.position.z -= GRAVITY_SPEED;
-                } else if z_gap > 0.0 {
-                    let gravity_speed = if z_gap > GRAVITY_SPEED { GRAVITY_SPEED } else { z_gap };
-                    self.position.z -= gravity_speed;
+                    self.position.sub_y(GRAVITY_SPEED);
+                } else if y_gap > 0.0 {
+                    let gravity_speed = if y_gap > GRAVITY_SPEED { GRAVITY_SPEED } else { y_gap };
+                    self.position.sub_y(gravity_speed);
                 }
 
                 if !self.should_fall(lvl) {
@@ -98,7 +103,7 @@ impl Player {
                 }
             }
             MovementState::Jumping(tick) => {
-                self.position.z += GRAVITY_SPEED;
+                self.position.add_y(GRAVITY_SPEED);
 
                 if tick == 10 {
                     self.movement_state = None;
@@ -110,9 +115,14 @@ impl Player {
     }
 
     pub fn move_model(&self, position: &mut Transform) {
-        *position = Transform::from_xyz(self.position.x, self.position.y, self.position.z + 0.5)
-            .with_scale(vec3(0.5, 0.5, 0.5))
-            .with_rotation(*DEFAULT_ROTATION);
+        position.translation = vec3(self.position.x, self.position.y + 1.0, self.position.z);
+    }
+
+    fn go_to(&mut self, future_x: f32, future_z: f32, lvl: &Res<Level>) {
+        if self.can_stay_on(future_x, future_z, lvl) {
+            self.position.x = future_x;
+            self.position.z = future_z;
+        }
     }
 }
 
@@ -123,109 +133,127 @@ impl Player {
     }
 
     fn should_fall(&self, lvl: &Res<Level>) -> bool {
-        self.position.z - self.position.z.floor() != 0.0 || !self.has_fundament(lvl)
+        self.position.y - self.position.y.floor() != 0.0 || !self.has_fundament(lvl)
     }
     fn can_fall(&self, lvl: &Res<Level>) -> bool {
-        let future_z = self.position.z.floor();
+        let future_y = self.position.y.floor();
 
-        self.no_z_obstacles(future_z, lvl)
+        self.no_y_obstacles(future_y, lvl)
     }
 
     fn has_fundament(&self, lvl: &Res<Level>) -> bool {
-        let mut points = vec![
-            Point::new(self.position.x.floor(), self.position.y.floor(), self.position.z.floor()),
-        ];
-
-        let x_gap = round_based(self.position.x - self.position.x.floor(), 1);
-        if x_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.round(), self.position.z.floor()));
-        } else if x_gap < MODEL_RADIUS {
-            points.push(Point::new((self.position.x - MODEL_RADIUS).floor(), self.position.y.round(), self.position.z.floor()));
-        }
-
-        let y_gap = round_based(self.position.y - self.position.y.floor(), 1);
-        if y_gap > MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), self.position.y.round(), self.position.z.floor()));
-        } else if y_gap < MODEL_RADIUS {
-            points.push(Point::new(self.position.x.round(), (self.position.y - MODEL_RADIUS).floor(), self.position.z.floor()));
-        }
-
-        !self.all_air(&points, lvl)
+        !self.no_y_obstacles(self.position.y, lvl)
     }
     fn has_ceil(&self, lvl: &Res<Level>) -> bool {
-        let future_position = Point::new(self.position.x.round(), self.position.y.round(), (self.position.z + 3.0).floor());
+        let future_position = Point::new(self.position.x.round(), (self.position.y + 3.0).floor(), self.position.z.round());
         let voxel_ceil = lvl.get_voxel_by_point(&future_position);
 
         voxel_ceil.is_some()
     }
 
-    fn no_z_obstacles(&self, z: f32, lvl: &Res<Level>) -> bool {
-        const FALLING_MODEL_RADIUS: f32 = MODEL_RADIUS * 0.9;
-        let obstacles = [
-            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), (self.position.y + FALLING_MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x + FALLING_MODEL_RADIUS).floor(), (self.position.y - FALLING_MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), (self.position.y + FALLING_MODEL_RADIUS).floor(), z),
-            Point::new((self.position.x - FALLING_MODEL_RADIUS).floor(), (self.position.y - FALLING_MODEL_RADIUS).floor(), z),
-        ];
+    fn can_stay_on(&self, x: f32, z: f32, lvl: &Res<Level>) -> bool {
+        let mut obstacles: Vec<Point> = get_touched_points(x, self.position.y, z);
 
-        self.all_air(&obstacles, lvl)
-    }
-    fn no_x_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
-        let x_gap = round_based(self.position.x - self.position.x.floor(), 2);
+        obstacles = obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect();
+        obstacles.extend(obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect::<Vec<Point>>());
 
-        let obstacles = if x_gap == MODEL_RADIUS {
-            vec![
-                Point::new(self.position.x.floor(), y, self.position.z + 1.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 2.0),
-            ]
-        } else if x_gap > MODEL_RADIUS {
-            vec![
-                Point::new((self.position.x + MODEL_RADIUS).round(), y, self.position.z + 1.0),
-                Point::new((self.position.x + MODEL_RADIUS).round(), y, self.position.z + 2.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 1.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 2.0),
-            ]
-        } else {
-            vec![
-                Point::new((self.position.x - MODEL_RADIUS).floor(), y, self.position.z + 1.0),
-                Point::new((self.position.x - MODEL_RADIUS).floor(), y, self.position.z + 2.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 1.0),
-                Point::new(self.position.x.floor(), y, self.position.z + 2.0),
-            ]
-        };
-
-        self.all_air(&obstacles, lvl)
-    }
-    fn no_y_obstacles(&self, x: f32, lvl: &Res<Level>) -> bool {
-        let y_gap = round_based(self.position.y - self.position.y.floor(), 2);
-
-        let obstacles = if y_gap == MODEL_RADIUS {
-            vec![
-                Point::new(x, self.position.y.floor(), self.position.z + 1.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 2.0),
-            ]
-        } else if y_gap > MODEL_RADIUS {
-            vec![
-                Point::new(x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 1.0),
-                Point::new(x, (self.position.y + MODEL_RADIUS).round(), self.position.z + 2.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 1.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 2.0),
-            ]
-        } else {
-            vec![
-                Point::new(x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 1.0),
-                Point::new(x, (self.position.y - MODEL_RADIUS).floor(), self.position.z + 2.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 1.0),
-                Point::new(x, self.position.y.floor(), self.position.z + 2.0),
-            ]
-        };
-
-        self.all_air(&obstacles, lvl)
+        lvl.points_are_empty(&obstacles)
     }
 
-    fn all_air(&self, points: &[Point], lvl: &Res<Level>) -> bool {
-        points.iter()
-            .all(|p| lvl.get_voxel_by_point(p).is_none())
+    fn no_y_obstacles(&self, y: f32, lvl: &Res<Level>) -> bool {
+        let obstacles: Vec<Point> = get_touched_points(self.position.x, y, self.position.z);
+
+        lvl.points_are_empty(&obstacles)
     }
 }
 
+fn angle_to_pie_piece(angle: f32) -> (f32, PiePiece) {
+    if angle <= FRAC_PI_2 {
+        (angle, BottomLeft)
+    } else if angle <= PI {
+        (angle - FRAC_PI_2, TopLeft)
+    } else if angle <= PI + FRAC_PI_2 {
+        (angle - PI, TopRight)
+    } else {
+        (angle - (PI + FRAC_PI_2), BottomRight)
+    }
+}
+
+fn angle_to_forward_x_z_modifiers(angle: f32) -> (f32, f32) {
+    let (diff, piece) = angle_to_pie_piece(angle);
+
+    match piece {
+        TopLeft => {
+            let x = diff / FRAC_PI_2;
+            (x, -(1.0 - x))
+        }
+        TopRight => {
+            let z = diff / FRAC_PI_2;
+            ((1.0 - z), z)
+        }
+        BottomRight => {
+            let x = diff / FRAC_PI_2;
+            (-x, (1.0 - x))
+        }
+        BottomLeft => {
+            let z = diff / FRAC_PI_2;
+            (-(1.0 - z), -z)
+        }
+    }
+}
+
+fn angle_to_left_x_z_modifiers(angle: f32) -> (f32, f32) {
+    let (diff, piece) = angle_to_pie_piece(angle);
+
+    match piece {
+        TopLeft => {
+            let z = diff / FRAC_PI_2;
+            (-(1.0 - z), -z)
+        }
+        TopRight => {
+            let x = diff / FRAC_PI_2;
+            (x, -(1.0 - x))
+        }
+        BottomRight => {
+            let z = diff / FRAC_PI_2;
+            ((1.0 - z), z)
+        }
+        BottomLeft => {
+            let x = diff / FRAC_PI_2;
+            (-x, (1.0 - x))
+        }
+    }
+}
+
+fn get_touched_points(x: f32, y: f32, z: f32) -> Vec<Point> {
+    let mut points: Vec<Point> = vec![
+        Point::new(x.floor(), y, z),
+        Point::new(x, y, z.floor()),
+    ];
+
+    let x_gap = round_based(x - x.floor(), 1);
+    if x_gap > MODEL_RADIUS {
+        points.push(Point::new((x + MODEL_RADIUS).floor(), y, z.floor()));
+    } else if x_gap < MODEL_RADIUS {
+        points.push(Point::new((x - MODEL_RADIUS).floor(), y, z.floor()));
+    };
+
+    let z_gap = round_based(z - z.floor(), 1);
+    if z_gap > MODEL_RADIUS {
+        points.push(Point::new(x.floor(), y, (z + MODEL_RADIUS).floor()));
+    } else if z_gap < MODEL_RADIUS {
+        points.push(Point::new(x.floor(), y, (z - MODEL_RADIUS).floor()));
+    };
+
+    if x_gap > MODEL_RADIUS && z_gap > MODEL_RADIUS {
+        points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+    } else if x_gap < MODEL_RADIUS && z_gap < MODEL_RADIUS {
+        points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+    } else if x_gap > MODEL_RADIUS && z_gap < MODEL_RADIUS {
+        points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+    } else if x_gap < MODEL_RADIUS && z_gap > MODEL_RADIUS {
+        points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+    }
+
+    points
+}

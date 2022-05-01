@@ -1,3 +1,4 @@
+use bevy::math::vec3;
 use bevy::prelude::*;
 
 use crate::GameState;
@@ -28,7 +29,8 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
     let mesh = asset_server.load("mesh/player.glb#Scene0");
 
     commands.spawn_bundle((
-        Transform::default(),
+        Transform::default()
+            .with_scale(vec3(0.5, 0.5, 0.5)),
         GlobalTransform::identity(),
     )).with_children(|parent| {
         parent.spawn_scene(mesh);
