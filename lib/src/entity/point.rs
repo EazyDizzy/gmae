@@ -14,12 +14,12 @@ impl Point {
         Point { x, y, z }
     }
 
-    pub fn go_down(&mut self, speed: f32) {
-        self.y -= speed;
+    pub fn sub_y(&mut self, y: f32) {
+        self.y -= y;
         self.y = round_based(self.y, 2);
     }
-    pub fn go_up(&mut self, speed: f32) {
-        self.y += speed;
+    pub fn add_y(&mut self, y: f32) {
+        self.y += y;
         self.y = round_based(self.y, 2);
     }
 }

@@ -29,13 +29,8 @@ impl VoxelStack {
     }
 
     pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
-        // println!("Posiible y {:?}", self.internal.keys().into_iter().map(|k| *k).collect::<Vec<usize>>());
-
         self.internal.get(&(point.y as usize))
-            .and_then(|plate| {
-                // println!("plate found {} {}", point.y, point.y as usize);
-                plate.get_voxel_by_point(point)
-            })
+            .and_then(|plate| plate.get_voxel_by_point(point))
     }
 }
 

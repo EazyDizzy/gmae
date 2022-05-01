@@ -28,12 +28,8 @@ impl VoxelPlate {
     }
 
     pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
-        // println!("Posiible z {:?}", self.internal.keys().into_iter().map(|k| *k).collect::<Vec<usize>>());
-        // println!("search z {} {}", point.z, point.z as usize);
         self.internal.get(&(point.z as usize))
             .and_then(|row| {
-                // println!("row found {} {}", point.z, point.z as usize);
-
                 row.iter()
                     .find(|v| v.position.x == point.x)
             })

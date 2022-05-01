@@ -92,10 +92,10 @@ impl Player {
             MovementState::Falling => {
                 let y_gap = self.position.y - self.position.y.floor();
                 if self.can_fall(lvl) {
-                    self.position.go_down(GRAVITY_SPEED);
+                    self.position.sub_y(GRAVITY_SPEED);
                 } else if y_gap > 0.0 {
                     let gravity_speed = if y_gap > GRAVITY_SPEED { GRAVITY_SPEED } else { y_gap };
-                    self.position.go_down(gravity_speed);
+                    self.position.sub_y(gravity_speed);
                 }
 
                 if !self.should_fall(lvl) {
@@ -103,7 +103,7 @@ impl Player {
                 }
             }
             MovementState::Jumping(tick) => {
-                self.position.go_up(GRAVITY_SPEED);
+                self.position.add_y(GRAVITY_SPEED);
 
                 if tick == 10 {
                     self.movement_state = None;
