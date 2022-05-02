@@ -111,15 +111,15 @@ fn setup_player_camera(mut commands: Commands, settings: Res<GameSettings>) {
 }
 
 fn enable_camera(
-    mut fly: Query<&mut FlyCamera>,
-    mut player: Query<&mut PlayerCamera>,
+    fly: Query<&mut FlyCamera>,
+    player: Query<&mut PlayerCamera>,
 ) {
     toggle_cameras(fly, player, true);
 }
 
 fn disable_camera(
-    mut fly: Query<&mut FlyCamera>,
-    mut player: Query<&mut PlayerCamera>,
+    fly: Query<&mut FlyCamera>,
+    player: Query<&mut PlayerCamera>,
 ) {
     toggle_cameras(fly, player, false);
 }

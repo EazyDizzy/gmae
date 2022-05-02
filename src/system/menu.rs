@@ -1,6 +1,4 @@
 use bevy::prelude::*;
-use bevy::utils::tracing::enabled;
-use bevy_fly_camera::FlyCamera;
 use crate::GameState;
 
 pub struct MenuPlugin;
@@ -33,11 +31,11 @@ fn keyboard_interaction(keys: Res<Input<KeyCode>>, mut game_state: ResMut<State<
     }
 }
 
-fn show_cursor(mut windows: ResMut<Windows>) {
+fn show_cursor(windows: ResMut<Windows>) {
     toggle_cursor(windows, true);
 }
 
-fn hide_cursor(mut windows: ResMut<Windows>) {
+fn hide_cursor(windows: ResMut<Windows>) {
     toggle_cursor(windows, false);
 }
 

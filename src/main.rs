@@ -34,7 +34,7 @@ mod player;
 mod ui;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
-enum GameState {
+pub enum GameState {
     Playing,
     Pause,
 }
@@ -45,16 +45,13 @@ fn main() {
     let mut app = App::new();
     app.add_state(GameState::Playing)
         .add_plugins(DefaultPlugins)
-        .add_plugin(EguiPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(EguiPlugin)
         .add_plugin(LevelPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(MenuPlugin)
-        // .add_system_set(
-        //     SystemSet::on_update(GameState::Pause)
-        //         .with_system(ui::render.system())
-        // )
+        .add_system(ui::render)
         .add_startup_system(system::light::setup.system());
 
     if settings.fly_camera {
