@@ -5,6 +5,7 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy_fly_camera::FlyCamera;
 use lib::util::game_settings::GameSettings;
+use crate::GameState;
 
 use crate::player::entity::Player;
 
@@ -16,6 +17,7 @@ pub struct PlayerCamera {
     sensitivity: f32,
 
     rotation_angle: f32,
+    enabled: bool,
 }
 
 impl PlayerCamera {
@@ -27,6 +29,7 @@ impl Default for PlayerCamera {
         Self {
             sensitivity: 0.3,
             rotation_angle: 0.0,
+            enabled: true,
         }
     }
 }
@@ -57,6 +60,9 @@ fn camera_rotation_system(
     }
 
     for (mut options, mut transform) in query.iter_mut() {
+        if !options.enabled {
+            continue;
+        }
         let mut new_angle = options.rotation_angle + delta.x * options.sensitivity * time.delta_seconds();
         if new_angle < 0.0 {
             // angle should always be positive. -1.28 === 5.0
@@ -104,6 +110,29 @@ fn setup_player_camera(mut commands: Commands, settings: Res<GameSettings>) {
     }
 }
 
+fn enable_camera(
+    mut fly: Query<&mut FlyCamera>,
+    mut player: Query<&mut PlayerCamera>,
+) {
+    toggle_cameras(fly, player, true);
+}
+
+fn disable_camera(
+    mut fly: Query<&mut FlyCamera>,
+    mut player: Query<&mut PlayerCamera>,
+) {
+    toggle_cameras(fly, player, false);
+}
+
+fn toggle_cameras(
+    mut fly: Query<&mut FlyCamera>,
+    mut player: Query<&mut PlayerCamera>,
+    enabled: bool,
+) {
+    fly.iter_mut().for_each(|mut camera| camera.enabled = enabled);
+    player.iter_mut().for_each(|mut camera| camera.enabled = enabled);
+}
+
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
@@ -112,6 +141,14 @@ impl Plugin for CameraPlugin {
             .add_startup_system(setup_player_camera)
             .add_system(camera_rotation_system)
             .add_system(player_model_rotation_system)
+            .add_system_set(
+                SystemSet::on_update(GameState::Pause)
+                    .with_system(disable_camera)
+            )
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(enable_camera)
+            )
         ;
     }
 }

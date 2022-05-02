@@ -19,6 +19,7 @@ use bevy::{
 };
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy_fly_camera::FlyCameraPlugin;
+use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use lib::entity::voxel::Material;
 use lib::util::game_settings::GameSettings;
@@ -30,10 +31,12 @@ use crate::system::menu::MenuPlugin;
 mod system;
 mod level;
 mod player;
+mod ui;
 
-#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 enum GameState {
     Playing,
+    Pause,
 }
 
 fn main() {
@@ -42,11 +45,16 @@ fn main() {
     let mut app = App::new();
     app.add_state(GameState::Playing)
         .add_plugins(DefaultPlugins)
+        .add_plugin(EguiPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(LevelPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(MenuPlugin)
+        // .add_system_set(
+        //     SystemSet::on_update(GameState::Pause)
+        //         .with_system(ui::render.system())
+        // )
         .add_startup_system(system::light::setup.system());
 
     if settings.fly_camera {
