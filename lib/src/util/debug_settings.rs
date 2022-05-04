@@ -4,12 +4,14 @@ use std::io::Read;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GameSettings {
-    background_music_volume: Option<f64>,
+pub struct DebugSettings {
+    pub debug_textures: bool,
+    pub fly_camera: bool,
+    pub inspector: bool,
 }
 
-impl GameSettings {
-    pub fn from_file(path: &str) -> GameSettings {
+impl DebugSettings {
+    pub fn from_file(path: &str) -> DebugSettings {
         let mut json = String::new();
         File::open(path)
             .expect("Can't open config file")
@@ -17,13 +19,5 @@ impl GameSettings {
             .expect("Can't read config file");
 
         serde_json::from_str(&json).expect("Failed to parse lvl")
-    }
-
-    pub fn get_background_music_volume(&self) -> f64 {
-        self.background_music_volume.unwrap_or(1.0)
-    }
-
-    pub fn update_background_music_volume(&mut self, new_value: f64) {
-        self.background_music_volume = Some(new_value);
     }
 }

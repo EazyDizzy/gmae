@@ -7,7 +7,7 @@ use bevy::utils::Uuid;
 use convert_case::{Case, Casing};
 use image::{DynamicImage, GenericImage, GenericImageView, Pixel, Rgba};
 use lib::entity::voxel::Voxel;
-use lib::util::game_settings::GameSettings;
+use lib::util::debug_settings::DebugSettings;
 use rand::distributions::Distribution;
 use rand::distributions::Uniform;
 
@@ -19,7 +19,10 @@ pub const TEXTURE_SIZE: u32 = 64;
 const COLOR_SIZE: u32 = Rgba::<u8>::CHANNEL_COUNT as u32;
 const BYTES_IN_ROW: u32 = TEXTURE_SIZE * COLOR_SIZE;
 
-pub fn get_material_for(materials: &ResMut<Assets<StandardMaterial>>, material_name: Material) -> Handle<StandardMaterial> {
+pub fn get_material_for(
+    materials: &ResMut<Assets<StandardMaterial>>,
+    material_name: Material,
+) -> Handle<StandardMaterial> {
     materials.get_handle(generate_material_handle_id(material_name))
 }
 
@@ -31,7 +34,7 @@ pub fn merge_materials(
     images: &mut ResMut<Assets<Image>>,
     number_of_images_wide: u32,
     number_of_images_in_height: u32,
-    settings: &Res<GameSettings>,
+    settings: &Res<DebugSettings>,
 ) -> Handle<StandardMaterial> {
     let material = voxels[0][0].material;
     if number_of_images_wide == 1 && number_of_images_in_height == 1 {
@@ -46,7 +49,8 @@ pub fn merge_materials(
 
     let new_texture_width = TEXTURE_SIZE * number_of_images_wide;
     let new_texture_height = TEXTURE_SIZE * number_of_images_in_height;
-    let mut pixel_buf = Vec::with_capacity((COLOR_SIZE * new_texture_width * new_texture_height) as usize);
+    let mut pixel_buf =
+        Vec::with_capacity((COLOR_SIZE * new_texture_width * new_texture_height) as usize);
 
     let mut cached_images = HashMap::new();
 
@@ -57,8 +61,13 @@ pub fn merge_materials(
 
         for x in 0..number_of_images_wide {
             let voxel = row[x as usize];
-            let voxel_material = if settings.debug_textures { material } else { voxel.material };
-            let original_image = cached_images.entry(voxel_material)
+            let voxel_material = if settings.debug_textures {
+                material
+            } else {
+                voxel.material
+            };
+            let original_image = cached_images
+                .entry(voxel_material)
                 .or_insert_with(|| get_basic_image_pixels(voxel_material, settings));
 
             let start = (original_y * BYTES_IN_ROW) as usize;
@@ -80,7 +89,8 @@ pub fn merge_materials(
     );
 
     let image_handle = images.add(image);
-    let original_material = materials.get(generate_material_handle_id(material))
+    let original_material = materials
+        .get(generate_material_handle_id(material))
         .expect(&format!("Cannot get material for {:?}", material))
         .clone();
 
@@ -94,14 +104,17 @@ pub fn merge_materials(
     handle
 }
 
-fn get_basic_image_pixels(material: Material, settings: &Res<GameSettings>) -> Vec<u8> {
+fn get_basic_image_pixels(material: Material, settings: &Res<DebugSettings>) -> Vec<u8> {
     get_basic_image_for_material(material, settings)
         .pixels()
         .flat_map(|(.., p)| p.0)
         .collect()
 }
 
-fn get_basic_image_for_material(voxel_material: Material, settings: &Res<GameSettings>) -> DynamicImage {
+fn get_basic_image_for_material(
+    voxel_material: Material,
+    settings: &Res<DebugSettings>,
+) -> DynamicImage {
     const TEXTURE_PATH: &str = "./assets/texture/block/";
     if settings.debug_textures {
         return generate_image_of_random_color();
@@ -135,8 +148,29 @@ fn get_material_file_name(voxel_material: Material) -> String {
     format!("{voxel_material:?}.png").to_case(Case::Snake)
 }
 
-fn generate_dynamic_material_handle_id(voxel_material: Material, image_width: u32, image_height: u32) -> HandleId {
-    let id = Uuid::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, voxel_material as u8, image_width as u8, image_height as u8]);
+fn generate_dynamic_material_handle_id(
+    voxel_material: Material,
+    image_width: u32,
+    image_height: u32,
+) -> HandleId {
+    let id = Uuid::from_bytes([
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        voxel_material as u8,
+        image_width as u8,
+        image_height as u8,
+    ]);
 
     HandleId::Id(id, 0)
 }
@@ -172,26 +206,36 @@ pub fn can_merge_materials(m1: Material, m2: Material) -> bool {
 #[allow(clippy::needless_pass_by_value)]
 pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<AssetServer>) {
     let _id = materials.set(
-        generate_material_handle_id(Material::OrangeLight), StandardMaterial {
-            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::OrangeLight))),
+        generate_material_handle_id(Material::OrangeLight),
+        StandardMaterial {
+            base_color_texture: Some(
+                asset_server.load(&generate_asset_path(Material::OrangeLight)),
+            ),
             reflectance: 1.0,
             alpha_mode: AlphaMode::Blend,
             unlit: true,
             ..Default::default()
-        });
-    let _id = materials.set(generate_material_handle_id(Material::BlueLight), StandardMaterial {
-        base_color_texture: Some(asset_server.load(&generate_asset_path(Material::BlueLight))),
-        reflectance: 1.0,
-        alpha_mode: AlphaMode::Blend,
-        unlit: true,
-        ..Default::default()
-    });
-    let _id = materials.set(generate_material_handle_id(Material::Glass), StandardMaterial {
-        base_color_texture: Some(asset_server.load(&generate_asset_path(Material::Glass))),
-        reflectance: 1.0,
-        alpha_mode: AlphaMode::Blend,
-        ..Default::default()
-    });
+        },
+    );
+    let _id = materials.set(
+        generate_material_handle_id(Material::BlueLight),
+        StandardMaterial {
+            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::BlueLight))),
+            reflectance: 1.0,
+            alpha_mode: AlphaMode::Blend,
+            unlit: true,
+            ..Default::default()
+        },
+    );
+    let _id = materials.set(
+        generate_material_handle_id(Material::Glass),
+        StandardMaterial {
+            base_color_texture: Some(asset_server.load(&generate_asset_path(Material::Glass))),
+            reflectance: 1.0,
+            alpha_mode: AlphaMode::Blend,
+            ..Default::default()
+        },
+    );
 
     let leaves_material_names = vec![
         Material::OakLeaves,
@@ -205,11 +249,19 @@ pub fn setup(mut materials: ResMut<Assets<StandardMaterial>>, asset_server: Res<
     setup_leaves_materials(&mut materials, &asset_server, leaves_material_names);
 
     let default_material_names = vec![
-        Material::SmoothStone, Material::Water, Material::Farmland,
+        Material::SmoothStone,
+        Material::Water,
+        Material::Farmland,
         Material::WhiteTerracotta,
-        Material::Unknown, Material::Pumpkin, Material::Hay, Material::DirtPath, Material::Grass,
-        Material::Bedrock, Material::Dirt,
-        Material::Podzol, Material::CoarseDirt,
+        Material::Unknown,
+        Material::Pumpkin,
+        Material::Hay,
+        Material::DirtPath,
+        Material::Grass,
+        Material::Bedrock,
+        Material::Dirt,
+        Material::Podzol,
+        Material::CoarseDirt,
         Material::StoneBricks,
         Material::MossyStoneBricks,
         Material::MossyCobblestone,

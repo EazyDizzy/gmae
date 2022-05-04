@@ -1,10 +1,13 @@
 use bevy::prelude::*;
-use lib::util::game_settings::GameSettings;
+use lib::util::debug_settings::DebugSettings;
 
 use crate::level::render::material::merge_materials;
 use crate::level::render::mesh::get_or_create;
 use crate::level::render::named_materials::NamedMaterials;
-use crate::level::render::shape::{is_back_side_visible, is_bottom_side_visible, is_forward_side_visible, is_left_side_visible, is_right_side_visible, is_top_side_visible};
+use crate::level::render::shape::{
+    is_back_side_visible, is_bottom_side_visible, is_forward_side_visible, is_left_side_visible,
+    is_right_side_visible, is_top_side_visible,
+};
 use crate::level::render::voxel_sequence::VoxelSequence;
 
 const PI: f32 = std::f32::consts::PI;
@@ -16,7 +19,7 @@ pub fn create_cube_bundle_batch(
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
     merged_voxels: &[VoxelSequence],
-    settings: &Res<GameSettings>,
+    settings: &Res<DebugSettings>,
 ) -> Vec<PbrBundle> {
     let mut bundles = vec![];
     let start_pos = sequence.start_position();
@@ -68,8 +71,17 @@ pub fn create_cube_bundle_batch(
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(sequence.center_x(), start_pos.y - 1.0, sequence.center_z())
-                    .with_rotation(Quat::from_euler(EulerRot::XYZ, -PI / 2.0, 0.0, 0.0)),
+                transform: Transform::from_xyz(
+                    sequence.center_x(),
+                    start_pos.y - 1.0,
+                    sequence.center_z(),
+                )
+                .with_rotation(Quat::from_euler(
+                    EulerRot::XYZ,
+                    -PI / 2.0,
+                    0.0,
+                    0.0,
+                )),
                 ..Default::default()
             });
         }
@@ -91,8 +103,17 @@ pub fn create_cube_bundle_batch(
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(start_pos.x + x_width, sequence.center_y(), sequence.center_z())
-                    .with_rotation(Quat::from_euler(EulerRot::XYZ, -PI / 2.0, PI / 2.0, 0.0)),
+                transform: Transform::from_xyz(
+                    start_pos.x + x_width,
+                    sequence.center_y(),
+                    sequence.center_z(),
+                )
+                .with_rotation(Quat::from_euler(
+                    EulerRot::XYZ,
+                    -PI / 2.0,
+                    PI / 2.0,
+                    0.0,
+                )),
                 ..Default::default()
             });
         }
@@ -111,8 +132,17 @@ pub fn create_cube_bundle_batch(
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(start_pos.x, sequence.center_y(), sequence.center_z())
-                    .with_rotation(Quat::from_euler(EulerRot::XYZ, -PI / 2.0, PI / 2.0, 0.0)),
+                transform: Transform::from_xyz(
+                    start_pos.x,
+                    sequence.center_y(),
+                    sequence.center_z(),
+                )
+                .with_rotation(Quat::from_euler(
+                    EulerRot::XYZ,
+                    -PI / 2.0,
+                    PI / 2.0,
+                    0.0,
+                )),
                 ..Default::default()
             });
         }
@@ -133,7 +163,11 @@ pub fn create_cube_bundle_batch(
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(sequence.center_x(), sequence.center_y(), start_pos.z),
+                transform: Transform::from_xyz(
+                    sequence.center_x(),
+                    sequence.center_y(),
+                    start_pos.z,
+                ),
                 ..Default::default()
             });
         }
@@ -152,7 +186,11 @@ pub fn create_cube_bundle_batch(
             bundles.push(PbrBundle {
                 mesh,
                 material,
-                transform: Transform::from_xyz(sequence.center_x(), sequence.center_y(), start_pos.z + z_width),
+                transform: Transform::from_xyz(
+                    sequence.center_x(),
+                    sequence.center_y(),
+                    start_pos.z + z_width,
+                ),
                 ..Default::default()
             });
         }

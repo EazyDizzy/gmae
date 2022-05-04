@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 use crate::entity::level::voxel_stack::VoxelStack;
@@ -42,7 +41,6 @@ impl Level {
     }
 
     pub fn points_are_empty(&self, points: &[Point]) -> bool {
-        points.iter()
-            .all(|p| self.get_voxel_by_point(p).is_none())
+        points.iter().all(|p| self.get_voxel_by_point(p).is_none())
     }
 }
