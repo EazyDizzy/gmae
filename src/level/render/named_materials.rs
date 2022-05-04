@@ -11,7 +11,7 @@ pub struct NamedMaterials {
 impl NamedMaterials {
     pub fn empty() -> NamedMaterials {
         NamedMaterials {
-            materials: HashMap::new()
+            materials: HashMap::new(),
         }
     }
 
@@ -25,12 +25,11 @@ impl NamedMaterials {
 }
 
 pub fn generate_name_for_voxels(voxels: &[Vec<&Voxel>]) -> String {
-    voxels.iter()
+    voxels
+        .iter()
         .map(|row| {
             row.iter()
-                .map(|v| {
-                    (v.material as u8).to_string()
-                })
+                .map(|v| (v.material as u8).to_string())
                 .collect::<Vec<String>>()
                 .join(".")
         })

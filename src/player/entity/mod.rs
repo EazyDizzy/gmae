@@ -94,7 +94,11 @@ impl Player {
                 if self.can_fall(lvl) {
                     self.position.sub_y(GRAVITY_SPEED);
                 } else if y_gap > 0.0 {
-                    let gravity_speed = if y_gap > GRAVITY_SPEED { GRAVITY_SPEED } else { y_gap };
+                    let gravity_speed = if y_gap > GRAVITY_SPEED {
+                        GRAVITY_SPEED
+                    } else {
+                        y_gap
+                    };
                     self.position.sub_y(gravity_speed);
                 }
 
@@ -145,7 +149,11 @@ impl Player {
         !self.no_y_obstacles(self.position.y, lvl)
     }
     fn has_ceil(&self, lvl: &Res<Level>) -> bool {
-        let future_position = Point::new(self.position.x.round(), (self.position.y + 3.0).floor(), self.position.z.round());
+        let future_position = Point::new(
+            self.position.x.round(),
+            (self.position.y + 3.0).floor(),
+            self.position.z.round(),
+        );
         let voxel_ceil = lvl.get_voxel_by_point(&future_position);
 
         voxel_ceil.is_some()
@@ -154,8 +162,16 @@ impl Player {
     fn can_stay_on(&self, x: f32, z: f32, lvl: &Res<Level>) -> bool {
         let mut obstacles: Vec<Point> = get_touched_points(x, self.position.y, z);
 
-        obstacles = obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect();
-        obstacles.extend(obstacles.iter().map(|p| Point::new(p.x, p.y + 1.0, p.z)).collect::<Vec<Point>>());
+        obstacles = obstacles
+            .iter()
+            .map(|p| Point::new(p.x, p.y + 1.0, p.z))
+            .collect();
+        obstacles.extend(
+            obstacles
+                .iter()
+                .map(|p| Point::new(p.x, p.y + 1.0, p.z))
+                .collect::<Vec<Point>>(),
+        );
 
         lvl.points_are_empty(&obstacles)
     }
@@ -226,10 +242,7 @@ fn angle_to_left_x_z_modifiers(angle: f32) -> (f32, f32) {
 }
 
 fn get_touched_points(x: f32, y: f32, z: f32) -> Vec<Point> {
-    let mut points: Vec<Point> = vec![
-        Point::new(x.floor(), y, z),
-        Point::new(x, y, z.floor()),
-    ];
+    let mut points: Vec<Point> = vec![Point::new(x.floor(), y, z), Point::new(x, y, z.floor())];
 
     let x_gap = round_based(x - x.floor(), 1);
     if x_gap > MODEL_RADIUS {
@@ -246,13 +259,29 @@ fn get_touched_points(x: f32, y: f32, z: f32) -> Vec<Point> {
     };
 
     if x_gap > MODEL_RADIUS && z_gap > MODEL_RADIUS {
-        points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+        points.push(Point::new(
+            (x + MODEL_RADIUS).floor(),
+            y,
+            (z + MODEL_RADIUS).floor(),
+        ));
     } else if x_gap < MODEL_RADIUS && z_gap < MODEL_RADIUS {
-        points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+        points.push(Point::new(
+            (x - MODEL_RADIUS).floor(),
+            y,
+            (z - MODEL_RADIUS).floor(),
+        ));
     } else if x_gap > MODEL_RADIUS && z_gap < MODEL_RADIUS {
-        points.push(Point::new((x + MODEL_RADIUS).floor(), y, (z - MODEL_RADIUS).floor()));
+        points.push(Point::new(
+            (x + MODEL_RADIUS).floor(),
+            y,
+            (z - MODEL_RADIUS).floor(),
+        ));
     } else if x_gap < MODEL_RADIUS && z_gap > MODEL_RADIUS {
-        points.push(Point::new((x - MODEL_RADIUS).floor(), y, (z + MODEL_RADIUS).floor()));
+        points.push(Point::new(
+            (x - MODEL_RADIUS).floor(),
+            y,
+            (z + MODEL_RADIUS).floor(),
+        ));
     }
 
     points

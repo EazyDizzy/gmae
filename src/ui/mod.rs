@@ -1,32 +1,58 @@
-use std::process::exit;
-use bevy::prelude::*;
-use bevy_egui::{egui, EguiContext};
-use bevy_egui::egui::{Pos2, vec2};
+pub mod menu;
+
 use crate::GameState;
+use bevy::prelude::*;
 
-pub fn render(
-    mut egui_context: ResMut<EguiContext>,
-    windows: Res<Windows>,
-    game_state: Res<State<GameState>>,
-) {
-    if game_state.current() != &GameState::Pause {
-        return;
+pub struct UIPlugin;
+
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+pub enum MenuState {
+    Main,
+    GameSettings,
+}
+
+impl Plugin for UIPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_state(MenuState::Main)
+            .add_system(keyboard_interaction)
+            .add_system_set(
+                SystemSet::on_update(GameState::Pause)
+                    .with_system(show_cursor)
+                    .with_system(menu::render),
+            )
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(hide_cursor));
     }
+}
 
-    let window = windows.get_primary().unwrap();
-    let window_height = window.height();
-    let window_width = window.width();
-
-    egui::Window::new("Menu")
-        .fixed_size(vec2(500.0, 100.0))
-        .collapsible(false)
-        // TODO center
-        .fixed_pos(Pos2 { x: window_width / 2.0, y: window_height / 2.0 })
-        .show(egui_context.ctx_mut(), |ui| {
-            let exit_button = ui.button("   Exit   ");
-
-            if exit_button.clicked() {
-                exit(0);
+fn keyboard_interaction(
+    keys: Res<Input<KeyCode>>,
+    mut game_state: ResMut<State<GameState>>,
+    mut menu_state: ResMut<State<MenuState>>,
+) {
+    if keys.just_pressed(KeyCode::Escape) {
+        match game_state.current() {
+            GameState::Playing => {
+                game_state.set(GameState::Pause).unwrap();
             }
-        });
+            GameState::Pause => {
+                game_state.set(GameState::Playing).unwrap();
+                menu_state.set(MenuState::Main);
+            }
+        }
+    }
+}
+
+fn show_cursor(windows: ResMut<Windows>) {
+    toggle_cursor(windows, true);
+}
+
+fn hide_cursor(windows: ResMut<Windows>) {
+    toggle_cursor(windows, false);
+}
+
+fn toggle_cursor(mut windows: ResMut<Windows>, enabled: bool) {
+    let window = windows.get_primary_mut().unwrap();
+
+    window.set_cursor_lock_mode(!enabled);
+    window.set_cursor_visibility(enabled);
 }

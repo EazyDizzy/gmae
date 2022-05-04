@@ -47,9 +47,8 @@ impl<'a> VoxelSequence<'a> {
         let mut voxels: Vec<Vec<&'a Voxel>> = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
-            let mut plate_voxels: Vec<&'a Voxel> = plate.iter()
-                .map(|row| *row.last().unwrap())
-                .collect();
+            let mut plate_voxels: Vec<&'a Voxel> =
+                plate.iter().map(|row| *row.last().unwrap()).collect();
             plate_voxels.reverse();
             for (i, voxel) in plate_voxels.into_iter().enumerate() {
                 if voxels.len() > i {
@@ -66,9 +65,7 @@ impl<'a> VoxelSequence<'a> {
         let mut voxels: Vec<Vec<&'a Voxel>> = Vec::with_capacity(self.voxels.len());
 
         for plate in &self.voxels {
-            let mut plate_voxels: Vec<&'a Voxel> = plate.iter()
-                .map(|row| row[0])
-                .collect();
+            let mut plate_voxels: Vec<&'a Voxel> = plate.iter().map(|row| row[0]).collect();
             plate_voxels.reverse();
             for (i, voxel) in plate_voxels.into_iter().enumerate() {
                 if voxels.len() > i {
@@ -259,7 +256,7 @@ mod tests {
 
     use crate::Material;
 
-// #[test]
+    // #[test]
     // fn one_block_y_borders() {
     //     let start = Voxel::new(Point::new(0, 0, 0.0), Material::Unknown);
     //     let seq = VoxelSequence::new(

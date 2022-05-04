@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
 use lib::entity::level::Level;
 use lib::entity::voxel::Shape;
-use lib::util::game_settings::GameSettings;
+use lib::util::debug_settings::DebugSettings;
 
 use crate::level::render::material::TEXTURE_SIZE;
 use crate::level::render::mesh::merge_voxels;
@@ -13,14 +13,14 @@ use crate::level::render::named_materials::NamedMaterials;
 use crate::level::render::shape::cube::create_cube_bundle_batch;
 use crate::level::render::shape::triangle_prism::create_triangle;
 use crate::level::render::voxel_sequence::VoxelSequence;
-use crate::Material;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
+use crate::Material;
 
 pub mod material;
 mod mesh;
-mod voxel_sequence;
-pub mod shape;
 pub(super) mod named_materials;
+pub mod shape;
+mod voxel_sequence;
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn init_world(
@@ -32,7 +32,7 @@ pub fn init_world(
     asset_server: Res<AssetServer>,
     level: Res<Level>,
     render_device: Res<RenderDevice>,
-    settings: Res<GameSettings>,
+    settings: Res<DebugSettings>,
 ) {
     let limits = render_device.limits().max_texture_dimension_2d;
     // This is needed because of wgpu limitation. It can't render a texture which breaks the limits in some dimension
@@ -58,12 +58,7 @@ pub fn init_world(
                 );
             }
             Shape::TrianglePrism(properties) => {
-                create_triangle(
-                    &mut commands,
-                    &asset_server,
-                    sequence,
-                    properties,
-                );
+                create_triangle(&mut commands, &asset_server, sequence, properties);
             }
         }
     }
@@ -79,7 +74,7 @@ fn spawn_cube_sequence(
     images: &mut ResMut<Assets<Image>>,
     sequence: &VoxelSequence,
     merged_voxels: &[VoxelSequence],
-    settings: &Res<GameSettings>,
+    settings: &Res<DebugSettings>,
 ) {
     let batch = create_cube_bundle_batch(
         meshes,

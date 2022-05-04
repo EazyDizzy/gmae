@@ -75,19 +75,18 @@ pub struct TrianglePrismProperties {
 impl TrianglePrismProperties {
     pub fn from_properties(properties: &HashMap<String, String>) -> TrianglePrismProperties {
         let fastening = Fastening::from_property(
-            properties.get("half")
-                .expect("`half` property does not exist")
+            properties
+                .get("half")
+                .expect("`half` property does not exist"),
         );
 
         let facing = WorldSide::from_property(
-            properties.get("facing")
-                .expect("`facing` property does not exist")
+            properties
+                .get("facing")
+                .expect("`facing` property does not exist"),
         );
 
-        TrianglePrismProperties {
-            fastening,
-            facing,
-        }
+        TrianglePrismProperties { fastening, facing }
     }
 }
 
@@ -102,7 +101,7 @@ impl Fastening {
         match value {
             "bottom" => Fastening::Bottom,
             "top" => Fastening::Top,
-            v => panic!("Unknown fastening value {v}")
+            v => panic!("Unknown fastening value {v}"),
         }
     }
 }
@@ -122,7 +121,7 @@ impl WorldSide {
             "south" => WorldSide::South,
             "east" => WorldSide::East,
             "west" => WorldSide::West,
-            v => panic!("Unknown world_side value {v}")
+            v => panic!("Unknown world_side value {v}"),
         }
     }
 }

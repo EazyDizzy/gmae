@@ -12,9 +12,9 @@ pub fn read_level(lvl_name: &str) -> Level {
 
     let mut decoder = ZlibDecoder::new(lvl_file);
     let mut json = String::new();
-    decoder.read_to_string(&mut json)
+    decoder
+        .read_to_string(&mut json)
         .expect("Failed to decode lvl");
 
-    serde_json::from_str(&json)
-        .expect("Failed to parse lvl")
+    serde_json::from_str(&json).expect("Failed to parse lvl")
 }
