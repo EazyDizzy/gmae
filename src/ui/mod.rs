@@ -27,7 +27,6 @@ impl Plugin for UIPlugin {
 fn keyboard_interaction(
     keys: Res<Input<KeyCode>>,
     mut game_state: ResMut<State<GameState>>,
-    mut menu_state: ResMut<State<MenuState>>,
 ) {
     if keys.just_pressed(KeyCode::Escape) {
         match game_state.current() {
@@ -36,7 +35,6 @@ fn keyboard_interaction(
             }
             GameState::Pause => {
                 game_state.set(GameState::Playing).unwrap();
-                menu_state.set(MenuState::Main);
             }
         }
     }
