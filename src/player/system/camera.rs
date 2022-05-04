@@ -4,7 +4,7 @@ use crate::GameState;
 use bevy::input::mouse::MouseMotion;
 use bevy::math::vec3;
 use bevy::prelude::*;
-use bevy_fly_camera::FlyCamera;
+use crate::system::fly_camera::FlyCamera;
 use lib::util::debug_settings::DebugSettings;
 
 use crate::player::entity::Player;

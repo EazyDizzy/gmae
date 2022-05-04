@@ -16,7 +16,7 @@ extern crate core;
 use crate::audio::GameAudioPlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
-use bevy_fly_camera::FlyCameraPlugin;
+use system::fly_camera::FlyCameraPlugin;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
