@@ -17,7 +17,7 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(CameraPlugin)
             .add_startup_system(setup)
             .add_system_set(
-                SystemSet::on_update(GameState::Playing).with_system(keyboard_interaction.system()),
+                SystemSet::on_update(GameState::Playing).with_system(keyboard_interaction),
             );
     }
 }

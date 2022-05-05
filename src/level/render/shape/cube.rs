@@ -76,12 +76,7 @@ pub fn create_cube_bundle_batch(
                     start_pos.y - 1.0,
                     sequence.center_z(),
                 )
-                .with_rotation(Quat::from_euler(
-                    EulerRot::XYZ,
-                    -PI / 2.0,
-                    0.0,
-                    0.0,
-                )),
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, -PI / 2.0, PI, 0.0)),
                 ..Default::default()
             });
         }
@@ -140,7 +135,7 @@ pub fn create_cube_bundle_batch(
                 .with_rotation(Quat::from_euler(
                     EulerRot::XYZ,
                     -PI / 2.0,
-                    PI / 2.0,
+                    -PI / 2.0,
                     0.0,
                 )),
                 ..Default::default()
@@ -167,7 +162,8 @@ pub fn create_cube_bundle_batch(
                     sequence.center_x(),
                     sequence.center_y(),
                     start_pos.z,
-                ),
+                )
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, PI, 0.0, 0.0)),
                 ..Default::default()
             });
         }
