@@ -1,5 +1,5 @@
 {
   "debug_textures": false,
-  "fly_camera": false,
+  "fly_camera": true,
   "inspector": false
 }

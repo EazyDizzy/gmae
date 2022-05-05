@@ -105,7 +105,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
             })
             .insert(FlyCamera {
                 sensitivity: 1.0,
-                max_speed: 2.0,
+                max_speed: 3.0,
                 ..Default::default()
             });
     } else {
