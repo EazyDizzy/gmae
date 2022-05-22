@@ -13,6 +13,7 @@ pub enum MenuState {
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
+        // TODO make MenuState Local?
         app.add_state(MenuState::Main)
             .add_system(keyboard_interaction)
             .add_system_set(
