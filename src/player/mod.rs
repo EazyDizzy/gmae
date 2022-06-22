@@ -1,5 +1,6 @@
 use bevy::math::vec3;
 use bevy::prelude::*;
+use crate::entity::component::hp::HP;
 
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
@@ -33,5 +34,6 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         .with_children(|parent| {
             parent.spawn_scene(mesh);
         })
-        .insert(Player::new());
+        .insert(Player::new())
+        .insert(HP::full(100));
 }

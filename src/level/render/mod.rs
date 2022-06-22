@@ -63,7 +63,7 @@ pub fn init_world(
         }
     }
 
-    // println!("world initialization: {:?}", start.elapsed());
+    println!("world initialization: {:?}", start.elapsed());
 }
 
 fn spawn_cube_sequence(

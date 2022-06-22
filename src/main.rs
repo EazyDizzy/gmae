@@ -33,6 +33,7 @@ mod level;
 mod player;
 mod system;
 mod ui;
+mod entity;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
@@ -51,6 +52,17 @@ fn main() {
         // .add_plugins_with(DefaultPlugins, |plugins| {
         //     plugins.disable::<bevy::log::LogPlugin>()
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
+        // .add_plugin(ConfigCam)
+        // .insert_resource(MovementSettings {
+        //     sensitivity: 0.00015, // default: 0.00012
+        //     speed: 15.0,          // default: 12.0
+        //     dist: 5.0,            // Camera distance from the player in topdown view
+        //     ..Default::default()
+        // })
+        // .insert_resource(PlayerSettings {
+        //     pos: Vec3::new(2., 0., 2.), //Initial position of the player
+        //     ..Default::default()
+        // })
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(AudioPlugin)
