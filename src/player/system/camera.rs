@@ -13,7 +13,6 @@ const CAMERA_HEIGHT: f32 = 10.0;
 
 #[derive(Component)]
 pub struct PlayerCamera {
-    /// The sensitivity of the Camera's motion based on mouse movement. Defaults to `3.0`
     sensitivity: f32,
 
     rotation_angle: f32,
@@ -72,7 +71,7 @@ fn camera_rotation_system(
             // angle should always be positive. -1.28 === 5.0
             new_angle += TAU;
         }
-        let clamped_angle: f32 = new_angle.clamp(0.0, PI * 2.0);
+        let clamped_angle: f32 = new_angle.clamp(0.0, TAU);
         options.rotation_angle = if clamped_angle.abs() == PI * 2.0 {
             0.0
         } else {

@@ -1,12 +1,13 @@
 use bevy::math::vec3;
 use bevy::prelude::*;
+use crate::entity::component::hp::HP;
 
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::keyboard_interaction;
 use crate::GameState;
 
-mod entity;
+pub mod entity;
 mod system;
 
 #[allow(clippy::module_name_repetitions)]
@@ -33,5 +34,6 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         .with_children(|parent| {
             parent.spawn_scene(mesh);
         })
-        .insert(Player::new());
+        .insert(Player::new())
+        .insert(HP::full(100));
 }

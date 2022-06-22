@@ -37,7 +37,7 @@ pub fn init_world(
     let limits = render_device.limits().max_texture_dimension_2d;
     // This is needed because of wgpu limitation. It can't render a texture which breaks the limits in some dimension
     let max_voxels_per_dimension = limits / TEXTURE_SIZE;
-    dbg!(max_voxels_per_dimension);
+    // dbg!(max_voxels_per_dimension);
 
     let merged_voxels = merge_voxels(level.voxel_stack(), max_voxels_per_dimension);
 
