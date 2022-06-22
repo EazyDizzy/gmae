@@ -1,6 +1,6 @@
 ### Rust version
 
-rustc 1.61.0-nightly (68369a041 2022-02-22)
+rustc 1.63.0-nightly (dc80ca78b 2022-06-21)
 
 ### Bevy fast compilation setup
 
