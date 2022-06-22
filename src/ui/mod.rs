@@ -1,4 +1,5 @@
 pub mod menu;
+mod hp;
 
 use crate::GameState;
 use bevy::prelude::*;
@@ -15,6 +16,7 @@ impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
         // TODO make MenuState Local?
         app.add_state(MenuState::Main)
+            .add_system(hp::render)
             .add_system(keyboard_interaction)
             .add_system_set(
                 SystemSet::on_update(GameState::Pause)

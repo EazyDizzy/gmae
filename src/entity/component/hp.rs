@@ -10,4 +10,7 @@ impl HP {
     pub fn full(max: u16) -> HP {
         HP { max, current: max }
     }
+    pub fn percent(&self) -> f32 {
+        self.current as f32 / self.max as f32
+    }
 }

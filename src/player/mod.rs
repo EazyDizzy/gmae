@@ -7,7 +7,7 @@ use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::keyboard_interaction;
 use crate::GameState;
 
-mod entity;
+pub mod entity;
 mod system;
 
 #[allow(clippy::module_name_repetitions)]
