@@ -16,7 +16,6 @@ pub fn setup(mut commands: Commands, level: Res<Level>) {
     }
 }
 
-// TODO fix shadows
 pub fn spawn_orange_light_source_inside(commands: &mut EntityCommands) {
     spawn_point_light_source_inside(
         PointLight {

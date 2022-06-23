@@ -12,6 +12,7 @@ pub fn keyboard_interaction(
 ) {
     let (mut player, mut transform) = player_query.iter_mut().next().unwrap();
     let angle = camera_query.iter().next().map_or(0.0, PlayerCamera::angle);
+    // TODO move to game settings and allow rebinding
     keyboard_input.get_pressed().for_each(|k| match k {
         KeyCode::Up => player.move_forward(&lvl, angle),
         KeyCode::Down => player.move_back(&lvl, angle),

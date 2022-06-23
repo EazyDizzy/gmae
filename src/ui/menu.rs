@@ -1,18 +1,17 @@
 use crate::ui::MenuState;
 use bevy::prelude::*;
-use bevy_egui::egui::{vec2, Pos2, Ui};
+use bevy_egui::egui::{vec2, Ui};
 use bevy_egui::{egui, EguiContext};
 use lib::util::game_settings::GameSettings;
 use std::process::exit;
 
 pub fn render(
     mut egui_context: ResMut<EguiContext>,
-    windows: Res<Windows>,
     game_settings: ResMut<GameSettings>,
     menu_state: ResMut<State<MenuState>>,
 ) {
     egui::Window::new("Menu")
-        .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0 ,0.0))
+        .anchor(egui::Align2::CENTER_CENTER, vec2(0.0 ,0.0))
         .collapsible(false)
         .show(egui_context.ctx_mut(), |ui| match menu_state.current() {
             MenuState::Main => render_main_menu(ui, menu_state),
@@ -26,8 +25,10 @@ fn render_main_menu(ui: &mut Ui, mut menu_state: ResMut<State<MenuState>>) {
         menu_state.set(MenuState::GameSettings).unwrap();
     }
 
+    // TODO normal padding?
     let exit_button = ui.button("    Exit    ");
     if exit_button.clicked() {
+        // TODO fire exit event to be able to save player position etc
         exit(0);
     }
 }

@@ -28,6 +28,7 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
 
     commands
         .spawn_bundle((
+            // TODO take spawn point from world file/save file
             Transform::default().with_scale(vec3(0.5, 0.5, 0.5)),
             GlobalTransform::identity(),
         ))

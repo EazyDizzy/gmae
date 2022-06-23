@@ -8,6 +8,7 @@ const LVL_DIR: &str = "./assets/lvl/";
 
 pub fn read_level(lvl_name: &str) -> Level {
     let path = [LVL_DIR, lvl_name, "/lvl.json.gz"].concat();
+    // TODO normal error handling with modal showing to user
     let lvl_file = File::open(path).expect("Can't open file");
 
     let mut decoder = ZlibDecoder::new(lvl_file);

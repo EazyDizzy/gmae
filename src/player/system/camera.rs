@@ -88,7 +88,7 @@ fn camera_rotation_system(
             player_position.y + 3.0,
             player_position.z,
         );
-        // idk how it works, but big Y fixes the camera angle problem
+        // idk how it works, but big Y fixes the camera angle problem TODO normal way?
         let up_target = Vec3::new(player_position.x, 10000.0, player_position.z);
         transform.look_at(target, up_target);
     }
@@ -98,10 +98,12 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
     if settings.fly_camera {
         commands
             .spawn()
+            // spawn remove hardcode, relatively to Player position
             .insert_bundle(PerspectiveCameraBundle {
                 transform: Transform::from_xyz(5.0, 8.0, 20.0),
                 ..Default::default()
             })
+            // TODO move sensitivity to game settings
             .insert(FlyCamera {
                 sensitivity: 1.0,
                 max_speed: 3.0,
