@@ -37,9 +37,9 @@ impl Default for PlayerCamera {
 
 fn player_model_rotation_system(
     camera_query: Query<&PlayerCamera>,
-    mut player_query: Query<(&mut Player, &mut Transform)>,
+    mut player_query: Query<(&mut Transform, With<Player>)>,
 ) {
-    let (_, mut transform) = player_query.iter_mut().next().unwrap();
+    let (mut transform, ..) = player_query.iter_mut().next().unwrap();
 
     for camera in camera_query.iter() {
         transform.rotation =
