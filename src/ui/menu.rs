@@ -11,18 +11,9 @@ pub fn render(
     game_settings: ResMut<GameSettings>,
     menu_state: ResMut<State<MenuState>>,
 ) {
-    let window = windows.get_primary().unwrap();
-    let window_height = window.height();
-    let window_width = window.width();
-
     egui::Window::new("Menu")
-        .fixed_size(vec2(500.0, 100.0))
+        .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0 ,0.0))
         .collapsible(false)
-        // TODO center
-        .fixed_pos(Pos2 {
-            x: window_width / 2.0,
-            y: window_height / 2.0,
-        })
         .show(egui_context.ctx_mut(), |ui| match menu_state.current() {
             MenuState::Main => render_main_menu(ui, menu_state),
             MenuState::GameSettings => render_game_settings_menu(ui, menu_state, game_settings),
