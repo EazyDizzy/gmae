@@ -56,7 +56,7 @@ fn read_level(lvl_name: &str) -> Level {
     let mut voxels = vec![];
     let mut creatures = vec![];
     let path = [LVL_DIR, lvl_name, "/r.0.0.mca"].concat();
-    let file = File::open(path).expect(&format!("Can't open file {}", lvl_name));
+    let file = File::open(path).unwrap_or_else(|_| panic!("Can't open file {}", lvl_name));
 
     let mut region = Region::from_stream(file).expect("Cannot create region from file.");
 

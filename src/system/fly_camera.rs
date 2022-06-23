@@ -52,7 +52,7 @@
 
 use bevy::{input::mouse::MouseMotion, prelude::*};
 
-/// A set of options for initializing a FlyCamera.
+/// A set of options for initializing a `FlyCamera`.
 /// Attach this component to a [`Camera3dBundle`](https://docs.rs/bevy/0.4.0/bevy/prelude/struct.Camera3dBundle.html) bundle to control it with your mouse and keyboard.
 /// # Example
 /// ```no_compile
@@ -130,8 +130,8 @@ fn forward_vector(rotation: &Quat) -> Vec3 {
 
 fn forward_walk_vector(rotation: &Quat) -> Vec3 {
     let f = forward_vector(rotation);
-    let f_flattened = Vec3::new(f.x, 0.0, f.z).normalize();
-    f_flattened
+    
+    Vec3::new(f.x, 0.0, f.z).normalize()
 }
 
 fn strafe_vector(rotation: &Quat) -> Vec3 {
@@ -161,16 +161,16 @@ fn camera_movement_system(
         let accel: Vec3 = (strafe_vector(&rotation) * axis_h)
             + (forward_walk_vector(&rotation) * axis_v)
             + (Vec3::Y * axis_float);
-        let accel: Vec3 = if accel.length() != 0.0 {
-            accel.normalize() * options.accel
-        } else {
+        let accel: Vec3 = if accel.length() == 0.0 {
             Vec3::ZERO
+        } else {
+            accel.normalize() * options.accel
         };
 
-        let friction: Vec3 = if options.velocity.length() != 0.0 {
-            options.velocity.normalize() * -1.0 * options.friction
-        } else {
+        let friction: Vec3 = if options.velocity.length() == 0.0 {
             Vec3::ZERO
+        } else {
+            options.velocity.normalize() * -1.0 * options.friction
         };
 
         options.velocity += accel * time.delta_seconds();
@@ -183,10 +183,10 @@ fn camera_movement_system(
         let delta_friction = friction * time.delta_seconds();
 
         options.velocity =
-            if (options.velocity + delta_friction).signum() != options.velocity.signum() {
-                Vec3::ZERO
-            } else {
+            if (options.velocity + delta_friction).signum() == options.velocity.signum() {
                 options.velocity + delta_friction
+            } else {
+                Vec3::ZERO
             };
 
         transform.translation += options.velocity;
@@ -225,7 +225,7 @@ fn mouse_motion_system(
 }
 
 /**
-Include this plugin to add the systems for the FlyCamera bundle.
+Include this plugin to add the systems for the `FlyCamera` bundle.
 
 ```no_compile
 fn main() {
