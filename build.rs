@@ -6,6 +6,7 @@ use fastanvil::{Block, Chunk, CurrentJavaChunk, Region};
 use fastnbt::from_bytes;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
+use lib::entity::level::creature::{Creature, CreatureName};
 use lib::entity::level::{DayPart, Level};
 use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
@@ -49,48 +50,45 @@ fn main() {
 
 fn read_level(lvl_name: &str) -> Level {
     let mut voxels = vec![];
+    let mut creatures = vec![];
     let path = [LVL_DIR, lvl_name, "/r.0.0.mca"].concat();
     let file = File::open(path).expect(&format!("Can't open file {}", lvl_name));
 
     let mut region = Region::from_stream(file).unwrap();
 
-    region
-        .iter()
-        .flatten()
-        .for_each(|chunk| {
-            let chunk_x = chunk.x;
-            let chunk_z = chunk.z;
-            let data = chunk.data;
-            if chunk_x > EXPORT_DIAPASON || chunk_z > EXPORT_DIAPASON {
-                return;
-            }
-            let chunk: CurrentJavaChunk = from_bytes(data.as_slice()).unwrap();
+    region.iter().flatten().for_each(|chunk| {
+        let chunk_x = chunk.x;
+        let chunk_z = chunk.z;
+        let data = chunk.data;
+        if chunk_x > EXPORT_DIAPASON || chunk_z > EXPORT_DIAPASON {
+            return;
+        }
+        let chunk: CurrentJavaChunk = from_bytes(data.as_slice()).unwrap();
 
-            for x in 0..CHUNK_SIZE {
-                for z in 0..CHUNK_SIZE {
-                    for y in chunk.y_range() {
-                        if let Some(block) = chunk.block(x, y, z) {
-                            if block.name() != "minecraft:air" {
-                                let voxel_x = (chunk_x * CHUNK_SIZE) + x;
-                                let voxel_z = (chunk_z * CHUNK_SIZE) + z;
-                                let material = match_name_to_material(block.name());
-                                if material == Material::Unknown {
-                                    println!("Unknown block: {}", block.name());
-                                }
-                                let shape = detect_shape(block);
-                                let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
-
-                                voxels.push(Voxel::new(
-                                    Point::new(voxel_x as f32, voxel_y, voxel_z as f32),
-                                    material,
-                                    shape,
-                                ));
+        for x in 0..CHUNK_SIZE {
+            for z in 0..CHUNK_SIZE {
+                for y in chunk.y_range() {
+                    if let Some(block) = chunk.block(x, y, z) {
+                        if block.name() != "minecraft:air" {
+                            let voxel_x = (chunk_x * CHUNK_SIZE) + x;
+                            let voxel_z = (chunk_z * CHUNK_SIZE) + z;
+                            let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
+                            let point = Point::new(voxel_x as f32, voxel_y, voxel_z as f32);
+                            if block.name() == "minecraft:oak_sign" {
+                                creatures.push(Creature::neytral(CreatureName::Dummy, point));
+                                continue;
                             }
+
+                            let material = match_name_to_material(block.name());
+                            let shape = detect_shape(block);
+
+                            voxels.push(Voxel::new(point, material, shape));
                         }
                     }
                 }
             }
-        });
+        }
+    });
 
     let day_part = match lvl_name {
         "village" => DayPart::Night,
@@ -98,7 +96,9 @@ fn read_level(lvl_name: &str) -> Level {
     };
 
     // TODO sort voxels here to remove sorting later
-    Level::new(voxels, day_part)
+    println!("creatures: {}", creatures.len());
+    println!("voxels: {}", voxels.len());
+    Level::new(voxels, day_part, creatures)
 }
 
 fn match_name_to_material(name: &str) -> Material {
