@@ -2,10 +2,10 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use fastanvil::{Block, Chunk, JavaChunk, RegionBuffer};
-use fastnbt::de::from_bytes;
-use flate2::Compression;
+use fastanvil::{Block, Chunk, CurrentJavaChunk, Region};
+use fastnbt::from_bytes;
 use flate2::write::ZlibEncoder;
+use flate2::Compression;
 use lib::entity::level::{DayPart, Level};
 use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
@@ -23,12 +23,15 @@ fn main() {
         let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
 
         if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
-            let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
+            let serialized_lvl_path =
+                format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
             let converted_metadata = fs::metadata(&serialized_lvl_path);
             let should_rebuild = if let Ok(converted) = converted_metadata {
                 original_metadata.modified().unwrap() > converted.modified().unwrap()
                 // || lvl_name == "debug"
-            } else { true };
+            } else {
+                true
+            };
 
             if should_rebuild {
                 println!("converting {original_lvl_path}");
@@ -47,44 +50,51 @@ fn main() {
 fn read_level(lvl_name: &str) -> Level {
     let mut voxels = vec![];
     let path = [LVL_DIR, lvl_name, "/r.0.0.mca"].concat();
-    let file = File::open(path)
-        .expect(&format!("Can't open file {}", lvl_name));
+    let file = File::open(path).expect(&format!("Can't open file {}", lvl_name));
 
-    let mut region = RegionBuffer::new(file);
+    let mut region = Region::from_stream(file).unwrap();
 
-    region.for_each_chunk(|chunk_x, chunk_z, data| {
-        if chunk_x > EXPORT_DIAPASON || chunk_z > EXPORT_DIAPASON {
-            return;
-        }
-        let chunk: JavaChunk = from_bytes(data.as_slice()).unwrap();
+    region
+        .iter()
+        .flatten()
+        .for_each(|chunk| {
+            let chunk_x = chunk.x;
+            let chunk_z = chunk.z;
+            let data = chunk.data;
+            if chunk_x > EXPORT_DIAPASON || chunk_z > EXPORT_DIAPASON {
+                return;
+            }
+            let chunk: CurrentJavaChunk = from_bytes(data.as_slice()).unwrap();
 
-        for x in 0..CHUNK_SIZE {
-            for z in 0..CHUNK_SIZE {
-                for y in chunk.y_range() {
-                    if let Some(block) = chunk.block(x, y, z) {
-                        if block.name() != "minecraft:air" {
-                            let voxel_x = (chunk_x * CHUNK_SIZE) + x;
-                            let voxel_z = (chunk_z * CHUNK_SIZE) + z;
-                            let material = match_name_to_material(block.name());
-                            let shape = detect_shape(block);
-                            let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
+            for x in 0..CHUNK_SIZE {
+                for z in 0..CHUNK_SIZE {
+                    for y in chunk.y_range() {
+                        if let Some(block) = chunk.block(x, y, z) {
+                            if block.name() != "minecraft:air" {
+                                let voxel_x = (chunk_x * CHUNK_SIZE) + x;
+                                let voxel_z = (chunk_z * CHUNK_SIZE) + z;
+                                let material = match_name_to_material(block.name());
+                                if material == Material::Unknown {
+                                    println!("Unknown block: {}", block.name());
+                                }
+                                let shape = detect_shape(block);
+                                let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
 
-                            voxels.push(Voxel::new(
-                                Point::new(voxel_x as f32, voxel_y, voxel_z as f32),
-                                material,
-                                shape,
-                            ));
+                                voxels.push(Voxel::new(
+                                    Point::new(voxel_x as f32, voxel_y, voxel_z as f32),
+                                    material,
+                                    shape,
+                                ));
+                            }
                         }
                     }
                 }
             }
-        }
-    })
-        .expect("Cannot proceed chunks");
+        });
 
     let day_part = match lvl_name {
         "village" => DayPart::Night,
-        &_ => DayPart::Day
+        &_ => DayPart::Day,
     };
 
     // TODO sort voxels here to remove sorting later
@@ -123,11 +133,15 @@ fn match_name_to_material(name: &str) -> Material {
         "minecraft:oak_planks" | "minecraft:oak_stairs" => Material::OakPlanks,
         "minecraft:oak_leaves" => Material::OakLeaves,
         "minecraft:oak_log" => Material::OakLog,
-        "minecraft:stripped_spruce_wood" | "minecraft:stripped_spruce_log" => Material::StrippedSpruceLog,
+        "minecraft:stripped_spruce_wood" | "minecraft:stripped_spruce_log" => {
+            Material::StrippedSpruceLog
+        }
         "minecraft:spruce_leaves" => Material::SpruceLeaves,
         "minecraft:spruce_log" | "minecraft:spruce_wood" => Material::SpruceLog,
         "minecraft:spruce_planks" => Material::SprucePlanks,
-        "minecraft:stripped_dark_oak_wood" | "minecraft:stripped_dark_oak_log" => Material::StrippedDarkOakLog,
+        "minecraft:stripped_dark_oak_wood" | "minecraft:stripped_dark_oak_log" => {
+            Material::StrippedDarkOakLog
+        }
         "minecraft:dark_oak_leaves" => Material::DarkOakLeaves,
         "minecraft:dark_oak_log" => Material::DarkOakLog,
         "minecraft:dark_oak_planks" => Material::DarkOakPlanks,
