@@ -17,16 +17,15 @@ const CHUNK_SIZE: usize = 16;
 const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
 
 fn main() {
-    let lvls = fs::read_dir(LVL_DIR).unwrap();
+    let lvls = fs::read_dir(LVL_DIR).expect("Cannot read files from lvls dir.");
 
     for dir in lvls.flatten() {
-        let lvl_name = dir.file_name();
-        let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
+        let lvl_name = dir.file_name().to_str().unwrap();
+        let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name);
 
         if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
-            let serialized_lvl_path =
-                format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
-            let converted_metadata = fs::metadata(&serialized_lvl_path);
+            let converted_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name);
+            let converted_metadata = fs::metadata(&converted_lvl_path);
             let should_rebuild = if let Ok(converted) = converted_metadata {
                 original_metadata.modified().unwrap() > converted.modified().unwrap()
                 // || lvl_name == "debug"
@@ -35,15 +34,19 @@ fn main() {
             };
 
             if should_rebuild {
-                println!("converting {original_lvl_path}");
-                let lvl = read_level(lvl_name.to_str().unwrap());
-                let lvl_data = serde_json::to_string(&lvl).unwrap();
+                println!("Converting {original_lvl_path}");
+                let lvl = read_level(lvl_name);
+                let serialized_lvl = serde_json::to_string(&lvl).expect("Cannot serialize lvl.");
 
-                let file = File::create(serialized_lvl_path).unwrap();
+                let file =
+                    File::create(converted_lvl_path).expect("Cannot create file for lvl saving.");
                 let mut e = ZlibEncoder::new(file, Compression::best());
-                e.write_all(lvl_data.as_bytes()).unwrap();
-                e.finish().unwrap();
+                e.write_all(serialized_lvl.as_bytes())
+                    .expect("Cannot write lvl to file.");
+                e.finish().expect("Cannot finish writing lvl to file.");
             }
+        } else {
+            eprintln!("Cannot read metadata of {}", &original_lvl_path);
         }
     }
 }
@@ -54,7 +57,7 @@ fn read_level(lvl_name: &str) -> Level {
     let path = [LVL_DIR, lvl_name, "/r.0.0.mca"].concat();
     let file = File::open(path).expect(&format!("Can't open file {}", lvl_name));
 
-    let mut region = Region::from_stream(file).unwrap();
+    let mut region = Region::from_stream(file).expect("Cannot create region from file.");
 
     region.iter().flatten().for_each(|chunk| {
         let chunk_x = chunk.x;
@@ -63,7 +66,8 @@ fn read_level(lvl_name: &str) -> Level {
         if chunk_x > EXPORT_DIAPASON || chunk_z > EXPORT_DIAPASON {
             return;
         }
-        let chunk: CurrentJavaChunk = from_bytes(data.as_slice()).unwrap();
+        let chunk: CurrentJavaChunk =
+            from_bytes(data.as_slice()).expect("Cannot parse chunk data.");
 
         for x in 0..CHUNK_SIZE {
             for z in 0..CHUNK_SIZE {
