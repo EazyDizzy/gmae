@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct Creature {
     relation: CreatureRelation,
     name: CreatureName,
-    position: Point,
+    pub position: Point,
 }
 
 impl Creature {

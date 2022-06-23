@@ -1,20 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-use crate::entity::level::voxel_stack::VoxelStack;
 use crate::entity::level::creature::Creature;
+use crate::entity::level::voxel_stack::VoxelStack;
 use crate::entity::point::Point;
 use crate::entity::voxel::Voxel;
 
+pub mod creature;
 pub mod voxel_plate;
 pub mod voxel_stack;
-pub mod creature;
 
 #[derive(Serialize, Deserialize)]
 pub struct Level {
     day_part: DayPart,
 
     voxel_stack: VoxelStack,
-    creatures: Vec<Creature>
+    creatures: Vec<Creature>,
 }
 
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
@@ -28,7 +28,7 @@ impl Level {
         Level {
             day_part,
             voxel_stack: VoxelStack::from(voxels),
-            creatures
+            creatures,
         }
     }
 
@@ -46,5 +46,9 @@ impl Level {
 
     pub fn points_are_empty(&self, points: &[Point]) -> bool {
         points.iter().all(|p| self.get_voxel_by_point(p).is_none())
+    }
+
+    pub fn creatures(&self) -> &Vec<Creature> {
+        &self.creatures
     }
 }
