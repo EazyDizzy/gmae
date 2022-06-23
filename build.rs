@@ -20,7 +20,8 @@ fn main() {
     let lvls = fs::read_dir(LVL_DIR).expect("Cannot read files from lvls dir.");
 
     for dir in lvls.flatten() {
-        let lvl_name = dir.file_name().to_str().unwrap();
+        let file_name = dir.file_name();
+        let lvl_name = file_name.to_str().unwrap();
         let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name);
 
         if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
