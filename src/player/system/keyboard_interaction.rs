@@ -31,7 +31,7 @@ pub fn keyboard_interaction(
             _ => None,
         };
         if let Some((future_x, future_z)) = future_position {
-            locomotivity.go_to(future_x, future_z, &lvl, phys);
+            locomotivity.move_to(future_x, future_z, &lvl, phys);
         }
 
         if *k == KeyCode::Space || *k == KeyCode::Apostrophe {
@@ -39,7 +39,6 @@ pub fn keyboard_interaction(
         }
     });
 
-    locomotivity.gravity_move(&lvl, phys);
     // TODO get rid of this line at all
     transform.translation = vec3(
         locomotivity.position().x,

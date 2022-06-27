@@ -16,7 +16,7 @@ pub struct Locomotivity {
     movement_state: Option<MovementState>,
 }
 
-// pub api
+// move fns
 impl Locomotivity {
     pub fn new(position: Point) -> Locomotivity {
         Locomotivity {
@@ -33,9 +33,24 @@ impl Locomotivity {
         if self.movement_state.is_none() && self.can_jump(lvl, phys) {
             self.movement_state = Some(MovementState::Jumping(0));
         }
+        self.gravity_move(lvl, phys);
     }
 
-    pub fn gravity_move(&mut self, lvl: &Res<Level>, phys: &PhysiologyDescription) {
+    pub fn move_to(
+        &mut self,
+        future_x: f32,
+        future_z: f32,
+        lvl: &Res<Level>,
+        phys: &PhysiologyDescription,
+    ) {
+        if self.can_stay_on(future_x, future_z, lvl, phys) {
+            self.position.x = future_x;
+            self.position.z = future_z;
+        }
+        self.gravity_move(lvl, phys);
+    }
+
+    fn gravity_move(&mut self, lvl: &Res<Level>, phys: &PhysiologyDescription) {
         if self.movement_state.is_none() {
             if self.should_fall(lvl, phys) {
                 self.movement_state = Some(MovementState::Falling);
@@ -73,13 +88,6 @@ impl Locomotivity {
             }
         }
     }
-
-    pub fn go_to(&mut self, future_x: f32, future_z: f32, lvl: &Res<Level>, phys: &PhysiologyDescription) {
-        if self.can_stay_on(future_x, future_z, lvl, phys) {
-            self.position.x = future_x;
-            self.position.z = future_z;
-        }
-    }
 }
 
 // obstacles checks
@@ -111,7 +119,13 @@ impl Locomotivity {
         voxel_ceil.is_some()
     }
 
-    fn can_stay_on(&self, x: f32, z: f32, lvl: &Res<Level>, phys: &PhysiologyDescription) -> bool {
+    pub fn can_stay_on(
+        &self,
+        x: f32,
+        z: f32,
+        lvl: &Res<Level>,
+        phys: &PhysiologyDescription,
+    ) -> bool {
         let mut obstacles: Vec<Point> = get_touched_points(x, self.position.y, z, phys);
 
         obstacles = obstacles
