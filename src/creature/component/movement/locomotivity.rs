@@ -11,15 +11,15 @@ enum MovementState {
 }
 
 #[derive(Component, Debug)]
-pub struct Moving {
+pub struct Locomotivity {
     position: Point,
     movement_state: Option<MovementState>,
 }
 
 // pub api
-impl Moving {
-    pub fn new(position: Point) -> Moving {
-        Moving {
+impl Locomotivity {
+    pub fn new(position: Point) -> Locomotivity {
+        Locomotivity {
             position,
             movement_state: None,
         }
@@ -83,7 +83,7 @@ impl Moving {
 }
 
 // obstacles checks
-impl Moving {
+impl Locomotivity {
     fn can_jump(&self, lvl: &Res<Level>, phys: &PhysiologyDescription) -> bool {
         self.has_fundament(lvl, phys) && !self.has_ceil(lvl)
     }

@@ -6,7 +6,7 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use crate::system::fly_camera::FlyCamera;
 use lib::util::debug_settings::DebugSettings;
-use crate::creature::component::moving::Moving;
+use crate::creature::component::movement::locomotivity::Locomotivity;
 
 use crate::player::entity::Player;
 
@@ -52,7 +52,7 @@ fn camera_rotation_system(
     time: Res<Time>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
     mut query: Query<(&mut PlayerCamera, &mut Transform)>,
-    player_query: Query<(&Moving, With<Player>)>,
+    player_query: Query<(&Locomotivity, With<Player>)>,
 ) {
     let mut delta: Vec2 = Vec2::ZERO;
     for event in mouse_motion_event_reader.iter() {
@@ -79,8 +79,8 @@ fn camera_rotation_system(
             clamped_angle
         };
 
-        let (moving, ..) = player_query.iter().next().unwrap();
-        let player_position = moving.position();
+        let (locomotivity, ..) = player_query.iter().next().unwrap();
+        let player_position = locomotivity.position();
         let x = player_position.x + CAMERA_HEIGHT * options.rotation_angle.cos();
         let z = player_position.z + CAMERA_HEIGHT * options.rotation_angle.sin();
         transform.translation = vec3(x, player_position.y + CAMERA_HEIGHT, z);
