@@ -6,11 +6,20 @@ use lib::entity::level::Level;
 use rand::Rng;
 
 #[derive(Debug)]
-pub struct RandomMovementStrategy {}
+pub struct RandomMovementStrategy {
+    i: u8,
+    direction: usize,
+}
+
+impl RandomMovementStrategy {
+    pub fn new() -> RandomMovementStrategy {
+        RandomMovementStrategy { i: 0, direction: 0 }
+    }
+}
 
 impl MoveYourBody for RandomMovementStrategy {
     fn update(
-        &self,
+        &mut self,
         locomotivity: &mut Locomotivity,
         phys: &PhysiologyDescription,
         lvl: &Res<Level>,
@@ -35,9 +44,19 @@ impl MoveYourBody for RandomMovementStrategy {
             .filter(|(x, z)| locomotivity.can_stay_on(*x, *z, lvl, phys))
             .collect();
 
-        let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0..valid_positions.len());
+        let index = if self.i < 20 && valid_positions.get(self.direction).is_some() {
+            self.direction
+        } else {
+            let mut rng = rand::thread_rng();
+            let index = rng.gen_range(0..valid_positions.len());
+            self.i = 0;
+            self.direction = index;
+            index
+        };
+
         let (new_x, new_z) = potential_positions[index];
         locomotivity.move_to(new_x, new_z, lvl, phys);
+
+        self.i += 1;
     }
 }

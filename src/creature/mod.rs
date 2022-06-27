@@ -60,11 +60,11 @@ fn move_creatures(
         &mut Transform,
         &mut Locomotivity,
         &PhysiologyDescription,
-        &MovementStrategy,
+        &mut MovementStrategy,
         With<Creature>,
     )>,
 ) {
-    for (mut transform, mut locomotivity, phys, move_strat, ..) in query.iter_mut() {
+    for (mut transform, mut locomotivity, phys, mut move_strat, ..) in query.iter_mut() {
         move_strat.update(&mut locomotivity, phys, &lvl);
         transform.translation = vec3(
             locomotivity.position().x,

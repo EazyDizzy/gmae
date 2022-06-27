@@ -10,7 +10,7 @@ pub mod random_movement;
 
 pub trait MoveYourBody: Send + Sync + Debug {
     fn update(
-        &self,
+        &mut self,
         locomotivity: &mut Locomotivity,
         phys: &PhysiologyDescription,
         lvl: &Res<Level>,
@@ -25,12 +25,12 @@ pub struct MovementStrategy {
 impl MovementStrategy {
     pub fn random() -> MovementStrategy {
         MovementStrategy {
-            strategy: Box::new(RandomMovementStrategy {}),
+            strategy: Box::new(RandomMovementStrategy::new()),
         }
     }
 
     pub fn update(
-        &self,
+        &mut self,
         locomotivity: &mut Locomotivity,
         phys: &PhysiologyDescription,
         lvl: &Res<Level>,
