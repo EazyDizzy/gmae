@@ -1,6 +1,9 @@
+use crate::creature::component::moving::Moving;
+use crate::creature::component::physiology_description::PhysiologyDescription;
+use crate::entity::component::hp::HP;
 use bevy::math::vec3;
 use bevy::prelude::*;
-use crate::entity::component::hp::HP;
+use lib::entity::point::Point;
 
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
@@ -36,5 +39,8 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
             parent.spawn_scene(mesh);
         })
         .insert(Player::new())
+        .insert(PhysiologyDescription::default())
+        // TODO read from save file
+        .insert(Moving::new(Point::new(9.5, 1.0, 3.0)))
         .insert(HP::full(100));
 }

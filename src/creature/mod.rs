@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use lib::entity::level::Level;
 
 pub mod dummy;
+pub mod component;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
