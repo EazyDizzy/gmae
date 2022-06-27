@@ -22,7 +22,8 @@ pub(super) mod named_materials;
 pub mod shape;
 mod voxel_sequence;
 
-#[allow(clippy::needless_pass_by_value)]
+// will be fully rewritten in future
+#[allow(clippy::needless_pass_by_value, clippy::too_many_arguments)]
 pub fn init_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -65,7 +66,8 @@ pub fn init_world(
 
     println!("world initialization: {:?}", start.elapsed());
 }
-
+// will be fully rewritten in future
+#[allow(clippy::too_many_arguments)]
 fn spawn_cube_sequence(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,

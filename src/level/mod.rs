@@ -21,6 +21,7 @@ impl Plugin for LevelPlugin {
 }
 
 impl LevelPlugin {
+    #[allow(clippy::unused_self)]
     fn get_level_resource(&self) -> Level {
         read_level("debug")
     }
