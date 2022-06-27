@@ -7,7 +7,6 @@ on:
 env:
     CARGO_TERM_COLOR: always
     RUST_TOOLCHAIN: nightly
-    TOOLCHAIN_PROFILE: minimal
 
 jobs:
     lints:
@@ -20,4 +19,4 @@ jobs:
               uses: Swatinem/rust-cache@v1
 
             - name: Run clippy
-              run: cargo clippy -- -Dwarnings
+              run: cargo clippy
