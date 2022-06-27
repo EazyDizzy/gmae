@@ -2,10 +2,11 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use fastanvil::{Block, Chunk, JavaChunk, RegionBuffer};
-use fastnbt::de::from_bytes;
-use flate2::Compression;
+use fastanvil::{Block, Chunk, CurrentJavaChunk, Region};
+use fastnbt::from_bytes;
 use flate2::write::ZlibEncoder;
+use flate2::Compression;
+use lib::entity::level::creature::{Creature, CreatureName};
 use lib::entity::level::{DayPart, Level};
 use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
@@ -16,47 +17,58 @@ const CHUNK_SIZE: usize = 16;
 const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
 
 fn main() {
-    let lvls = fs::read_dir(LVL_DIR).unwrap();
+    let lvls = fs::read_dir(LVL_DIR).expect("Cannot read files from lvls dir.");
 
     for dir in lvls.flatten() {
-        let lvl_name = dir.file_name();
-        let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name.to_str().unwrap());
+        let file_name = dir.file_name();
+        let lvl_name = file_name.to_str().unwrap();
+        let original_lvl_path = format!("{LVL_DIR}{}/r.0.0.mca", lvl_name);
 
         if let Ok(original_metadata) = fs::metadata(&original_lvl_path) {
-            let serialized_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name.to_str().unwrap());
-            let converted_metadata = fs::metadata(&serialized_lvl_path);
+            let converted_lvl_path = format!("{LVL_DIR}{}/lvl.json.gz", lvl_name);
+            let converted_metadata = fs::metadata(&converted_lvl_path);
             let should_rebuild = if let Ok(converted) = converted_metadata {
                 original_metadata.modified().unwrap() > converted.modified().unwrap()
                 // || lvl_name == "debug"
-            } else { true };
+            } else {
+                true
+            };
 
             if should_rebuild {
-                println!("converting {original_lvl_path}");
-                let lvl = read_level(lvl_name.to_str().unwrap());
-                let lvl_data = serde_json::to_string(&lvl).unwrap();
+                println!("Converting {original_lvl_path}");
+                let lvl = read_level(lvl_name);
+                let serialized_lvl = serde_json::to_string(&lvl).expect("Cannot serialize lvl.");
 
-                let file = File::create(serialized_lvl_path).unwrap();
+                let file =
+                    File::create(converted_lvl_path).expect("Cannot create file for lvl saving.");
                 let mut e = ZlibEncoder::new(file, Compression::best());
-                e.write_all(lvl_data.as_bytes()).unwrap();
-                e.finish().unwrap();
+                e.write_all(serialized_lvl.as_bytes())
+                    .expect("Cannot write lvl to file.");
+                e.finish().expect("Cannot finish writing lvl to file.");
             }
+        } else {
+            eprintln!("Cannot read metadata of {}", &original_lvl_path);
         }
     }
 }
 
 fn read_level(lvl_name: &str) -> Level {
     let mut voxels = vec![];
+    let mut creatures = vec![];
     let path = [LVL_DIR, lvl_name, "/r.0.0.mca"].concat();
-    let file = File::open(path)
-        .expect(&format!("Can't open file {}", lvl_name));
+    let file = File::open(path).unwrap_or_else(|_| panic!("Can't open file {}", lvl_name));
 
-    let mut region = RegionBuffer::new(file);
+    let mut region = Region::from_stream(file).expect("Cannot create region from file.");
 
-    region.for_each_chunk(|chunk_x, chunk_z, data| {
+    region.iter().flatten().for_each(|chunk| {
+        let chunk_x = chunk.x;
+        let chunk_z = chunk.z;
+        let data = chunk.data;
         if chunk_x > EXPORT_DIAPASON || chunk_z > EXPORT_DIAPASON {
             return;
         }
-        let chunk: JavaChunk = from_bytes(data.as_slice()).unwrap();
+        let chunk: CurrentJavaChunk =
+            from_bytes(data.as_slice()).expect("Cannot parse chunk data.");
 
         for x in 0..CHUNK_SIZE {
             for z in 0..CHUNK_SIZE {
@@ -65,30 +77,33 @@ fn read_level(lvl_name: &str) -> Level {
                         if block.name() != "minecraft:air" {
                             let voxel_x = (chunk_x * CHUNK_SIZE) + x;
                             let voxel_z = (chunk_z * CHUNK_SIZE) + z;
+                            let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
+                            let point = Point::new(voxel_x as f32, voxel_y, voxel_z as f32);
+                            if block.name() == "minecraft:oak_sign" {
+                                creatures.push(Creature::neytral(CreatureName::Dummy, point));
+                                continue;
+                            }
+
                             let material = match_name_to_material(block.name());
                             let shape = detect_shape(block);
-                            let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
 
-                            voxels.push(Voxel::new(
-                                Point::new(voxel_x as f32, voxel_y, voxel_z as f32),
-                                material,
-                                shape,
-                            ));
+                            voxels.push(Voxel::new(point, material, shape));
                         }
                     }
                 }
             }
         }
-    })
-        .expect("Cannot proceed chunks");
+    });
 
     let day_part = match lvl_name {
         "village" => DayPart::Night,
-        &_ => DayPart::Day
+        &_ => DayPart::Day,
     };
 
     // TODO sort voxels here to remove sorting later
-    Level::new(voxels, day_part)
+    println!("creatures: {}", creatures.len());
+    println!("voxels: {}", voxels.len());
+    Level::new(voxels, day_part, creatures)
 }
 
 fn match_name_to_material(name: &str) -> Material {
@@ -123,11 +138,15 @@ fn match_name_to_material(name: &str) -> Material {
         "minecraft:oak_planks" | "minecraft:oak_stairs" => Material::OakPlanks,
         "minecraft:oak_leaves" => Material::OakLeaves,
         "minecraft:oak_log" => Material::OakLog,
-        "minecraft:stripped_spruce_wood" | "minecraft:stripped_spruce_log" => Material::StrippedSpruceLog,
+        "minecraft:stripped_spruce_wood" | "minecraft:stripped_spruce_log" => {
+            Material::StrippedSpruceLog
+        }
         "minecraft:spruce_leaves" => Material::SpruceLeaves,
         "minecraft:spruce_log" | "minecraft:spruce_wood" => Material::SpruceLog,
         "minecraft:spruce_planks" => Material::SprucePlanks,
-        "minecraft:stripped_dark_oak_wood" | "minecraft:stripped_dark_oak_log" => Material::StrippedDarkOakLog,
+        "minecraft:stripped_dark_oak_wood" | "minecraft:stripped_dark_oak_log" => {
+            Material::StrippedDarkOakLog
+        }
         "minecraft:dark_oak_leaves" => Material::DarkOakLeaves,
         "minecraft:dark_oak_log" => Material::DarkOakLog,
         "minecraft:dark_oak_planks" => Material::DarkOakPlanks,

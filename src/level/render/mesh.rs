@@ -57,7 +57,7 @@ fn stretch_sequences_by_y<'a>(
     mut all_sequences: Vec<VoxelSequence<'a>>,
     y: usize,
 ) -> Vec<VoxelSequence<'a>> {
-    let needed_y = (y - 1) as f32;
+    let needed_y = y as f32 - 1.0;
     let previous_layer_sequences = all_sequences
         .iter_mut()
         .filter(|s| s.has_y_end_on(needed_y))

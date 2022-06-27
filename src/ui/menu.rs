@@ -42,7 +42,7 @@ fn render_game_settings_menu(
         match new_value {
             None => {}
             Some(new_value) => {
-                game_settings.update_background_music_volume(new_value)
+                game_settings.update_background_music_volume(new_value);
             }
         }
 

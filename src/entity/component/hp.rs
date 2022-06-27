@@ -11,7 +11,7 @@ impl HP {
         HP { max, current: max }
     }
     pub fn percent(&self) -> f32 {
-        self.current as f32 / self.max as f32
+        f32::from(self.current) / f32::from(self.max)
     }
 
     pub fn max(&self) -> u16 {
