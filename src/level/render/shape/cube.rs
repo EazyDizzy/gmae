@@ -12,6 +12,8 @@ use crate::level::render::voxel_sequence::VoxelSequence;
 
 const PI: f32 = std::f32::consts::PI;
 
+// will be fully rewritten in future
+#[allow(clippy::too_many_lines)]
 pub fn create_cube_bundle_batch(
     meshes: &mut ResMut<Assets<Mesh>>,
     named_materials: &mut ResMut<NamedMaterials>,
