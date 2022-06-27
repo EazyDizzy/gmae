@@ -1,0 +1,23 @@
+name: CI
+
+on:
+    pull_request:
+        branches: [ master ]
+
+env:
+    CARGO_TERM_COLOR: always
+    RUST_TOOLCHAIN: nightly
+    TOOLCHAIN_PROFILE: minimal
+
+jobs:
+    lints:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout sources
+              uses: actions/checkout@v2
+
+            - name: Cache
+              uses: Swatinem/rust-cache@v1
+
+            - name: Run clippy
+              run: cargo clippy
