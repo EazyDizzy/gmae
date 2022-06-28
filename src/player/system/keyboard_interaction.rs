@@ -23,6 +23,7 @@ pub fn keyboard_interaction(
     let angle = camera_query.iter().next().map_or(0.0, PlayerCamera::angle);
     // TODO move to game settings and allow rebinding
     keyboard_input.get_pressed().for_each(|k| {
+        // TODO sprint
         let future_position = match k {
             KeyCode::Up => Some(translate_forward(&locomotivity, angle, phys.movement_speed)),
             KeyCode::Down => Some(translate_back(&locomotivity, angle, phys.movement_speed)),
