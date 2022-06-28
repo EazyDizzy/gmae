@@ -14,6 +14,7 @@
 extern crate core;
 
 use crate::audio::GameAudioPlugin;
+use crate::creature::CreaturePlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
@@ -23,19 +24,18 @@ use lib::entity::voxel::Material;
 use lib::util::debug_settings::DebugSettings;
 use lib::util::game_settings::GameSettings;
 use system::fly_camera::FlyCameraPlugin;
-use crate::creature::CreaturePlugin;
 
 use crate::level::LevelPlugin;
 use crate::player::PlayerPlugin;
 use crate::ui::UIPlugin;
 
 mod audio;
+mod creature;
+mod entity;
 mod level;
 mod player;
 mod system;
 mod ui;
-mod entity;
-mod creature;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
@@ -63,7 +63,8 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(UIPlugin)
         .add_plugin(GameAudioPlugin)
-        .add_startup_system(system::light::setup);
+        .add_startup_system(system::light::setup)
+        .add_system(game_settings_save);
 
     if debug_settings.fly_camera {
         app.add_plugin(FlyCameraPlugin);
@@ -79,4 +80,10 @@ fn main() {
     // bevy_mod_debugdump::print_render_graph(&mut app);
     // bevy_mod_debugdump::print_render_schedule(&mut app);
     app.run();
+}
+
+fn game_settings_save(game_settings: ResMut<GameSettings>) {
+    if game_settings.is_changed() {
+        game_settings.save();
+    }
 }

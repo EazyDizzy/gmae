@@ -25,10 +25,9 @@ impl GameSettings {
 
     pub fn update_background_music_volume(&mut self, new_value: f64) {
         self.background_music_volume = Some(new_value);
-        self.save();
     }
 
-    fn save(&self) {
+    pub fn save(&self) {
         let serialized = serde_json::to_string(self).unwrap();
 
         let mut file = File::create("game_settings.json").unwrap();

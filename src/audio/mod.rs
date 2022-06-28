@@ -17,5 +17,7 @@ fn start_background_audio(asset_server: Res<AssetServer>, audio: Res<Audio>) {
 }
 
 fn audio_adjust_volume_from_settings(audio: Res<Audio>, game_settings: Res<GameSettings>) {
-    audio.set_volume(game_settings.get_background_music_volume() as f32);
+    if game_settings.is_changed() {
+        audio.set_volume(game_settings.get_background_music_volume() as f32);
+    }
 }
