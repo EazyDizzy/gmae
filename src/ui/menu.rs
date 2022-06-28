@@ -5,7 +5,7 @@ use bevy_egui::{egui, EguiContext};
 use lib::util::game_settings::GameSettings;
 use std::process::exit;
 
-pub fn render(
+pub fn ui_render_menu(
     mut egui_context: ResMut<EguiContext>,
     game_settings: ResMut<GameSettings>,
     menu_state: ResMut<State<MenuState>>,

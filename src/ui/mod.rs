@@ -16,18 +16,18 @@ impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
         // TODO make MenuState Local?
         app.add_state(MenuState::Main)
-            .add_system(hp::render)
-            .add_system(keyboard_interaction)
+            .add_system(hp::ui_render_hp)
+            .add_system(ui_track_menu_keyboard_interaction)
             .add_system_set(
                 SystemSet::on_update(GameState::Pause)
-                    .with_system(show_cursor)
-                    .with_system(menu::render),
+                    .with_system(ui_show_cursor)
+                    .with_system(menu::ui_render_menu),
             )
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(hide_cursor));
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(ui_hide_cursor));
     }
 }
 
-fn keyboard_interaction(
+fn ui_track_menu_keyboard_interaction(
     keys: Res<Input<KeyCode>>,
     mut game_state: ResMut<State<GameState>>,
 ) {
@@ -43,11 +43,11 @@ fn keyboard_interaction(
     }
 }
 
-fn show_cursor(windows: ResMut<Windows>) {
+fn ui_show_cursor(windows: ResMut<Windows>) {
     toggle_cursor(windows, true);
 }
 
-fn hide_cursor(windows: ResMut<Windows>) {
+fn ui_hide_cursor(windows: ResMut<Windows>) {
     toggle_cursor(windows, false);
 }
 

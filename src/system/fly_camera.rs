@@ -152,7 +152,6 @@ fn mouse_motion_system(
         options.pitch += delta.y * options.sensitivity * time.delta_seconds();
 
         options.pitch = options.pitch.clamp(-89.0, 89.9);
-        // println!("pitch: {}, yaw: {}", options.pitch, options.yaw);
 
         let yaw_radians = options.yaw.to_radians();
         let pitch_radians = options.pitch.to_radians();

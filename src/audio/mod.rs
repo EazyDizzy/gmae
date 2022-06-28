@@ -6,7 +6,7 @@ pub struct GameAudioPlugin;
 
 impl Plugin for GameAudioPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(adjust_volume)
+        app.add_system(audio_adjust_volume_from_settings)
             .add_startup_system(start_background_audio);
     }
 }
@@ -16,6 +16,6 @@ fn start_background_audio(asset_server: Res<AssetServer>, audio: Res<Audio>) {
         .play_looped(asset_server.load("audio/background/forest-birds-chirping-nature-sounds.mp3"));
 }
 
-fn adjust_volume(audio: Res<Audio>, game_settings: Res<GameSettings>) {
+fn audio_adjust_volume_from_settings(audio: Res<Audio>, game_settings: Res<GameSettings>) {
     audio.set_volume(game_settings.get_background_music_volume() as f32);
 }

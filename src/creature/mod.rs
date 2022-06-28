@@ -18,7 +18,7 @@ pub struct CreaturePlugin;
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(move_creatures));
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(creatures_execute_move_strategies));
     }
 }
 
@@ -54,7 +54,7 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
 #[derive(Component, Debug)]
 pub struct Creature {}
 
-fn move_creatures(
+fn creatures_execute_move_strategies(
     lvl: Res<Level>,
     mut query: Query<(
         &mut Transform,

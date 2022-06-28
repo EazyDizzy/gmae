@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_egui::egui::{vec2, Color32, Pos2, ProgressBar, Rgba};
 use bevy_egui::{egui, EguiContext};
 
-pub fn render(
+pub fn ui_render_hp(
     mut egui_context: ResMut<EguiContext>,
     windows: Res<Windows>,
     player_query: Query<(&HP, With<Player>)>,

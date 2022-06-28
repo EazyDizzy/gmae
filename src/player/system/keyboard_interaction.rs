@@ -8,7 +8,7 @@ use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::player::entity::Player;
 use crate::player::system::camera::PlayerCamera;
 
-pub fn keyboard_interaction(
+pub fn player_track_keyboard_interaction(
     keyboard_input: Res<Input<KeyCode>>,
     lvl: Res<Level>,
     mut player_query: Query<(

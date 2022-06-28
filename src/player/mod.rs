@@ -7,7 +7,7 @@ use crate::creature::component::movement::locomotivity::Locomotivity;
 
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
-use crate::player::system::keyboard_interaction::keyboard_interaction;
+use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
 use crate::GameState;
 
 pub mod entity;
@@ -21,7 +21,7 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(CameraPlugin)
             .add_startup_system(setup)
             .add_system_set(
-                SystemSet::on_update(GameState::Playing).with_system(keyboard_interaction),
+                SystemSet::on_update(GameState::Playing).with_system(player_track_keyboard_interaction),
             );
     }
 }

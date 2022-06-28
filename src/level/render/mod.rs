@@ -64,7 +64,7 @@ pub fn init_world(
         }
     }
 
-    println!("world initialization: {:?}", start.elapsed());
+    debug!("world initialization: {:?}", start.elapsed());
 }
 // will be fully rewritten in future
 #[allow(clippy::too_many_arguments)]

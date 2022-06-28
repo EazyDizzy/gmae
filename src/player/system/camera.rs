@@ -36,7 +36,7 @@ impl Default for PlayerCamera {
     }
 }
 
-fn player_model_rotation_system(
+fn camera_rotate_player_model(
     camera_query: Query<&PlayerCamera>,
     mut player_query: Query<(&mut Transform, With<Player>)>,
 ) {
@@ -48,7 +48,7 @@ fn player_model_rotation_system(
     }
 }
 
-fn camera_rotation_system(
+fn camera_track_mouse_motion(
     time: Res<Time>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
     mut query: Query<(&mut PlayerCamera, &mut Transform)>,
@@ -121,11 +121,11 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
     }
 }
 
-fn enable_camera(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerCamera>) {
+fn ui_enable_all_cameras(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerCamera>) {
     toggle_cameras(fly, player, true);
 }
 
-fn disable_camera(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerCamera>) {
+fn ui_disable_all_cameras(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerCamera>) {
     toggle_cameras(fly, player, false);
 }
 
@@ -146,9 +146,9 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_player_camera)
-            .add_system(camera_rotation_system)
-            .add_system(player_model_rotation_system)
-            .add_system_set(SystemSet::on_update(GameState::Pause).with_system(disable_camera))
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(enable_camera));
+            .add_system(camera_track_mouse_motion)
+            .add_system(camera_rotate_player_model)
+            .add_system_set(SystemSet::on_update(GameState::Pause).with_system(ui_disable_all_cameras))
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(ui_enable_all_cameras));
     }
 }
