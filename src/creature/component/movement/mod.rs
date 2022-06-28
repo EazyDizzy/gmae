@@ -8,6 +8,8 @@ use std::fmt::Debug;
 pub mod locomotivity;
 pub mod random_movement;
 
+pub const CREATURE_MOVED_LABEL: &str = "CREATURE_MOVED_LABEL";
+
 pub trait MoveYourBody: Send + Sync + Debug {
     fn update(
         &mut self,

@@ -1,5 +1,5 @@
 use crate::creature::component::movement::locomotivity::Locomotivity;
-use crate::creature::component::movement::MovementStrategy;
+use crate::creature::component::movement::{MovementStrategy, CREATURE_MOVED_LABEL};
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::dummy::Dummy;
 use crate::entity::component::hp::HP;
@@ -18,7 +18,12 @@ pub struct CreaturePlugin;
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(creatures_execute_move_strategies));
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(creatures_execute_move_strategies)
+                    .label(CREATURE_MOVED_LABEL),
+            )
+            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL));
     }
 }
 
@@ -57,15 +62,19 @@ pub struct Creature {}
 fn creatures_execute_move_strategies(
     lvl: Res<Level>,
     mut query: Query<(
-        &mut Transform,
         &mut Locomotivity,
         &PhysiologyDescription,
         &mut MovementStrategy,
         With<Creature>,
     )>,
 ) {
-    for (mut transform, mut locomotivity, phys, mut move_strat, ..) in query.iter_mut() {
+    for (mut locomotivity, phys, mut move_strat, ..) in query.iter_mut() {
         move_strat.update(&mut locomotivity, phys, &lvl);
+    }
+}
+
+fn creature_move_model(mut query: Query<(&mut Transform, &Locomotivity)>) {
+    for (mut transform, locomotivity) in query.iter_mut() {
         transform.translation = vec3(
             locomotivity.position().x,
             locomotivity.position().y,

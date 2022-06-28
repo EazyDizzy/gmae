@@ -1,9 +1,8 @@
+use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::physiology_description::PhysiologyDescription;
-use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::entity::level::Level;
 use std::f32::consts::{FRAC_PI_2, PI};
-use crate::creature::component::movement::locomotivity::Locomotivity;
 
 use crate::player::entity::Player;
 use crate::player::system::camera::PlayerCamera;
@@ -11,15 +10,10 @@ use crate::player::system::camera::PlayerCamera;
 pub fn player_track_keyboard_interaction(
     keyboard_input: Res<Input<KeyCode>>,
     lvl: Res<Level>,
-    mut player_query: Query<(
-        &mut Transform,
-        &mut Locomotivity,
-        &PhysiologyDescription,
-        With<Player>,
-    )>,
+    mut player_query: Query<(&mut Locomotivity, &PhysiologyDescription, With<Player>)>,
     camera_query: Query<&PlayerCamera>,
 ) {
-    let (mut transform, mut locomotivity, phys, ..) = player_query.iter_mut().next().unwrap();
+    let (mut locomotivity, phys, ..) = player_query.iter_mut().next().unwrap();
     let angle = camera_query.iter().next().map_or(0.0, PlayerCamera::angle);
     // TODO move to game settings and allow rebinding
     keyboard_input.get_pressed().for_each(|k| {
@@ -39,13 +33,6 @@ pub fn player_track_keyboard_interaction(
             locomotivity.jump(&lvl, phys);
         }
     });
-
-    // TODO get rid of this line at all
-    transform.translation = vec3(
-        locomotivity.position().x,
-        locomotivity.position().y,
-        locomotivity.position().z,
-    );
 
     if keyboard_input.just_pressed(KeyCode::Space) {}
 }
