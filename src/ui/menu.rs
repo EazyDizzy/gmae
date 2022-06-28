@@ -11,7 +11,8 @@ pub fn render(
     menu_state: ResMut<State<MenuState>>,
 ) {
     egui::Window::new("Menu")
-        .anchor(egui::Align2::CENTER_CENTER, vec2(0.0 ,0.0))
+        .anchor(egui::Align2::CENTER_CENTER, vec2(0.0, 0.0))
+        .resizable(false)
         .collapsible(false)
         .show(egui_context.ctx_mut(), |ui| match menu_state.current() {
             MenuState::Main => render_main_menu(ui, menu_state),

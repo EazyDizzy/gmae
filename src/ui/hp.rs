@@ -1,7 +1,7 @@
 use crate::entity::component::hp::HP;
 use crate::player::entity::Player;
 use bevy::prelude::*;
-use bevy_egui::egui::{vec2, Color32, Pos2, ProgressBar, Rgba};
+use bevy_egui::egui::{vec2, Pos2, ProgressBar};
 use bevy_egui::{egui, EguiContext};
 
 pub fn ui_render_hp(
@@ -24,9 +24,6 @@ pub fn ui_render_hp(
                 .fixed_size(vec2(250.0, 40.0))
                 .show(ui, |ui| {
                     if let Some((hp, ..)) = player {
-                        // TODO must be better way
-                        ui.style_mut().visuals.selection.bg_fill =
-                            Color32::from(Rgba::from_srgba_premultiplied(220, 20, 60, 255));
                         ui.add(ProgressBar::new(hp.percent()).text(format!(
                             "{} / {}",
                             hp.current(),
