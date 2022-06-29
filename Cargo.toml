@@ -43,3 +43,5 @@ path = "./lib"
 # https://github.com/zkat/big-brain ai
 # https://github.com/jcornaz/heron physics
 # https://github.com/lightsoutgames/bevy_input_actionmap controls
+# https://github.com/bevyengine/bevy_github_ci_template ci
+# https://github.com/MrGVSV/bevy_proto create creatures with config files

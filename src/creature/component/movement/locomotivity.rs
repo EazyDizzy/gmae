@@ -33,7 +33,6 @@ impl Locomotivity {
         if self.movement_state.is_none() && self.can_jump(lvl, phys) {
             self.movement_state = Some(MovementState::Jumping(0));
         }
-        self.gravity_move(lvl, phys);
     }
 
     pub fn move_to(
@@ -47,10 +46,9 @@ impl Locomotivity {
             self.position.x = future_x;
             self.position.z = future_z;
         }
-        self.gravity_move(lvl, phys);
     }
 
-    fn gravity_move(&mut self, lvl: &Res<Level>, phys: &PhysiologyDescription) {
+    pub fn gravity_move(&mut self, lvl: &Res<Level>, phys: &PhysiologyDescription) {
         if self.movement_state.is_none() {
             if self.should_fall(lvl, phys) {
                 self.movement_state = Some(MovementState::Falling);

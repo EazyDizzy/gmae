@@ -2,15 +2,16 @@ use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::{MovementStrategy, CREATURE_MOVED_LABEL};
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::dummy::Dummy;
-use crate::entity::component::hp::HP;
+use crate::creature::pizza::Pizza;
 use crate::GameState;
 use bevy::math::vec3;
 use bevy::prelude::*;
+use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
-use lib::entity::point::Point;
 
 pub mod component;
 pub mod dummy;
+pub mod pizza;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
@@ -23,41 +24,52 @@ impl Plugin for CreaturePlugin {
                     .with_system(creatures_execute_move_strategies)
                     .label(CREATURE_MOVED_LABEL),
             )
-            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL));
+            .add_system(creatures_apply_gravity
+                .after(CREATURE_MOVED_LABEL)
+                .before(creature_move_model)
+            )
+            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
+        ;
     }
 }
 
 fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<AssetServer>) {
     let dummy_mesh = asset_server.load("mesh/dummy.glb#Scene0");
+    let pizza_mesh = asset_server.load("mesh/pizza.glb#Scene0");
 
     for creature in level.creatures() {
-        commands
-            .spawn_bundle((
-                Transform::from_xyz(
-                    creature.position.x,
-                    creature.position.y,
-                    creature.position.z,
-                ),
-                GlobalTransform::identity(),
-            ))
-            .with_children(|parent| {
-                parent.spawn_scene(dummy_mesh.clone());
-            })
-            .insert(Dummy::new())
-            .insert(Creature {})
-            .insert(MovementStrategy::random())
-            .insert(PhysiologyDescription::default())
-            .insert(Locomotivity::new(Point::new(
+        let mut ec = commands.spawn_bundle((
+            Transform::from_xyz(
                 creature.position.x,
                 creature.position.y,
                 creature.position.z,
-            )))
-            .insert(HP::full(100));
+            ),
+            GlobalTransform::identity(),
+        ));
+        ec.with_children(|parent| {
+            let mesh = match creature.name {
+                CreatureName::Dummy => dummy_mesh.clone(),
+                CreatureName::Pizza => pizza_mesh.clone(),
+            };
+            parent.spawn_scene(mesh);
+        })
+        .insert(CreatureMarker {});
+
+        match creature.name {
+            CreatureName::Dummy => {
+                ec.insert(Dummy::new());
+                dummy::insert(&mut ec, creature);
+            }
+            CreatureName::Pizza => {
+                ec.insert(Pizza::new());
+                pizza::insert(&mut ec, creature);
+            }
+        }
     }
 }
 
 #[derive(Component, Debug)]
-pub struct Creature {}
+pub struct CreatureMarker {}
 
 fn creatures_execute_move_strategies(
     lvl: Res<Level>,
@@ -65,7 +77,7 @@ fn creatures_execute_move_strategies(
         &mut Locomotivity,
         &PhysiologyDescription,
         &mut MovementStrategy,
-        With<Creature>,
+        With<CreatureMarker>,
     )>,
 ) {
     for (mut locomotivity, phys, mut move_strat, ..) in query.iter_mut() {
@@ -80,5 +92,14 @@ fn creature_move_model(mut query: Query<(&mut Transform, &Locomotivity)>) {
             locomotivity.position().y,
             locomotivity.position().z,
         );
+    }
+}
+
+fn creatures_apply_gravity(
+    lvl: Res<Level>,
+    mut query: Query<(&mut Locomotivity, &PhysiologyDescription)>,
+) {
+    for (mut locomotivity, phys) in query.iter_mut() {
+        locomotivity.gravity_move(&lvl, phys);
     }
 }

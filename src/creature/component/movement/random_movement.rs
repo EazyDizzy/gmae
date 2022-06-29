@@ -53,6 +53,7 @@ impl MoveYourBody for RandomMovementStrategy {
             self.direction = index;
             index
         };
+        // dbg!(potential_positions);
 
         let (new_x, new_z) = potential_positions[index];
         locomotivity.move_to(new_x, new_z, lvl, phys);

@@ -10,6 +10,7 @@ use lib::entity::level::creature::{Creature, CreatureName};
 use lib::entity::level::{DayPart, Level};
 use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
+use lib::util::game_settings::GameSettings;
 
 const EXPORT_DIAPASON: usize = 8;
 const LVL_DIR: &str = "./assets/lvl/";
@@ -79,9 +80,16 @@ fn read_level(lvl_name: &str) -> Level {
                             let voxel_z = (chunk_z * CHUNK_SIZE) + z;
                             let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
                             let point = Point::new(voxel_x as f32, voxel_y, voxel_z as f32);
-                            if block.name() == "minecraft:oak_sign" {
-                                creatures.push(Creature::neytral(CreatureName::Dummy, point));
-                                continue;
+                            match block.name() {
+                                "minecraft:oak_sign" => {
+                                    creatures.push(Creature::neytral(CreatureName::Dummy, point));
+                                    continue;
+                                }
+                                "minecraft:spruce_sign" => {
+                                    creatures.push(Creature::enemy(CreatureName::Pizza, point));
+                                    continue;
+                                }
+                                _ => {}
                             }
 
                             let material = match_name_to_material(block.name());
