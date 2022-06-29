@@ -42,7 +42,7 @@ impl Locomotivity {
         lvl: &Res<Level>,
         phys: &PhysiologyDescription,
     ) {
-        if self.can_stay_on(future_x, future_z, lvl, phys) {
+        if self.creature_not_inside_blocks(future_x, future_z, lvl, phys) {
             self.position.x = future_x;
             self.position.z = future_z;
         }
@@ -117,7 +117,7 @@ impl Locomotivity {
         voxel_ceil.is_some()
     }
 
-    pub fn can_stay_on(
+    pub fn creature_not_inside_blocks(
         &self,
         x: f32,
         z: f32,
@@ -130,6 +130,7 @@ impl Locomotivity {
             .iter()
             .map(|p| Point::new(p.x, p.y + 1.0, p.z))
             .collect();
+
         obstacles.extend(
             obstacles
                 .iter()
@@ -144,6 +145,18 @@ impl Locomotivity {
         let obstacles: Vec<Point> = get_touched_points(self.position.x, y, self.position.z, phys);
 
         lvl.points_are_empty(&obstacles)
+    }
+    pub fn has_y_obstacles_on_point(
+        &self,
+        x: f32,
+        y: f32,
+        z: f32,
+        lvl: &Res<Level>,
+        phys: &PhysiologyDescription,
+    ) -> bool {
+        let obstacles: Vec<Point> = get_touched_points(x, y, z, phys);
+
+        !lvl.points_are_empty(&obstacles)
     }
 }
 

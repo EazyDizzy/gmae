@@ -24,12 +24,12 @@ impl Plugin for CreaturePlugin {
                     .with_system(creatures_execute_move_strategies)
                     .label(CREATURE_MOVED_LABEL),
             )
-            .add_system(creatures_apply_gravity
-                .after(CREATURE_MOVED_LABEL)
-                .before(creature_move_model)
+            .add_system(
+                creatures_apply_gravity
+                    .after(CREATURE_MOVED_LABEL)
+                    .before(creature_move_model),
             )
-            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
-        ;
+            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL));
     }
 }
 
@@ -43,7 +43,9 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
                 creature.position.x,
                 creature.position.y,
                 creature.position.z,
-            ),
+            )
+            //     TODO make sth to avoid this
+            .with_scale(vec3(0.5, 0.5, 0.5)),
             GlobalTransform::identity(),
         ));
         ec.with_children(|parent| {

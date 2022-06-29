@@ -41,8 +41,15 @@ impl MoveYourBody for RandomMovementStrategy {
         ];
         let valid_positions: Vec<(f32, f32)> = potential_positions
             .into_iter()
-            .filter(|(x, z)| locomotivity.can_stay_on(*x, *z, lvl, phys))
+            .filter(|(x, z)| {
+                locomotivity.creature_not_inside_blocks(*x, *z, lvl, phys)
+                    && locomotivity.has_y_obstacles_on_point(*x, position.y, *z, lvl, phys)
+            })
             .collect();
+
+        if valid_positions.is_empty() {
+            return;
+        }
 
         let index = if self.i < 20 && valid_positions.get(self.direction).is_some() {
             self.direction
@@ -53,7 +60,6 @@ impl MoveYourBody for RandomMovementStrategy {
             self.direction = index;
             index
         };
-        // dbg!(potential_positions);
 
         let (new_x, new_z) = potential_positions[index];
         locomotivity.move_to(new_x, new_z, lvl, phys);
