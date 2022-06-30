@@ -118,7 +118,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>, gam
                 ..Default::default()
             })
             .insert(PlayerCamera {
-                sensitivity: game_settings.get_player_camera_sensitivity() as f32,
+                sensitivity: game_settings.get_mouse_sensitivity() as f32,
                 ..Default::default()
             });
     }
@@ -132,10 +132,10 @@ fn ui_disable_all_cameras(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerC
     toggle_cameras(fly, player, false);
 }
 
-fn apply_player_camera_sensitivity_change(game_settings: Res<GameSettings>, mut player: Query<&mut PlayerCamera>) {
+fn apply_mouse_sensitivity_change(game_settings: Res<GameSettings>, mut player: Query<&mut PlayerCamera>) {
     if game_settings.is_changed() {
         player.iter_mut()
-            .for_each(|mut camera| camera.sensitivity = game_settings.get_player_camera_sensitivity() as f32)
+            .for_each(|mut camera| camera.sensitivity = game_settings.get_mouse_sensitivity() as f32)
     }
 }
 
@@ -158,7 +158,7 @@ impl Plugin for CameraPlugin {
         app.add_startup_system(setup_player_camera)
             .add_system(camera_track_mouse_motion)
             .add_system(camera_rotate_player_model)
-            .add_system(apply_player_camera_sensitivity_change)
+            .add_system(apply_mouse_sensitivity_change)
             .add_system_set(SystemSet::on_update(GameState::Pause).with_system(ui_disable_all_cameras))
             .add_system_set(SystemSet::on_update(GameState::Playing).with_system(ui_enable_all_cameras));
     }

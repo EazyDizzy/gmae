@@ -40,7 +40,7 @@ fn render_game_settings_menu(
     mut game_settings: ResMut<GameSettings>,
 ) {
     ui.add(egui::Slider::from_get_set(0.0..=1.0, settings::update_background_music(&mut game_settings)).text("Background music volume"));
-    ui.add(egui::Slider::from_get_set(0.01..=1.0, settings::update_player_camera_sensitivity(game_settings)).text("Camera sensitivity"));
+    ui.add(egui::Slider::from_get_set(0.01..=1.0, settings::update_mouse_sensitivity(&mut game_settings)).text("Mouse sensitivity"));
 
     let back_button = ui.button("Back");
     if back_button.clicked() {

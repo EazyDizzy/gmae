@@ -14,15 +14,15 @@ pub fn update_background_music<'settings>(game_settings: &'settings mut ResMut<G
    })
 }
 
-pub fn update_player_camera_sensitivity<'settings>(mut game_settings: ResMut<'settings, GameSettings>) -> Box<dyn FnMut(Option<f64>) -> f64 +'settings> {
+pub fn update_mouse_sensitivity<'settings>(game_settings: &'settings mut ResMut<GameSettings>) -> Box<dyn FnMut(Option<f64>) -> f64 +'settings> {
    Box::new(move |new_value: Option<f64>| -> f64 {
       match new_value {
          None => {}
          Some(new_value) => {
-            game_settings.update_player_camera_sensitivity(new_value);
+            game_settings.update_mouse_sensitivity(new_value);
          }
       }
 
-      game_settings.get_player_camera_sensitivity()
+      game_settings.get_mouse_sensitivity()
    })
 }
