@@ -10,6 +10,8 @@ use bevy::prelude::*;
 use bevy_prototype_debug_lines::DebugLines;
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
+use lib::entity::point::Point;
+use std::f32::consts::PI;
 
 pub mod component;
 pub mod dummy;
@@ -47,6 +49,8 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
                 creature.position.y,
                 creature.position.z,
             )
+            //     TODO remove default rotation after debug
+            .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0))
             //     TODO make sth to avoid this
             .with_scale(vec3(0.5, 0.5, 0.5)),
             GlobalTransform::identity(),
@@ -118,16 +122,24 @@ fn creatures_apply_gravity(
 fn creatures_show_direction_of_sight(
     mut lines: ResMut<DebugLines>,
     player_query: Query<(&Locomotivity, With<Player>)>,
-    enemy_query: Query<(&Locomotivity, With<EnemyCreatureMarker>)>,
+    enemy_query: Query<(
+        &Locomotivity,
+        &Transform,
+        &PhysiologyDescription,
+        With<EnemyCreatureMarker>,
+    )>,
 ) {
     if let Some(player_locomotivity) = player_query.iter().next() {
         let (player_position, ..) = player_locomotivity;
         let end = player_position.position().into_vec3();
 
-        for (locomotivity, ..) in enemy_query.iter() {
-            let start = locomotivity.position().into_vec3();
+        for (locomotivity, transform, phys, ..) in enemy_query.iter() {
+            let pos: &Point = locomotivity.position();
+            let eyes_pos: Point = phys.get_eyes_position(&transform, pos);
+            let start = eyes_pos.into_vec3();
             let duration = 0.0; // Duration of 0 will show the line for 1 frame.
-            lines.line(start, end, duration);
+            lines.line_colored(start, end, duration, Color::RED);
+            lines.line_colored(pos.into_vec3(), end, duration, Color::BLUE);
         }
     }
 }

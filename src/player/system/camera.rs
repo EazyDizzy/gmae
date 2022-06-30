@@ -73,7 +73,7 @@ fn camera_track_mouse_motion(
             new_angle += TAU;
         }
         let clamped_angle: f32 = new_angle.clamp(0.0, TAU);
-        options.rotation_angle = if clamped_angle.abs() == PI * 2.0 {
+        options.rotation_angle = if clamped_angle.abs() == TAU {
             0.0
         } else {
             clamped_angle

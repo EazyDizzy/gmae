@@ -54,8 +54,8 @@ fn main() {
         // .add_plugins_with(DefaultPlugins, |plugins| {
         //     plugins.disable::<bevy::log::LogPlugin>()
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugin(LogDiagnosticsPlugin::default())
+        // .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        // .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(DebugLinesPlugin::default())
         .add_plugin(AudioPlugin)
         .add_plugin(EguiPlugin)

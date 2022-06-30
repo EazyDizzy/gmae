@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-
 use crate::entity::point::Point;
+use crate::entity::WorldSide;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
 pub enum Material {
@@ -102,26 +102,6 @@ impl Fastening {
             "bottom" => Fastening::Bottom,
             "top" => Fastening::Top,
             v => panic!("Unknown fastening value {v}"),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
-pub enum WorldSide {
-    North,
-    South,
-    East,
-    West,
-}
-
-impl WorldSide {
-    fn from_property(value: &str) -> WorldSide {
-        match value {
-            "north" => WorldSide::North,
-            "south" => WorldSide::South,
-            "east" => WorldSide::East,
-            "west" => WorldSide::West,
-            v => panic!("Unknown world_side value {v}"),
         }
     }
 }

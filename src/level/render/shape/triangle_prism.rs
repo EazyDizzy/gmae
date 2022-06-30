@@ -2,7 +2,8 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 use lib::entity::point::Point;
-use lib::entity::voxel::{Fastening, TrianglePrismProperties, WorldSide};
+use lib::entity::voxel::{Fastening, TrianglePrismProperties};
+use lib::entity::WorldSide;
 
 use crate::level::render::voxel_sequence::VoxelSequence;
 
