@@ -135,7 +135,7 @@ fn ui_disable_all_cameras(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerC
 fn apply_mouse_sensitivity_change(game_settings: Res<GameSettings>, mut player: Query<&mut PlayerCamera>) {
     if game_settings.is_changed() {
         player.iter_mut()
-            .for_each(|mut camera| camera.sensitivity = game_settings.get_mouse_sensitivity() as f32)
+            .for_each(|mut camera| camera.sensitivity = game_settings.get_mouse_sensitivity() as f32);
     }
 }
 
