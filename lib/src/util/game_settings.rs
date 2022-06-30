@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameSettings {
     background_music_volume: Option<f64>,
+    player_camera_sensitivity: Option<f64>,
 }
 
 impl GameSettings {
@@ -25,6 +26,14 @@ impl GameSettings {
 
     pub fn update_background_music_volume(&mut self, new_value: f64) {
         self.background_music_volume = Some(new_value);
+    }
+
+    pub fn get_player_camera_sensitivity(&self) -> f64 {
+        self.player_camera_sensitivity.unwrap_or(0.3)
+    }
+
+    pub fn update_player_camera_sensitivity(&mut self, new_value: f64) {
+        self.player_camera_sensitivity = Some(new_value);
     }
 
     pub fn save(&self) {
