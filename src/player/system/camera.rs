@@ -6,6 +6,7 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use crate::system::fly_camera::FlyCamera;
 use lib::util::debug_settings::DebugSettings;
+use lib::util::game_settings::GameSettings;
 use crate::creature::component::movement::locomotivity::Locomotivity;
 
 use crate::player::entity::Player;
@@ -96,7 +97,7 @@ fn camera_track_mouse_motion(
     }
 }
 
-fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
+fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>, game_settings: Res<GameSettings>) {
     if settings.fly_camera {
         commands
             .spawn()
@@ -105,7 +106,6 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
                 transform: Transform::from_xyz(5.0, 8.0, 20.0),
                 ..Default::default()
             })
-            // TODO move sensitivity to game settings
             .insert(FlyCamera {
                 sensitivity: 1.0,
                 max_speed: 3.0,
@@ -117,7 +117,10 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
             .insert_bundle(PerspectiveCameraBundle {
                 ..Default::default()
             })
-            .insert(PlayerCamera::default());
+            .insert(PlayerCamera {
+                sensitivity: game_settings.get_mouse_sensitivity() as f32,
+                ..Default::default()
+            });
     }
 }
 
@@ -127,6 +130,13 @@ fn ui_enable_all_cameras(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerCa
 
 fn ui_disable_all_cameras(fly: Query<&mut FlyCamera>, player: Query<&mut PlayerCamera>) {
     toggle_cameras(fly, player, false);
+}
+
+fn apply_mouse_sensitivity_change(game_settings: Res<GameSettings>, mut player: Query<&mut PlayerCamera>) {
+    if game_settings.is_changed() {
+        player.iter_mut()
+            .for_each(|mut camera| camera.sensitivity = game_settings.get_mouse_sensitivity() as f32);
+    }
 }
 
 fn toggle_cameras(
@@ -148,6 +158,7 @@ impl Plugin for CameraPlugin {
         app.add_startup_system(setup_player_camera)
             .add_system(camera_track_mouse_motion)
             .add_system(camera_rotate_player_model)
+            .add_system(apply_mouse_sensitivity_change)
             .add_system_set(SystemSet::on_update(GameState::Pause).with_system(ui_disable_all_cameras))
             .add_system_set(SystemSet::on_update(GameState::Playing).with_system(ui_enable_all_cameras));
     }

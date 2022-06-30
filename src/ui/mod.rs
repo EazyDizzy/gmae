@@ -1,5 +1,6 @@
 mod hp;
 pub mod menu;
+mod settings;
 
 use crate::GameState;
 use bevy::prelude::*;
