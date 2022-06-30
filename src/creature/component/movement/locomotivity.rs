@@ -1,5 +1,6 @@
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::prelude::*;
+use lib::entity::level::creature::Creature;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
 use lib::util::math::round_based;
@@ -14,6 +15,16 @@ enum MovementState {
 pub struct Locomotivity {
     position: Point,
     movement_state: Option<MovementState>,
+}
+
+impl From<&Creature> for Locomotivity {
+    fn from(creature: &Creature) -> Self {
+        Locomotivity::new(Point::new(
+            creature.position.x,
+            creature.position.y,
+            creature.position.z,
+        ))
+    }
 }
 
 // move fns

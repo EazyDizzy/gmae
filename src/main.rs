@@ -12,7 +12,6 @@
 )]
 
 extern crate core;
-
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
@@ -20,6 +19,7 @@ use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
+use bevy_prototype_debug_lines::*;
 use lib::entity::voxel::Material;
 use lib::util::debug_settings::DebugSettings;
 use lib::util::game_settings::GameSettings;
@@ -56,6 +56,7 @@ fn main() {
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(DebugLinesPlugin::default())
         .add_plugin(AudioPlugin)
         .add_plugin(EguiPlugin)
         .add_plugin(LevelPlugin)

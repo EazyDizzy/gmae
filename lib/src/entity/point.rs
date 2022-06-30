@@ -1,3 +1,5 @@
+use bevy::math::vec3;
+use bevy::math::Vec3;
 use serde::{Deserialize, Serialize};
 
 use crate::util::math::round_based;
@@ -21,5 +23,9 @@ impl Point {
     pub fn add_y(&mut self, y: f32) {
         self.y += y;
         self.y = round_based(self.y, 2);
+    }
+
+    pub fn into_vec3(&self) -> Vec3 {
+        vec3(self.x, self.y, self.z)
     }
 }

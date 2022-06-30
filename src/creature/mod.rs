@@ -3,9 +3,11 @@ use crate::creature::component::movement::{MovementStrategy, CREATURE_MOVED_LABE
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::dummy::Dummy;
 use crate::creature::pizza::Pizza;
+use crate::player::entity::Player;
 use crate::GameState;
 use bevy::math::vec3;
 use bevy::prelude::*;
+use bevy_prototype_debug_lines::DebugLines;
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 
@@ -29,7 +31,8 @@ impl Plugin for CreaturePlugin {
                     .after(CREATURE_MOVED_LABEL)
                     .before(creature_move_model),
             )
-            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL));
+            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
+            .add_system(creatures_show_direction_of_sight);
     }
 }
 
@@ -57,6 +60,10 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
         })
         .insert(CreatureMarker {});
 
+        if creature.is_enemy() {
+            ec.insert(EnemyCreatureMarker {});
+        }
+
         match creature.name {
             CreatureName::Dummy => {
                 ec.insert(Dummy::new());
@@ -72,6 +79,8 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
 
 #[derive(Component, Debug)]
 pub struct CreatureMarker {}
+#[derive(Component, Debug)]
+pub struct EnemyCreatureMarker {}
 
 fn creatures_execute_move_strategies(
     lvl: Res<Level>,
@@ -103,5 +112,22 @@ fn creatures_apply_gravity(
 ) {
     for (mut locomotivity, phys) in query.iter_mut() {
         locomotivity.gravity_move(&lvl, phys);
+    }
+}
+
+fn creatures_show_direction_of_sight(
+    mut lines: ResMut<DebugLines>,
+    player_query: Query<(&Locomotivity, With<Player>)>,
+    enemy_query: Query<(&Locomotivity, With<EnemyCreatureMarker>)>,
+) {
+    if let Some(player_locomotivity) = player_query.iter().next() {
+        let (player_position, ..) = player_locomotivity;
+        let end = player_position.position().into_vec3();
+
+        for (locomotivity, ..) in enemy_query.iter() {
+            let start = locomotivity.position().into_vec3();
+            let duration = 0.0; // Duration of 0 will show the line for 1 frame.
+            lines.line(start, end, duration);
+        }
     }
 }
