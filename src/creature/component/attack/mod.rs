@@ -23,9 +23,9 @@ impl Attack {
         let pos: &Point = locomotivity.position();
         let eyes_pos = phys.get_eyes_position(transform, pos);
         if can_see_from(&eyes_pos, player_position, lvl) {
-            dbg!("can see");
+            // dbg!("can see");
         } else {
-            dbg!("can't see");
+            // dbg!("can't see");
         }
     }
 }

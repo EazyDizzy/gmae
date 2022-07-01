@@ -10,7 +10,6 @@ use lib::entity::level::creature::{Creature, CreatureName};
 use lib::entity::level::{DayPart, Level};
 use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
-use lib::util::game_settings::GameSettings;
 
 const EXPORT_DIAPASON: usize = 8;
 const LVL_DIR: &str = "./assets/lvl/";

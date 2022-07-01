@@ -28,4 +28,7 @@ impl Point {
     pub fn into_vec3(&self) -> Vec3 {
         vec3(self.x, self.y, self.z)
     }
+    pub fn floor(&self) -> Point {
+        Point::new(self.x.floor(), self.y.floor(), self.z.floor())
+    }
 }

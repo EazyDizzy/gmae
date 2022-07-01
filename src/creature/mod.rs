@@ -13,6 +13,7 @@ use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
 use std::f32::consts::PI;
+use crate::creature::component::attack::util::raytracer::get_last_seen_point;
 
 pub mod component;
 pub mod dummy;
@@ -136,15 +137,16 @@ fn creatures_show_direction_of_sight(
         let (player_locomotivity, ..) = player;
         let mut player_position: Point = player_locomotivity.position().clone();
         player_position.add_y(1.0);
-        let end = player_position.into_vec3();
 
         for (locomotivity, transform, phys, attack, ..) in enemy_query.iter() {
             let pos: &Point = locomotivity.position();
-            let eyes_pos: Point = phys.get_eyes_position(&transform, pos);
+            let eyes_pos: Point = phys.get_eyes_position(transform, pos);
             let start = eyes_pos.into_vec3();
             let duration = 0.0; // Duration of 0 will show the line for 1 frame.
+            let last_seen_point = get_last_seen_point(&eyes_pos, &player_position, &lvl);
+            let end = last_seen_point.unwrap_or_else(|| player_position.clone()).into_vec3();
             lines.line_colored(start, end, duration, Color::RED);
-            lines.line_colored(pos.into_vec3(), end, duration, Color::BLUE);
+
             attack.exec(
                 phys,
                 locomotivity,
