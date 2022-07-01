@@ -1,3 +1,4 @@
+#![feature(test)]
 #![deny(clippy::all, clippy::pedantic, clippy::cognitive_complexity)]
 #![allow(
     clippy::expect_fun_call,
@@ -10,8 +11,9 @@
     clippy::needless_pass_by_value,
     clippy::module_name_repetitions
 )]
-
 extern crate core;
+#[cfg(test)]
+extern crate test;
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;

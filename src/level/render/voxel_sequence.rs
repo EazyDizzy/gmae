@@ -247,26 +247,3 @@ impl<'a> VoxelSequence<'a> {
         x >= start_x && x <= end_x
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use lib::entity::level::render::voxel_sequence::VoxelSequence;
-    use lib::entity::point::Point;
-    use lib::entity::voxel::Voxel;
-
-    use crate::Material;
-
-    // #[test]
-    // fn one_block_y_borders() {
-    //     let start = Voxel::new(Point::new(0, 0, 0.0), Material::Unknown);
-    //     let seq = VoxelSequence::new(
-    //         &start,
-    //         &start,
-    //     );
-    //
-    //     assert_eq!(
-    //         seq.y_borders(),
-    //         (0.0, 0.0)
-    //     );
-    // }
-}

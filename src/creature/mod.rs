@@ -1,3 +1,4 @@
+use crate::creature::component::attack::Attack;
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::{MovementStrategy, CREATURE_MOVED_LABEL};
 use crate::creature::component::physiology_description::PhysiologyDescription;
@@ -121,25 +122,36 @@ fn creatures_apply_gravity(
 
 fn creatures_show_direction_of_sight(
     mut lines: ResMut<DebugLines>,
+    lvl: Res<Level>,
     player_query: Query<(&Locomotivity, With<Player>)>,
     enemy_query: Query<(
         &Locomotivity,
         &Transform,
         &PhysiologyDescription,
+        &Attack,
         With<EnemyCreatureMarker>,
     )>,
 ) {
-    if let Some(player_locomotivity) = player_query.iter().next() {
-        let (player_position, ..) = player_locomotivity;
-        let end = player_position.position().into_vec3();
+    if let Some(player) = player_query.iter().next() {
+        let (player_locomotivity, ..) = player;
+        let mut player_position: Point = player_locomotivity.position().clone();
+        player_position.add_y(1.0);
+        let end = player_position.into_vec3();
 
-        for (locomotivity, transform, phys, ..) in enemy_query.iter() {
+        for (locomotivity, transform, phys, attack, ..) in enemy_query.iter() {
             let pos: &Point = locomotivity.position();
             let eyes_pos: Point = phys.get_eyes_position(&transform, pos);
             let start = eyes_pos.into_vec3();
             let duration = 0.0; // Duration of 0 will show the line for 1 frame.
             lines.line_colored(start, end, duration, Color::RED);
             lines.line_colored(pos.into_vec3(), end, duration, Color::BLUE);
+            attack.exec(
+                phys,
+                locomotivity,
+                transform,
+                &player_position,
+                &lvl,
+            );
         }
     }
 }
