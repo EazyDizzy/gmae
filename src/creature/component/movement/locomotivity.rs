@@ -58,45 +58,6 @@ impl Locomotivity {
             self.position.z = future_z;
         }
     }
-
-    pub fn gravity_move(&mut self, lvl: &Res<Level>, phys: &PhysiologyDescription) {
-        if self.movement_state.is_none() {
-            if self.should_fall(lvl, phys) {
-                self.movement_state = Some(MovementState::Falling);
-            } else {
-                return;
-            }
-        }
-
-        match self.movement_state.unwrap() {
-            MovementState::Falling => {
-                let y_gap = self.position.y - self.position.y.floor();
-                if self.can_fall(lvl, phys) {
-                    self.position.sub_y(phys.gravity_speed);
-                } else if y_gap > 0.0 {
-                    let gravity_speed = if y_gap > phys.gravity_speed {
-                        phys.gravity_speed
-                    } else {
-                        y_gap
-                    };
-                    self.position.sub_y(gravity_speed);
-                }
-
-                if !self.should_fall(lvl, phys) {
-                    self.movement_state = None;
-                }
-            }
-            MovementState::Jumping(tick) => {
-                self.position.add_y(phys.gravity_speed);
-
-                if tick == 10 {
-                    self.movement_state = None;
-                } else {
-                    self.movement_state = Some(MovementState::Jumping(tick + 1));
-                }
-            }
-        }
-    }
 }
 
 // obstacles checks

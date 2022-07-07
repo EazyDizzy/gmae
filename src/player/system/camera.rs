@@ -1,16 +1,16 @@
-use std::f32::consts::{PI, TAU};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
 
+use crate::creature::component::movement::locomotivity::Locomotivity;
+use crate::system::fly_camera::FlyCamera;
 use crate::GameState;
 use bevy::input::mouse::MouseMotion;
 use bevy::math::vec3;
 use bevy::prelude::*;
-use crate::system::fly_camera::FlyCamera;
 use lib::util::debug_settings::DebugSettings;
-use crate::creature::component::movement::locomotivity::Locomotivity;
 
 use crate::player::entity::Player;
 
-const CAMERA_HEIGHT: f32 = 10.0;
+const CAMERA_HEIGHT: f32 = 15.0;
 
 #[derive(Component)]
 pub struct PlayerCamera {
@@ -30,7 +30,7 @@ impl Default for PlayerCamera {
     fn default() -> Self {
         Self {
             sensitivity: 0.3,
-            rotation_angle: 0.0,
+            rotation_angle: -FRAC_PI_2 - FRAC_PI_4,
             enabled: true,
         }
     }
@@ -49,50 +49,23 @@ fn camera_rotate_player_model(
 }
 
 fn camera_track_mouse_motion(
-    time: Res<Time>,
-    mut mouse_motion_event_reader: EventReader<MouseMotion>,
     mut query: Query<(&mut PlayerCamera, &mut Transform)>,
-    player_query: Query<(&Locomotivity, With<Player>)>,
+    player_query: Query<(&Transform, With<Player>, Without<PlayerCamera>)>,
 ) {
-    let mut delta: Vec2 = Vec2::ZERO;
-    for event in mouse_motion_event_reader.iter() {
-        delta += event.delta;
-    }
-    if delta.is_nan() {
-        return;
-    }
-
     for (mut options, mut transform) in query.iter_mut() {
         if !options.enabled {
             continue;
         }
-        let mut new_angle =
-            options.rotation_angle + delta.x * options.sensitivity * time.delta_seconds();
-        if new_angle < 0.0 {
-            // angle should always be positive. -1.28 === 5.0
-            new_angle += TAU;
-        }
-        let clamped_angle: f32 = new_angle.clamp(0.0, TAU);
-        options.rotation_angle = if clamped_angle.abs() == TAU {
-            0.0
-        } else {
-            clamped_angle
-        };
 
-        let (locomotivity, ..) = player_query.iter().next().unwrap();
-        let player_position = locomotivity.position();
+        let (player_transform, ..) = player_query.iter().next().unwrap();
+        let player_position = player_transform.translation;
         let x = player_position.x + CAMERA_HEIGHT * options.rotation_angle.cos();
         let z = player_position.z + CAMERA_HEIGHT * options.rotation_angle.sin();
         transform.translation = vec3(x, player_position.y + CAMERA_HEIGHT, z);
 
-        let target = Vec3::new(
-            player_position.x,
-            player_position.y + 3.0,
-            player_position.z,
-        );
         // idk how it works, but big Y fixes the camera angle problem TODO normal way?
         let up_target = Vec3::new(player_position.x, 10000.0, player_position.z);
-        transform.look_at(target, up_target);
+        transform.look_at(player_position, up_target);
     }
 }
 
@@ -148,7 +121,11 @@ impl Plugin for CameraPlugin {
         app.add_startup_system(setup_player_camera)
             .add_system(camera_track_mouse_motion)
             .add_system(camera_rotate_player_model)
-            .add_system_set(SystemSet::on_update(GameState::Pause).with_system(ui_disable_all_cameras))
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(ui_enable_all_cameras));
+            .add_system_set(
+                SystemSet::on_update(GameState::Pause).with_system(ui_disable_all_cameras),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing).with_system(ui_enable_all_cameras),
+            );
     }
 }

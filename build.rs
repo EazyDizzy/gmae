@@ -2,7 +2,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use fastanvil::{Block, Chunk, CurrentJavaChunk, Region};
+use fastanvil::{Block, Chunk, CurrentJavaChunk, HeightMode, Region};
 use fastnbt::from_bytes;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
@@ -11,7 +11,7 @@ use lib::entity::level::{DayPart, Level};
 use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
 
-const EXPORT_DIAPASON: usize = 8;
+const EXPORT_DIAPASON: usize = 1;
 const LVL_DIR: &str = "./assets/lvl/";
 const CHUNK_SIZE: usize = 16;
 const MAX_NEGATIVE_HEIGHT: f32 = 64.0;
@@ -29,7 +29,7 @@ fn main() {
             let converted_metadata = fs::metadata(&converted_lvl_path);
             let should_rebuild = if let Ok(converted) = converted_metadata {
                 original_metadata.modified().unwrap() > converted.modified().unwrap()
-                // || lvl_name == "debug"
+                    // || lvl_name == "bug_detection"
             } else {
                 true
             };
@@ -59,6 +59,7 @@ fn read_level(lvl_name: &str) -> Level {
     let file = File::open(path).unwrap_or_else(|_| panic!("Can't open file {}", lvl_name));
 
     let mut region = Region::from_stream(file).expect("Cannot create region from file.");
+    // let mut heightmap = vec![];
 
     region.iter().flatten().for_each(|chunk| {
         let chunk_x = chunk.x;
@@ -69,15 +70,18 @@ fn read_level(lvl_name: &str) -> Level {
         }
         let chunk: CurrentJavaChunk =
             from_bytes(data.as_slice()).expect("Cannot parse chunk data.");
+        let mut chunk_heightmap = vec![];
 
         for x in 0..CHUNK_SIZE {
             for z in 0..CHUNK_SIZE {
+                let mut max_y = 0.0;
                 for y in chunk.y_range() {
                     if let Some(block) = chunk.block(x, y, z) {
                         if block.name() != "minecraft:air" {
                             let voxel_x = (chunk_x * CHUNK_SIZE) + x;
                             let voxel_z = (chunk_z * CHUNK_SIZE) + z;
                             let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
+                            max_y = voxel_y;
                             let point = Point::new(voxel_x as f32, voxel_y, voxel_z as f32);
                             match block.name() {
                                 "minecraft:oak_sign" => {
@@ -98,8 +102,10 @@ fn read_level(lvl_name: &str) -> Level {
                         }
                     }
                 }
+                chunk_heightmap.push(max_y);
             }
         }
+        println!("{}:{}", chunk_x, chunk_z);
     });
 
     let day_part = match lvl_name {

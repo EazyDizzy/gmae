@@ -24,19 +24,14 @@ pub struct CreaturePlugin;
 
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
-            .add_system_set(
-                SystemSet::on_update(GameState::Playing)
-                    .with_system(creatures_execute_move_strategies)
-                    .label(CREATURE_MOVED_LABEL),
-            )
-            .add_system(
-                creatures_apply_gravity
-                    .after(CREATURE_MOVED_LABEL)
-                    .before(creature_move_model),
-            )
-            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
-            .add_system(creatures_show_direction_of_sight);
+        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures);
+            // .add_system_set(
+            //     SystemSet::on_update(GameState::Playing)
+            //         .with_system(creatures_execute_move_strategies)
+            //         .label(CREATURE_MOVED_LABEL),
+            // )
+            // .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
+            // .add_system(creatures_show_direction_of_sight);
     }
 }
 
@@ -112,24 +107,15 @@ fn creature_move_model(mut query: Query<(&mut Transform, &Locomotivity)>) {
     }
 }
 
-fn creatures_apply_gravity(
-    lvl: Res<Level>,
-    mut query: Query<(&mut Locomotivity, &PhysiologyDescription)>,
-) {
-    for (mut locomotivity, phys) in query.iter_mut() {
-        locomotivity.gravity_move(&lvl, phys);
-    }
-}
-
 fn creatures_show_direction_of_sight(
     mut lines: ResMut<DebugLines>,
     lvl: Res<Level>,
     player_query: Query<(&Locomotivity, With<Player>)>,
-    enemy_query: Query<(
+    mut enemy_query: Query<(
         &Locomotivity,
         &Transform,
         &PhysiologyDescription,
-        &Attack,
+        &mut Attack,
         With<EnemyCreatureMarker>,
     )>,
 ) {
@@ -138,7 +124,7 @@ fn creatures_show_direction_of_sight(
         let mut player_position: Point = player_locomotivity.position().clone();
         player_position.add_y(1.0);
 
-        for (locomotivity, transform, phys, attack, ..) in enemy_query.iter() {
+        for (locomotivity, transform, phys, mut attack, ..) in enemy_query.iter_mut() {
             let pos: &Point = locomotivity.position();
             let eyes_pos: Point = phys.get_eyes_position(transform, pos);
             let start = eyes_pos.into_vec3();

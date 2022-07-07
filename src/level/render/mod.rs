@@ -2,6 +2,7 @@ use std::time::Instant;
 
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+use heron::prelude::*;
 use bevy::render::renderer::RenderDevice;
 use lib::entity::level::Level;
 use lib::entity::voxel::Shape;
@@ -35,6 +36,13 @@ pub fn init_world(
     render_device: Res<RenderDevice>,
     settings: Res<DebugSettings>,
 ) {
+    commands
+        .spawn_bundle((Transform::identity(), GlobalTransform::identity()))
+        .insert(RigidBody::Static)
+        .insert(CollisionShape::HeightField {
+            size: Vec2::new(160., 160.),
+            heights: vec![vec![0., 0.], vec![0., 0.]],
+        });
     let limits = render_device.limits().max_texture_dimension_2d;
     // This is needed because of wgpu limitation. It can't render a texture which breaks the limits in some dimension
     let max_voxels_per_dimension = limits / TEXTURE_SIZE;

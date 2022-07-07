@@ -19,6 +19,6 @@ pub fn insert(entity_commands: &mut EntityCommands, creature: &Creature) {
     entity_commands
         .insert(PhysiologyDescription::default())
         .insert(Locomotivity::from(creature))
-        .insert(Attack {})
+        .insert(Attack::new())
         .insert(HP::full(100));
 }
