@@ -1,109 +1,62 @@
 use std::time::Instant;
 
 use bevy::ecs::system::EntityCommands;
+use bevy::math::vec3;
 use bevy::prelude::*;
-use heron::prelude::*;
 use bevy::render::renderer::RenderDevice;
+use heron::prelude::*;
+use heron::rapier_plugin::nalgebra::Vector3;
+use heron::rapier_plugin::rapier3d::prelude::{ColliderBuilder, Isometry, SharedShape};
+use heron::{CustomCollisionShape, PendingConvexCollision};
 use lib::entity::level::Level;
 use lib::entity::voxel::Shape;
 use lib::util::debug_settings::DebugSettings;
 
-use crate::level::render::material::TEXTURE_SIZE;
 use crate::level::render::mesh::merge_voxels;
-use crate::level::render::named_materials::NamedMaterials;
-use crate::level::render::shape::cube::create_cube_bundle_batch;
-use crate::level::render::shape::triangle_prism::create_triangle;
 use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::Material;
 
-pub mod material;
 mod mesh;
-pub(super) mod named_materials;
-pub mod shape;
 mod voxel_sequence;
 
-// will be fully rewritten in future
 #[allow(clippy::needless_pass_by_value, clippy::too_many_arguments)]
-pub fn init_world(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut named_materials: ResMut<NamedMaterials>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut images: ResMut<Assets<Image>>,
-    asset_server: Res<AssetServer>,
-    level: Res<Level>,
-    render_device: Res<RenderDevice>,
-    settings: Res<DebugSettings>,
-) {
+pub fn init_world(mut commands: Commands, asset_server: Res<AssetServer>, level: Res<Level>) {
+    let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
+    let lvl_width = level.width() as f32;
+
     commands
-        .spawn_bundle((Transform::identity(), GlobalTransform::identity()))
+        .spawn_bundle((
+            Transform::from_xyz(lvl_width / 2.0 - 1., -0.5, lvl_width / 2.0 - 1.),
+            GlobalTransform::identity(),
+        ))
         .insert(RigidBody::Static)
-        .insert(CollisionShape::HeightField {
-            size: Vec2::new(160., 160.),
-            heights: vec![vec![0., 0.], vec![0., 0.]],
+        .with_children(|parent| {
+            parent.spawn_scene(mesh);
         });
-    let limits = render_device.limits().max_texture_dimension_2d;
-    // This is needed because of wgpu limitation. It can't render a texture which breaks the limits in some dimension
-    let max_voxels_per_dimension = limits / TEXTURE_SIZE;
-    // dbg!(max_voxels_per_dimension);
 
-    let merged_voxels = merge_voxels(level.voxel_stack(), max_voxels_per_dimension);
+    let merged_voxels = merge_voxels(level.voxel_stack());
+    for shape in merged_voxels {
+        let x_width = shape.end_position().x - shape.start_position().x + 1.0;
+        let z_width = shape.end_position().z - shape.start_position().z + 1.0;
+        let y_height = shape.end_position().y - shape.start_position().y + 1.0;
 
-    let start = Instant::now();
-
-    for sequence in &merged_voxels {
-        match sequence.shape() {
-            Shape::Cube => {
-                spawn_cube_sequence(
-                    &mut commands,
-                    &mut meshes,
-                    &mut named_materials,
-                    &mut materials,
-                    &mut images,
-                    sequence,
-                    &merged_voxels,
-                    &settings,
-                );
-            }
-            Shape::TrianglePrism(properties) => {
-                create_triangle(&mut commands, &asset_server, sequence, properties);
-            }
-        }
+        commands
+            .spawn_bundle((
+                Transform::from_xyz(
+                    shape.end_position().x - x_width / 2.0 + 0.5,
+                    shape.end_position().y - y_height / 2.0 + 0.5,
+                    shape.end_position().z - z_width / 2.0 + 0.5,
+                ),
+                GlobalTransform::identity(),
+            ))
+            .insert(RigidBody::Static)
+            .insert(CollisionShape::Cuboid {
+                half_extends: Vec3::new(x_width / 2.0, y_height / 2.0, z_width / 2.0),
+                border_radius: None,
+            });
     }
-
-    debug!("world initialization: {:?}", start.elapsed());
-}
-// will be fully rewritten in future
-#[allow(clippy::too_many_arguments)]
-fn spawn_cube_sequence(
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    named_materials: &mut ResMut<NamedMaterials>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    images: &mut ResMut<Assets<Image>>,
-    sequence: &VoxelSequence,
-    merged_voxels: &[VoxelSequence],
-    settings: &Res<DebugSettings>,
-) {
-    let batch = create_cube_bundle_batch(
-        meshes,
-        named_materials,
-        materials,
-        images,
-        sequence,
-        merged_voxels,
-        settings,
-    );
-    let mut light_spawned = false;
-
-    for bundle in batch {
-        let mut entity_commands = commands.spawn_bundle(bundle);
-
-        if !light_spawned {
-            light_spawned = spawn_light(&mut entity_commands, sequence.example_material());
-        }
-    }
+    //     TODO spawn light
 }
 
 fn spawn_light(entity_commands: &mut EntityCommands, material: Material) -> bool {

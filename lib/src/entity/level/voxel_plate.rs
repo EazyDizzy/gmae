@@ -11,6 +11,15 @@ pub struct VoxelPlate {
 }
 
 impl VoxelPlate {
+    pub fn width(&self) -> usize {
+        let max_row = self
+            .internal
+            .iter()
+            .max_by(|(.., row1), (.., row2)| row1.len().cmp(&row2.len()));
+        let (.., row) = max_row.expect("Failed to find any rows in VoxelPlate");
+        row.len()
+    }
+
     pub fn add_voxel(&mut self, voxel: Voxel) {
         let z = voxel.position.z as usize;
         self.internal.entry(z).or_insert_with(Vec::new).push(voxel);

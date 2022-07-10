@@ -6,7 +6,6 @@ use bevy::utils::Uuid;
 use lib::entity::level::voxel_stack::VoxelStack;
 use pad::PadStr;
 
-use crate::level::render::material::can_merge_materials;
 use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::Material;
 use lib::entity::voxel::{Shape, Voxel};
@@ -32,7 +31,7 @@ pub fn get_or_create(
     }
 }
 
-pub fn merge_voxels(voxel_stack: &VoxelStack, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
+pub fn merge_voxels(voxel_stack: &VoxelStack) -> Vec<VoxelSequence> {
     let mut all_sequences = vec![];
 
     for (y, plate) in voxel_stack.plates() {
@@ -40,10 +39,9 @@ pub fn merge_voxels(voxel_stack: &VoxelStack, max_voxels_per_dimension: u32) -> 
 
         for (z, row) in plate.rows() {
             let row: Vec<&Voxel> = row.iter().collect();
-            let row_sequences = merge_voxels_x_row(row, max_voxels_per_dimension);
+            let row_sequences = merge_voxels_x_row(row);
 
-            plane_sequences =
-                stretch_sequences_by_z(row_sequences, plane_sequences, z, max_voxels_per_dimension);
+            plane_sequences = stretch_sequences_by_z(row_sequences, plane_sequences, z);
         }
 
         all_sequences = stretch_sequences_by_y(plane_sequences, all_sequences, y);
@@ -67,7 +65,6 @@ fn stretch_sequences_by_y<'a>(
         let same_new_seq = plane_sequences.iter().enumerate().find(|(_, s)| {
             s.same_x_size(seq)
                 && s.same_z_size(seq)
-                && can_merge_materials(seq.example_material(), s.example_material())
         });
 
         if let Some((i, ..)) = same_new_seq {
@@ -85,7 +82,6 @@ fn stretch_sequences_by_z<'a>(
     row_sequences: Vec<VoxelSequence<'a>>,
     mut plane_sequences: Vec<VoxelSequence<'a>>,
     z: usize,
-    max_voxels_per_dimension: u32,
 ) -> Vec<VoxelSequence<'a>> {
     let mut sequences_to_append = vec![];
     let mut prev_row_sequences: Vec<&mut VoxelSequence> = plane_sequences
@@ -98,15 +94,10 @@ fn stretch_sequences_by_z<'a>(
             s.same_x_size(&sequence)
                 && sequence.shape() == &Shape::Cube
                 && should_merge(sequence.example_material())
-                && can_merge_materials(sequence.example_material(), s.example_material())
         });
 
         if let Some(same) = same_sequence {
-            if (same.z_width() as u32) + (sequence.z_width() as u32) < max_voxels_per_dimension {
-                same.expand_z_end(sequence);
-            } else {
-                sequences_to_append.push(sequence);
-            }
+            sequences_to_append.push(sequence);
         } else {
             sequences_to_append.push(sequence);
         }
@@ -117,7 +108,7 @@ fn stretch_sequences_by_z<'a>(
     plane_sequences
 }
 
-fn merge_voxels_x_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Vec<VoxelSequence> {
+fn merge_voxels_x_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
     row.sort_by(|a, b| a.position.x.partial_cmp(&b.position.x).unwrap());
 
     let mut x_sequences = vec![];
@@ -125,14 +116,10 @@ fn merge_voxels_x_row(mut row: Vec<&Voxel>, max_voxels_per_dimension: u32) -> Ve
     let mut prev_voxel_index = 0;
 
     for (index, voxel) in row.iter().enumerate().skip(1) {
-        let start_voxel = row[start_voxel_index];
         let prev_voxel = row[prev_voxel_index];
-        let concatenation_width = (prev_voxel.position.x - start_voxel.position.x) as u32;
         let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
             || voxel.shape != prev_voxel.shape
-            || !should_merge(prev_voxel.material)
-            || concatenation_width + 1 == max_voxels_per_dimension
-            || !can_merge_materials(prev_voxel.material, voxel.material);
+            || !should_merge(prev_voxel.material);
 
         if stop_concatenation {
             x_sequences.push(VoxelSequence::new(

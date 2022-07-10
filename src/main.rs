@@ -14,6 +14,8 @@
 extern crate core;
 #[cfg(test)]
 extern crate test;
+
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
 use bevy::prelude::*;
@@ -50,17 +52,18 @@ fn main() {
     let game_settings = GameSettings::from_file("game_settings.json");
 
     let mut app = App::new();
-    app.add_state(GameState::Playing)
+    app.insert_resource(Msaa { samples: 4 })
+        .add_state(GameState::Playing)
         .insert_resource(ClearColor(Color::rgb(0.5, 0.5, 0.9)))
         .add_plugins(DefaultPlugins)
         // .add_plugins_with(DefaultPlugins, |plugins| {
         //     plugins.disable::<bevy::log::LogPlugin>()
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
-        // .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        // .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PhysicsPlugin::default()) // Add the plugin
         .insert_resource(Gravity::from(Vec3::new(0.0, -9.81, 0.0)))
-        .add_plugin(DebugLinesPlugin::default())
+        // .add_plugin(DebugLinesPlugin::default())
         .add_plugin(AudioPlugin)
         .add_plugin(EguiPlugin)
         .add_plugin(LevelPlugin)
