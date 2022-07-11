@@ -9,7 +9,6 @@ use crate::Material;
 pub struct VoxelSequence<'a> {
     start: &'a Voxel,
     end: &'a Voxel,
-    voxels: Vec<Vec<Vec<&'a Voxel>>>,
 }
 
 impl<'a> VoxelSequence<'a> {
@@ -17,20 +16,15 @@ impl<'a> VoxelSequence<'a> {
         VoxelSequence {
             start: voxels.first().unwrap(),
             end: voxels.last().unwrap(),
-            voxels: vec![vec![voxels]],
         }
     }
 
     pub fn expand_y_end(&mut self, other: Self) {
         self.end = other.end;
-        let only_plate = other.voxels[0].clone();
-        self.voxels.push(only_plate);
     }
 
     pub fn expand_z_end(&mut self, other: Self) {
         self.end = other.end;
-        let only_row = other.voxels[0][0].clone();
-        self.voxels[0].push(only_row);
     }
 
     pub fn start_position(&self) -> &Point {

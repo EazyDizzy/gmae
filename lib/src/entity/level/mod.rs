@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::entity::level::creature::Creature;
 use crate::entity::level::voxel_stack::VoxelStack;
 use crate::entity::point::Point;
+use crate::entity::voxel::Material;
 use crate::entity::voxel::Voxel;
 
 pub mod creature;
@@ -25,7 +26,12 @@ pub enum DayPart {
 }
 
 impl Level {
-    pub fn new(name:String, voxels: Vec<Voxel>, day_part: DayPart, creatures: Vec<Creature>) -> Level {
+    pub fn new(
+        name: String,
+        voxels: Vec<Voxel>,
+        day_part: DayPart,
+        creatures: Vec<Creature>,
+    ) -> Level {
         Level {
             name,
             day_part,
@@ -37,6 +43,11 @@ impl Level {
     pub fn width(&self) -> usize {
         // TODO cache return value to not calculate each time
         self.voxel_stack.width()
+    }
+    pub fn lights(&self) -> Vec<&Voxel> {
+        // TODO cache return value to not calculate each time
+        self.voxel_stack
+            .voxels_by_material(&[Material::BlueLight, Material::OrangeLight])
     }
 
     pub fn is_day(&self) -> bool {

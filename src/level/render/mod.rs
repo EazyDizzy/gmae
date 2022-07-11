@@ -3,12 +3,13 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use heron::prelude::*;
 use lib::entity::level::Level;
+use lib::entity::voxel::Voxel;
 
-use crate::level::render::mesh::merge_voxels;
+use crate::level::render::merge::merge_voxels;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::Material;
 
-mod mesh;
+mod merge;
 mod voxel_sequence;
 
 #[allow(clippy::needless_pass_by_value, clippy::too_many_arguments)]
@@ -47,15 +48,17 @@ pub fn init_world(mut commands: Commands, asset_server: Res<AssetServer>, level:
                 border_radius: None,
             });
     }
-    //     TODO spawn light
+    for light in level.lights() {
+        spawn_light(&mut commands, light);
+    }
 }
 
-fn spawn_light(entity_commands: &mut EntityCommands, material: Material) -> bool {
-    if material == Material::OrangeLight {
-        spawn_orange_light_source_inside(entity_commands);
+fn spawn_light(commands: &mut Commands, voxel: &Voxel) -> bool {
+    if voxel.material == Material::OrangeLight {
+        spawn_orange_light_source_inside(commands, voxel);
         true
-    } else if material == Material::BlueLight {
-        spawn_blue_light_source_inside(entity_commands);
+    } else if voxel.material == Material::BlueLight {
+        spawn_blue_light_source_inside(commands, voxel);
         true
     } else {
         false

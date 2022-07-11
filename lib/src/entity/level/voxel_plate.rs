@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entity::level::Voxel;
 use crate::entity::point::Point;
+use crate::entity::voxel::Material;
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct VoxelPlate {
@@ -11,6 +12,10 @@ pub struct VoxelPlate {
 }
 
 impl VoxelPlate {
+    pub fn lights(&self) -> Vec<&Voxel> {
+        self.voxels_by_material(&[Material::BlueLight, Material::OrangeLight])
+    }
+
     pub fn width(&self) -> usize {
         let max_row = self
             .internal
@@ -38,5 +43,18 @@ impl VoxelPlate {
         self.internal
             .get(&(point.z as usize))
             .and_then(|row| row.iter().find(|v| v.position.x == point.x))
+    }
+
+    pub fn voxels_by_material(&self, materials: &[Material]) -> Vec<&Voxel> {
+        let mut result = vec![];
+        for (_, voxels) in &self.internal {
+            let mut needed_voxels = voxels
+                .iter()
+                .filter(|v| materials.contains(&v.material))
+                .collect();
+            result.append(&mut needed_voxels);
+        }
+
+        result
     }
 }
