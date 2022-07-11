@@ -102,10 +102,7 @@ fn read_level(lvl_name: &str) -> Level {
         }
     });
 
-    let day_part = match lvl_name {
-        "village" => DayPart::Night,
-        &_ => DayPart::Day,
-    };
+    let day_part = DayPart::Night;
 
     // TODO sort voxels here to remove sorting later
     println!("creatures: {}", creatures.len());

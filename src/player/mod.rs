@@ -46,16 +46,11 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         })
         .insert(Velocity::from_linear(vec3(0., 0., 0.)))
         .insert(Acceleration::from_linear(Vec3::X * 1.0))
-        .insert(PhysicMaterial {
-            friction: 1.0,
-            density: 100.0,
-            ..Default::default()
-        })
         .insert(RotationConstraints::lock())
         .insert(
             CollisionLayers::none()
-                .with_group(GamePhysicsLayer::Player)
-                .with_mask(GamePhysicsLayer::World),
+                .with_group(GamePhysicsLayer::Enemy)
+                .with_masks([GamePhysicsLayer::World, GamePhysicsLayer::Player]),
         )
         .insert(PhysiologyDescription::default())
         // TODO read from save file

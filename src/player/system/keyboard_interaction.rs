@@ -28,15 +28,14 @@ pub fn player_track_keyboard_interaction(
             x_velocity += x;
             z_velocity += z;
         }
-
-        if *k == KeyCode::Space || *k == KeyCode::Apostrophe {}
     });
 
     if move_buttons > 0 {
+        // TODO add jumping
         // TODO no overwrite to not block physics engine
         *velocity = velocity.with_linear(vec3(
             x_velocity / move_buttons as f32 * phys.movement_speed,
-            0.,
+            velocity.linear.y,
             z_velocity / move_buttons as f32 * phys.movement_speed,
         ));
     }

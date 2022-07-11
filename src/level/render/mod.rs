@@ -14,7 +14,7 @@ mod voxel_sequence;
 
 #[allow(clippy::needless_pass_by_value, clippy::too_many_arguments)]
 pub fn init_world(mut commands: Commands, asset_server: Res<AssetServer>, level: Res<Level>) {
-    let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
+    // let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
     let lvl_width = level.width() as f32;
 
     commands
@@ -24,7 +24,7 @@ pub fn init_world(mut commands: Commands, asset_server: Res<AssetServer>, level:
         ))
         .insert(RigidBody::Static)
         .with_children(|parent| {
-            parent.spawn_scene(mesh);
+            // parent.spawn_scene(mesh);
         });
 
     let merged_voxels = merge_voxels(level.voxel_stack());

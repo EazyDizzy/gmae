@@ -1,18 +1,21 @@
+use crate::creature::component::attack::util::raytracer::get_last_seen_point;
 use crate::creature::component::attack::Attack;
 use crate::creature::component::movement::locomotivity::Locomotivity;
-use crate::creature::component::movement::{MovementStrategy};
+use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::dummy::Dummy;
 use crate::creature::pizza::Pizza;
 use crate::player::entity::Player;
+use crate::{GamePhysicsLayer, GameState};
 use bevy::math::vec3;
 use bevy::prelude::*;
+use heron::prelude::*;
 use bevy_prototype_debug_lines::DebugLines;
+use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
 use std::f32::consts::PI;
-use crate::creature::component::attack::util::raytracer::get_last_seen_point;
 
 pub mod component;
 pub mod dummy;
@@ -23,14 +26,12 @@ pub struct CreaturePlugin;
 
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures);
-            // .add_system_set(
-            //     SystemSet::on_update(GameState::Playing)
-            //         .with_system(creatures_execute_move_strategies)
-            //         .label(CREATURE_MOVED_LABEL),
-            // )
-            // .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
-            // .add_system(creatures_show_direction_of_sight);
+        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(creatures_execute_move_strategies),
+            )
+            .add_system(creatures_show_direction_of_sight);
     }
 }
 
@@ -58,7 +59,17 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             };
             parent.spawn_scene(mesh);
         })
-        .insert(CreatureMarker {});
+        .insert(CreatureMarker {})
+        .insert(RigidBody::Dynamic)
+        .insert(CollisionShape::Cylinder {
+            radius: 0.5,
+            half_height: 1.0,
+        })
+        .insert(
+            CollisionLayers::none()
+                .with_group(GamePhysicsLayer::Player)
+                .with_mask(GamePhysicsLayer::World),
+        );
 
         if creature.is_enemy() {
             ec.insert(EnemyCreatureMarker {});
@@ -119,16 +130,12 @@ fn creatures_show_direction_of_sight(
             let start = eyes_pos.into_vec3();
             let duration = 0.0; // Duration of 0 will show the line for 1 frame.
             let last_seen_point = get_last_seen_point(&eyes_pos, &player_position, &lvl);
-            let end = last_seen_point.unwrap_or_else(|| player_position.clone()).into_vec3();
+            let end = last_seen_point
+                .unwrap_or_else(|| player_position.clone())
+                .into_vec3();
             lines.line_colored(start, end, duration, Color::RED);
 
-            attack.exec(
-                phys,
-                locomotivity,
-                transform,
-                &player_position,
-                &lvl,
-            );
+            attack.exec(phys, locomotivity, transform, &player_position, &lvl);
         }
     }
 }
