@@ -11,6 +11,7 @@ use lib::entity::point::Point;
 
 pub mod component;
 pub mod dummy;
+pub mod buffs;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
