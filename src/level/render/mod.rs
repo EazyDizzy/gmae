@@ -1,19 +1,10 @@
-use std::time::Instant;
 
 use bevy::ecs::system::EntityCommands;
-use bevy::math::vec3;
 use bevy::prelude::*;
-use bevy::render::renderer::RenderDevice;
 use heron::prelude::*;
-use heron::rapier_plugin::nalgebra::Vector3;
-use heron::rapier_plugin::rapier3d::prelude::{ColliderBuilder, Isometry, SharedShape};
-use heron::{CustomCollisionShape, PendingConvexCollision};
 use lib::entity::level::Level;
-use lib::entity::voxel::Shape;
-use lib::util::debug_settings::DebugSettings;
 
 use crate::level::render::mesh::merge_voxels;
-use crate::level::render::voxel_sequence::VoxelSequence;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::Material;
 

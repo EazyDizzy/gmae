@@ -1,13 +1,9 @@
-use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use heron::AxisAngle;
-use lib::entity::level::Level;
-use std::f32::consts::{FRAC_PI_2, PI};
 
 use crate::player::entity::Player;
-use crate::player::system::camera::PlayerCamera;
 use crate::Velocity;
 
 pub fn player_track_keyboard_interaction(

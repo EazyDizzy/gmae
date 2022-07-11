@@ -2,7 +2,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use fastanvil::{Block, Chunk, CurrentJavaChunk, HeightMode, Region};
+use fastanvil::{Block, Chunk, CurrentJavaChunk, Region};
 use fastnbt::from_bytes;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
@@ -72,7 +72,6 @@ fn read_level(lvl_name: &str) -> Level {
 
         for x in 0..CHUNK_SIZE {
             for z in 0..CHUNK_SIZE {
-                let mut max_y = 0.0;
                 for y in chunk.y_range() {
                     if let Some(block) = chunk.block(x, y, z) {
                         if block.name() != "minecraft:air" {

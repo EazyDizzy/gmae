@@ -22,7 +22,6 @@ use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
-use bevy_prototype_debug_lines::DebugLinesPlugin;
 use heron::prelude::*;
 use lib::entity::voxel::Material;
 use lib::util::debug_settings::DebugSettings;

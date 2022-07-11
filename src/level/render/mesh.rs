@@ -1,35 +1,7 @@
-use std::str::FromStr;
-
-use bevy::asset::HandleId;
-use bevy::prelude::*;
-use bevy::utils::Uuid;
 use lib::entity::level::voxel_stack::VoxelStack;
-use pad::PadStr;
 
 use crate::level::render::voxel_sequence::VoxelSequence;
-use crate::Material;
-use lib::entity::voxel::{Shape, Voxel};
-
-pub fn get_or_create(
-    meshes: &mut ResMut<Assets<Mesh>>,
-    width: f32,
-    height: f32,
-    flip: bool,
-) -> Handle<Mesh> {
-    let handle_id = generate_mesh_handle_id(width, height, flip);
-
-    if meshes.get(handle_id).is_none() {
-        meshes.set(
-            handle_id,
-            Mesh::from(shape::Quad {
-                size: Vec2::new(width, height),
-                flip,
-            }),
-        )
-    } else {
-        meshes.get_handle(handle_id)
-    }
-}
+use lib::entity::voxel::Voxel;
 
 pub fn merge_voxels(voxel_stack: &VoxelStack) -> Vec<VoxelSequence> {
     let mut all_sequences = vec![];
@@ -62,10 +34,10 @@ fn stretch_sequences_by_y<'a>(
         .collect::<Vec<&mut VoxelSequence<'a>>>();
 
     for seq in previous_layer_sequences {
-        let same_new_seq = plane_sequences.iter().enumerate().find(|(_, s)| {
-            s.same_x_size(seq)
-                && s.same_z_size(seq)
-        });
+        let same_new_seq = plane_sequences
+            .iter()
+            .enumerate()
+            .find(|(_, s)| s.same_x_size(seq) && s.same_z_size(seq));
 
         if let Some((i, ..)) = same_new_seq {
             let d = plane_sequences.remove(i);
@@ -90,14 +62,12 @@ fn stretch_sequences_by_z<'a>(
         .collect();
 
     for sequence in row_sequences {
-        let same_sequence = prev_row_sequences.iter_mut().find(|s| {
-            s.same_x_size(&sequence)
-                && sequence.shape() == &Shape::Cube
-                && should_merge(sequence.example_material())
-        });
+        let same_sequence = prev_row_sequences
+            .iter_mut()
+            .find(|s| s.same_x_size(&sequence));
 
         if let Some(same) = same_sequence {
-            sequences_to_append.push(sequence);
+            same.expand_z_end(sequence);
         } else {
             sequences_to_append.push(sequence);
         }
@@ -117,9 +87,7 @@ fn merge_voxels_x_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
 
     for (index, voxel) in row.iter().enumerate().skip(1) {
         let prev_voxel = row[prev_voxel_index];
-        let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0
-            || voxel.shape != prev_voxel.shape
-            || !should_merge(prev_voxel.material);
+        let stop_concatenation = voxel.position.x != prev_voxel.position.x + 1.0;
 
         if stop_concatenation {
             x_sequences.push(VoxelSequence::new(
@@ -136,29 +104,4 @@ fn merge_voxels_x_row(mut row: Vec<&Voxel>) -> Vec<VoxelSequence> {
     ));
 
     x_sequences
-}
-
-fn should_merge(material: Material) -> bool {
-    ![Material::BlueLight, Material::OrangeLight].contains(&material)
-}
-
-fn generate_mesh_handle_id(width: f32, height: f32, flip: bool) -> HandleId {
-    // requirement of uuid
-    let hash = format!(
-        "{}{}{}",
-        width
-            .to_string()
-            .pad_to_width_with_char(8, 'A')
-            .replace('.', "B"),
-        height
-            .to_string()
-            .pad_to_width_with_char(8, 'A')
-            .replace('.', "B"),
-        u8::from(flip).to_string().pad_to_width_with_char(8, 'A'),
-    )
-    .pad_to_width_with_char(32, 'A');
-
-    let id = Uuid::from_str(&hash).expect(&format!("Cannot generate mesh uuid from {hash}"));
-
-    HandleId::Id(id, 1)
 }

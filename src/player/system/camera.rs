@@ -1,9 +1,7 @@
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 
-use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::system::fly_camera::FlyCamera;
 use crate::GameState;
-use bevy::input::mouse::MouseMotion;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::util::debug_settings::DebugSettings;
@@ -14,22 +12,13 @@ const CAMERA_HEIGHT: f32 = 15.0;
 
 #[derive(Component)]
 pub struct PlayerCamera {
-    sensitivity: f32,
-
     rotation_angle: f32,
     enabled: bool,
-}
-
-impl PlayerCamera {
-    pub fn angle(&self) -> f32 {
-        self.rotation_angle
-    }
 }
 
 impl Default for PlayerCamera {
     fn default() -> Self {
         Self {
-            sensitivity: 0.3,
             rotation_angle: -FRAC_PI_2 - FRAC_PI_4,
             enabled: true,
         }
@@ -52,7 +41,7 @@ fn camera_track_mouse_motion(
     mut query: Query<(&mut PlayerCamera, &mut Transform)>,
     player_query: Query<(&Transform, With<Player>, Without<PlayerCamera>)>,
 ) {
-    for (mut options, mut transform) in query.iter_mut() {
+    for (options, mut transform) in query.iter_mut() {
         if !options.enabled {
             continue;
         }

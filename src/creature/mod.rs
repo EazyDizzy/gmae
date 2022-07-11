@@ -1,11 +1,10 @@
 use crate::creature::component::attack::Attack;
 use crate::creature::component::movement::locomotivity::Locomotivity;
-use crate::creature::component::movement::{MovementStrategy, CREATURE_MOVED_LABEL};
+use crate::creature::component::movement::{MovementStrategy};
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::dummy::Dummy;
 use crate::creature::pizza::Pizza;
 use crate::player::entity::Player;
-use crate::GameState;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy_prototype_debug_lines::DebugLines;
@@ -94,16 +93,6 @@ fn creatures_execute_move_strategies(
 ) {
     for (mut locomotivity, phys, mut move_strat, ..) in query.iter_mut() {
         move_strat.update(&mut locomotivity, phys, &lvl);
-    }
-}
-
-fn creature_move_model(mut query: Query<(&mut Transform, &Locomotivity)>) {
-    for (mut transform, locomotivity) in query.iter_mut() {
-        transform.translation = vec3(
-            locomotivity.position().x,
-            locomotivity.position().y,
-            locomotivity.position().z,
-        );
     }
 }
 

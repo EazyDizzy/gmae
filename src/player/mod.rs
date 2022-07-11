@@ -1,11 +1,8 @@
-use crate::creature::component::movement::locomotivity::Locomotivity;
-use crate::creature::component::movement::CREATURE_MOVED_LABEL;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::entity::component::hp::HP;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use heron::prelude::*;
-use lib::entity::point::Point;
 
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
@@ -24,8 +21,7 @@ impl Plugin for PlayerPlugin {
             .add_startup_system(setup)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(player_track_keyboard_interaction)
-                    .label(CREATURE_MOVED_LABEL),
+                    .with_system(player_track_keyboard_interaction),
             );
     }
 }
