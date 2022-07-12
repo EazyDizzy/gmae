@@ -20,13 +20,15 @@ pub trait PhysiologyBuff: Send + Sync + Debug {
 pub struct BuffClock {
     pub buff: Box<dyn PhysiologyBuff>,
     pub timer: BuffTimer,
-    pub start_time: Option<DateTime<Utc>>
+    pub start_time: Option<DateTime<Utc>>,
+    pub call_amount: Option<u8>
 }
 
 impl BuffClock {
-    pub fn frame(buff: Box<dyn PhysiologyBuff>, frames: u8) -> BuffClock {
+    pub fn frame(buff: Box<dyn PhysiologyBuff>, frames: u8, call_amount: u8) -> BuffClock {
         BuffClock {
             timer: BuffTimer::Frame(frames),
+            call_amount: Some(call_amount),
             start_time: None,
             buff
         }
@@ -36,6 +38,7 @@ impl BuffClock {
         BuffClock {
             timer: BuffTimer::Seconds(seconds),
             start_time: Some(Utc::now()),
+            call_amount: None,
             buff
         }
     }
@@ -44,6 +47,7 @@ impl BuffClock {
         BuffClock {
             timer: BuffTimer::Minutes(minutes),
             start_time: Some(Utc::now()),
+            call_amount: None,
             buff
         }
     }
@@ -52,11 +56,17 @@ impl BuffClock {
         self.buff.apply(phys)
     }
 
+    // TODO update this logic to fit seconds & minutes
     fn should_remove(&self) -> bool {
-        //
+        match self.timer {
+            BuffTimer::Frame(val) => self.call_amount.unwrap() == val,
+            _ => false
+        }
 
-        // checks if buff expired
-        true
+    }
+
+    fn delete(&self, phys: &mut PhysiologyDescription) {
+        self.buff.remove(phys)
     }
 }
 
@@ -71,7 +81,7 @@ impl SprintBuff {
 
 impl PhysiologyBuff for SprintBuff {
     fn apply(&self, phys: &mut PhysiologyDescription) {
-        phys.movement_speed = 0.3;
+        phys.movement_speed *= 1.5;
     }
     fn remove(&self, phys: &mut PhysiologyDescription) {
         phys.movement_speed = 0.1;
@@ -89,10 +99,22 @@ impl BuffStorage {
             physiology_buffs: Vec::new()
         }
     }
-    fn apply() {
-        // iterate physiology_buffs and call
+    pub fn apply(&mut self, phys: &mut PhysiologyDescription) {
+        for buff in self.physiology_buffs.iter_mut() {
+            buff.apply(phys);
+            buff.call_amount = Some(buff.call_amount.unwrap() + 1);
+        }
     }
-    fn clean(&self) {
-        // if should remove - then remove from this.physiology_buffs
+
+    pub fn clean(&mut self, phys: &mut PhysiologyDescription) {
+        println!("before clean physiology_buffs, {:?}", self.physiology_buffs);
+        self.physiology_buffs.retain(|buff| {
+            if buff.should_remove() {
+                buff.delete(phys);
+                return false
+            }
+            return true
+        });
+        println!("after clean physiology_buffs, {:?}", self.physiology_buffs);
     }
 }
