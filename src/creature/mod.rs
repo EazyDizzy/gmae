@@ -1,4 +1,3 @@
-use crate::creature::component::attack::util::raytracer::get_last_seen_point;
 use crate::creature::component::attack::Attack;
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::MovementStrategy;
@@ -9,8 +8,9 @@ use crate::player::entity::Player;
 use crate::{GamePhysicsLayer, GameState};
 use bevy::math::vec3;
 use bevy::prelude::*;
-use heron::prelude::*;
 use bevy_prototype_debug_lines::DebugLines;
+use heron::prelude::*;
+use heron::rapier_plugin::PhysicsWorld;
 use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
@@ -31,7 +31,7 @@ impl Plugin for CreaturePlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creatures_execute_move_strategies),
             )
-            .add_system(creatures_show_direction_of_sight);
+            .add_system(creatures_attack_player);
     }
 }
 
@@ -60,7 +60,7 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             parent.spawn_scene(mesh);
         })
         .insert(CreatureMarker {})
-        .insert(RigidBody::Dynamic)
+        // .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Cylinder {
             radius: 0.5,
             half_height: 1.0,
@@ -107,35 +107,33 @@ fn creatures_execute_move_strategies(
     }
 }
 
-fn creatures_show_direction_of_sight(
+fn creatures_attack_player(
     mut lines: ResMut<DebugLines>,
-    lvl: Res<Level>,
-    player_query: Query<(&Locomotivity, With<Player>)>,
+    player_query: Query<&Transform, With<Player>>,
+    physics_world: PhysicsWorld,
     mut enemy_query: Query<(
-        &Locomotivity,
         &Transform,
         &PhysiologyDescription,
         &mut Attack,
         With<EnemyCreatureMarker>,
     )>,
 ) {
-    if let Some(player) = player_query.iter().next() {
-        let (player_locomotivity, ..) = player;
-        let mut player_position: Point = player_locomotivity.position().clone();
-        player_position.add_y(1.0);
+    if let Some(player_transform) = player_query.iter().next() {
+        let mut player_position = player_transform.translation;
+        player_position.y += 0.5;
 
-        for (locomotivity, transform, phys, mut attack, ..) in enemy_query.iter_mut() {
-            let pos: &Point = locomotivity.position();
-            let eyes_pos: Point = phys.get_eyes_position(transform, pos);
-            let start = eyes_pos.into_vec3();
-            let duration = 0.0; // Duration of 0 will show the line for 1 frame.
-            let last_seen_point = get_last_seen_point(&eyes_pos, &player_position, &lvl);
-            let end = last_seen_point
-                .unwrap_or_else(|| player_position.clone())
-                .into_vec3();
-            lines.line_colored(start, end, duration, Color::RED);
+        for (transform, phys, mut attack, ..) in enemy_query.iter_mut() {
+            let eyes_pos = phys.get_eyes_position(transform).into_vec3();
+            let ray_cast_result =
+                physics_world.ray_cast(eyes_pos, player_position - eyes_pos, true);
 
-            attack.exec(phys, locomotivity, transform, &player_position, &lvl);
+            let can_see = if let Some(cast_info) = ray_cast_result {
+                lines.line_colored(eyes_pos, cast_info.collision_point, 0., Color::WHITE);
+                player_query.get(cast_info.entity).is_ok()
+            } else {
+                lines.line_colored(eyes_pos, player_position, 0., Color::WHITE);
+                true
+            };
         }
     }
 }

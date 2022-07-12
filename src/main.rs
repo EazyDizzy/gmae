@@ -15,13 +15,14 @@ extern crate core;
 #[cfg(test)]
 extern crate test;
 
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
+use bevy_prototype_debug_lines::DebugLinesPlugin;
 use heron::prelude::*;
 use lib::entity::voxel::Material;
 use lib::util::debug_settings::DebugSettings;
@@ -62,7 +63,7 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PhysicsPlugin::default()) // Add the plugin
         .insert_resource(Gravity::from(Vec3::new(0.0, -9.81, 0.0)))
-        // .add_plugin(DebugLinesPlugin::default())
+        .add_plugin(DebugLinesPlugin::default())
         .add_plugin(AudioPlugin)
         .add_plugin(EguiPlugin)
         .add_plugin(LevelPlugin)

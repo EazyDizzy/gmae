@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::util::math::round_based;
 
+// TODO remove and use Vec3 everywhere
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Point {
     pub x: f32,

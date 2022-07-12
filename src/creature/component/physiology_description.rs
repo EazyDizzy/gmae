@@ -25,12 +25,12 @@ impl Default for PhysiologyDescription {
 }
 
 impl PhysiologyDescription {
-    pub fn get_eyes_position(&self, transform: &Transform, pos: &Point) -> Point {
+    pub fn get_eyes_position(&self, transform: &Transform) -> Point {
         let (_, y_rotation, _) = transform.rotation.to_euler(EulerRot::XYZ);
 
-        let start_x = pos.x - self.model_radius * y_rotation.sin();
-        let start_z = pos.z - self.model_radius * y_rotation.cos();
-        let start_y = pos.y + self.eyes_height;
+        let start_x = transform.translation.x - self.model_radius * y_rotation.sin();
+        let start_z = transform.translation.z - self.model_radius * y_rotation.cos();
+        let start_y = transform.translation.y + self.eyes_height;
 
         Point::new(start_x, start_y, start_z)
     }
