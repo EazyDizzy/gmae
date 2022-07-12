@@ -1,13 +1,12 @@
 use core::fmt::Debug;
+use std::time::{Duration, Instant};
 use serde_json::Number;
 use crate::creature::component::physiology_description::PhysiologyDescription;
-use chrono::{DateTime, Duration, Utc};
 use bevy::prelude::*;
 
 #[derive(Debug)]
 pub enum BuffTimer {
-    Seconds(u8),
-    Minutes(u8),
+    Period(Duration),
     Frame(u8),
 }
 
@@ -18,61 +17,58 @@ pub trait PhysiologyBuff: Send + Sync + Debug {
 
 #[derive(Debug)]
 pub struct BuffClock {
-    pub buff: Box<dyn PhysiologyBuff>,
-    pub timer: BuffTimer,
-    pub start_time: Option<DateTime<Utc>>,
-    pub call_amount: Option<u8>
+    buff: Box<dyn PhysiologyBuff>,
+    timer: BuffTimer,
+    start_time: Option<Instant>,
+    call_amount: Option<u8>
 }
 
 impl BuffClock {
-    pub fn frame(buff: Box<dyn PhysiologyBuff>, frames: u8, call_amount: u8) -> BuffClock {
+    pub fn frame(buff: Box<dyn PhysiologyBuff>, frames: u8) -> BuffClock {
         BuffClock {
             timer: BuffTimer::Frame(frames),
-            call_amount: Some(call_amount),
             start_time: None,
+            call_amount: Some(0),
             buff
         }
     }
 
-    pub fn seconds(buff: Box<dyn PhysiologyBuff>, seconds: u8) -> BuffClock {
+    pub fn period(buff: Box<dyn PhysiologyBuff>, duration: Duration) -> BuffClock {
         BuffClock {
-            timer: BuffTimer::Seconds(seconds),
-            start_time: Some(Utc::now()),
+            timer: BuffTimer::Period(duration),
+            start_time: Some(Instant::now()),
             call_amount: None,
             buff
         }
     }
 
-    pub fn minutes(buff: Box<dyn PhysiologyBuff>, minutes: u8) -> BuffClock {
-        BuffClock {
-            timer: BuffTimer::Minutes(minutes),
-            start_time: Some(Utc::now()),
-            call_amount: None,
-            buff
-        }
-    }
-
-    fn apply(&self, phys: &mut PhysiologyDescription) {
+    fn apply(&mut self, phys: &mut PhysiologyDescription) {
+        self.call_amount = match self.call_amount {
+            Some(val) => Some(val + 1),
+            None => None
+        };
         self.buff.apply(phys)
     }
 
-    // TODO update this logic to fit seconds & minutes
     fn should_remove(&self) -> bool {
         match self.timer {
-            BuffTimer::Frame(val) => self.call_amount.unwrap() == val,
-            _ => false
+            BuffTimer::Frame(val) => self.call_amount.unwrap_or(0) == val,
+            BuffTimer::Period(val) => {
+                let now = Instant::now();
+                now.duration_since(self.start_time.unwrap()) >= val
+            },
         }
 
     }
 
-    fn delete(&self, phys: &mut PhysiologyDescription) {
+    fn remove(&self, phys: &mut PhysiologyDescription) {
         self.buff.remove(phys)
     }
 }
 
 #[derive(Debug)]
 pub struct SprintBuff {
-    pub speed_multiplier: f32
+    speed_multiplier: f32
 }
 
 impl Default for SprintBuff {
@@ -107,17 +103,16 @@ impl BuffStorage {
     pub fn apply(&mut self, phys: &mut PhysiologyDescription) {
         for buff in self.physiology_buffs.iter_mut() {
             buff.apply(phys);
-            buff.call_amount = Some(buff.call_amount.unwrap() + 1);
         }
     }
 
     pub fn clean(&mut self, phys: &mut PhysiologyDescription) {
         self.physiology_buffs.retain(|buff| {
             if buff.should_remove() {
-                buff.delete(phys);
+                buff.remove(phys);
                 return false
             }
-            return true
+            true
         });
     }
 }

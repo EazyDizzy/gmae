@@ -1,14 +1,15 @@
+use std::time::Duration;
 use bevy::prelude::*;
 use crate::creature::buffs::{BuffClock, BuffStorage, PhysiologyBuff, BuffTimer, SprintBuff};
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::player::entity::Player;
 
-pub fn add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&mut BuffStorage, With<Player>>) {
+pub fn buffs_add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&mut BuffStorage, With<Player>>) {
     for mut buffs in query.iter_mut() {
         keyboard_input.get_pressed().for_each(|k| {
             match k {
                 KeyCode::LShift | KeyCode::RShift => {
-                    buffs.physiology_buffs.push(BuffClock::frame(Box::new(SprintBuff {speed_multiplier: 4.0}), 1, 0));
+                    buffs.physiology_buffs.push(BuffClock::frame(Box::new(SprintBuff::default()), 1));
                 },
                 _ => {},
             };
