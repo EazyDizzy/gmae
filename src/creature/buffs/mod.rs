@@ -71,22 +71,27 @@ impl BuffClock {
 }
 
 #[derive(Debug)]
-pub struct SprintBuff {}
+pub struct SprintBuff {
+    pub speed_multiplier: f32
+}
 
-impl SprintBuff {
-    pub fn new() -> SprintBuff {
-        SprintBuff{}
+impl Default for SprintBuff {
+    fn default() -> Self {
+        SprintBuff {
+            speed_multiplier: 1.5
+        }
     }
 }
 
 impl PhysiologyBuff for SprintBuff {
     fn apply(&self, phys: &mut PhysiologyDescription) {
-        phys.movement_speed *= 1.5;
+        phys.movement_speed *= self.speed_multiplier;
     }
     fn remove(&self, phys: &mut PhysiologyDescription) {
         phys.movement_speed = 0.1;
     }
 }
+
 
 #[derive(Component, Debug)]
 pub struct BuffStorage {
@@ -107,7 +112,6 @@ impl BuffStorage {
     }
 
     pub fn clean(&mut self, phys: &mut PhysiologyDescription) {
-        println!("before clean physiology_buffs, {:?}", self.physiology_buffs);
         self.physiology_buffs.retain(|buff| {
             if buff.should_remove() {
                 buff.delete(phys);
@@ -115,6 +119,5 @@ impl BuffStorage {
             }
             return true
         });
-        println!("after clean physiology_buffs, {:?}", self.physiology_buffs);
     }
 }

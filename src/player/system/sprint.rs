@@ -8,7 +8,7 @@ pub fn add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&mut Buf
         keyboard_input.get_pressed().for_each(|k| {
             match k {
                 KeyCode::LShift | KeyCode::RShift => {
-                    buffs.physiology_buffs.push(BuffClock::frame(Box::new(SprintBuff::new()), 1, 0));
+                    buffs.physiology_buffs.push(BuffClock::frame(Box::new(SprintBuff {speed_multiplier: 4.0}), 1, 0));
                 },
                 _ => {},
             };
