@@ -1,6 +1,5 @@
 use core::fmt::Debug;
 use std::time::{Duration, Instant};
-use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::prelude::*;
 use crate::creature::buffs::sprint::{buffs_add_sprint};
 use crate::creature::buffs::system::{apply_buffs, clear_buffs};
@@ -26,22 +25,22 @@ pub enum BuffTimer {
     Frame(u8),
 }
 
-pub trait PhysiologyBuff: Send + Sync + Debug {
-    fn apply(&self, phys: &mut PhysiologyDescription);
-    fn remove(&self, phys: &mut PhysiologyDescription);
+pub trait Buff<Target>: Send + Sync + Debug {
+    fn apply(&self, target: &mut Target);
+    fn remove(&self, target: &mut Target);
 }
 
 #[derive(Debug)]
-pub struct BuffClock {
-    buff: Box<dyn PhysiologyBuff>,
+pub struct BuffClock<Target> {
+    buff: Box<dyn Buff<Target>>,
     timer: BuffTimer,
     start_time: Option<Instant>,
     call_amount: Option<u8>
 }
 
 #[allow(dead_code)]
-impl BuffClock {
-    pub fn frame(buff: Box<dyn PhysiologyBuff>, frames: u8) -> BuffClock {
+impl<Target> BuffClock<Target> {
+    pub fn frame(buff: Box<dyn Buff<Target>>, frames: u8) -> BuffClock<Target> {
         BuffClock {
             timer: BuffTimer::Frame(frames),
             start_time: None,
@@ -50,7 +49,7 @@ impl BuffClock {
         }
     }
 
-    pub fn period(buff: Box<dyn PhysiologyBuff>, duration: Duration) -> BuffClock {
+    pub fn period(buff: Box<dyn Buff<Target>>, duration: Duration) -> BuffClock<Target> {
         BuffClock {
             timer: BuffTimer::Period(duration),
             start_time: Some(Instant::now()),
@@ -59,9 +58,9 @@ impl BuffClock {
         }
     }
 
-    fn apply(&mut self, phys: &mut PhysiologyDescription) {
+    fn apply(&mut self, target: &mut Target) {
         self.call_amount = self.call_amount.map(|val| val + 1);
-        self.buff.apply(phys);
+        self.buff.apply(target);
     }
 
     fn should_remove(&self) -> bool {
@@ -75,33 +74,33 @@ impl BuffClock {
 
     }
 
-    fn remove(&self, phys: &mut PhysiologyDescription) {
-        self.buff.remove(phys);
+    fn remove(&self, target: &mut Target) {
+        self.buff.remove(target);
     }
 }
 
 
 #[derive(Component, Debug)]
-pub struct BuffStorage {
-    pub physiology_buffs: Vec<BuffClock>
+pub struct BuffStorage<Target> {
+    pub physiology_buffs: Vec<BuffClock<Target>>
 }
 
-impl BuffStorage {
-    pub fn new() -> BuffStorage {
+impl<Target> BuffStorage<Target> {
+    pub fn new() -> BuffStorage<Target> {
         BuffStorage {
             physiology_buffs: Vec::new()
         }
     }
-    pub fn apply(&mut self, phys: &mut PhysiologyDescription) {
+    pub fn apply(&mut self, target: &mut Target) {
         for buff in &mut self.physiology_buffs.iter_mut() {
-            buff.apply(phys);
+            buff.apply(target);
         }
     }
 
-    pub fn clean(&mut self, phys: &mut PhysiologyDescription) {
+    pub fn clean(&mut self, target: &mut Target) {
         self.physiology_buffs.retain(|buff| {
             if buff.should_remove() {
-                buff.remove(phys);
+                buff.remove(target);
                 return false
             }
             true
