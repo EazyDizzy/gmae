@@ -26,11 +26,11 @@ impl Buff<PhysiologyDescription> for SprintBuff {
 }
 
 pub fn buffs_add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&mut BuffStorage<PhysiologyDescription>, With<Player>>) {
-    for mut buffs in query.iter_mut() {
+    for mut buffs_component in query.iter_mut() {
         keyboard_input.get_pressed().for_each(|k| {
             match k {
                 KeyCode::LShift | KeyCode::RShift => {
-                    buffs.physiology_buffs.push(BuffClock::frame(Box::new(SprintBuff::default()), 1));
+                    buffs_component.buffs.push(BuffClock::frame(Box::new(SprintBuff::default()), 1));
                 },
                 _ => {},
             };

@@ -3,6 +3,7 @@ use std::time::{Duration, Instant};
 use bevy::prelude::*;
 use crate::creature::buffs::sprint::{buffs_add_sprint};
 use crate::creature::buffs::system::{apply_buffs, clear_buffs};
+use crate::creature::component::physiology_description::PhysiologyDescription;
 
 mod sprint;
 mod system;
@@ -13,8 +14,8 @@ pub struct BuffsPlugin;
 impl Plugin for BuffsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(CoreStage::Update, buffs_add_sprint)
-            .add_system_to_stage(CoreStage::PreUpdate, apply_buffs)
-            .add_system_to_stage(CoreStage::PostUpdate, clear_buffs);
+            .add_system_to_stage(CoreStage::PreUpdate, apply_buffs::<PhysiologyDescription>)
+            .add_system_to_stage(CoreStage::PostUpdate, clear_buffs::<PhysiologyDescription>);
     }
 }
 
@@ -25,13 +26,13 @@ pub enum BuffTimer {
     Frame(u8),
 }
 
-pub trait Buff<Target>: Send + Sync + Debug {
+pub trait Buff<Target: Component>: Send + Sync + Debug {
     fn apply(&self, target: &mut Target);
     fn remove(&self, target: &mut Target);
 }
 
 #[derive(Debug)]
-pub struct BuffClock<Target> {
+pub struct BuffClock<Target: Component> {
     buff: Box<dyn Buff<Target>>,
     timer: BuffTimer,
     start_time: Option<Instant>,
@@ -39,7 +40,7 @@ pub struct BuffClock<Target> {
 }
 
 #[allow(dead_code)]
-impl<Target> BuffClock<Target> {
+impl<Target: Component> BuffClock<Target> {
     pub fn frame(buff: Box<dyn Buff<Target>>, frames: u8) -> BuffClock<Target> {
         BuffClock {
             timer: BuffTimer::Frame(frames),
@@ -81,24 +82,24 @@ impl<Target> BuffClock<Target> {
 
 
 #[derive(Component, Debug)]
-pub struct BuffStorage<Target> {
-    pub physiology_buffs: Vec<BuffClock<Target>>
+pub struct BuffStorage<Target: Component>  {
+    pub buffs: Vec<BuffClock<Target>>
 }
 
-impl<Target> BuffStorage<Target> {
+impl<Target: Component> BuffStorage<Target> {
     pub fn new() -> BuffStorage<Target> {
         BuffStorage {
-            physiology_buffs: Vec::new()
+            buffs: Vec::new()
         }
     }
     pub fn apply(&mut self, target: &mut Target) {
-        for buff in &mut self.physiology_buffs.iter_mut() {
+        for buff in &mut self.buffs.iter_mut() {
             buff.apply(target);
         }
     }
 
     pub fn clean(&mut self, target: &mut Target) {
-        self.physiology_buffs.retain(|buff| {
+        self.buffs.retain(|buff| {
             if buff.should_remove() {
                 buff.remove(target);
                 return false
