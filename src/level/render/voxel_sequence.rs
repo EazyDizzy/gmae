@@ -1,9 +1,5 @@
-use std::ops::RangeInclusive;
-
 use lib::entity::point::Point;
-use lib::entity::voxel::{Shape, Voxel};
-
-use crate::Material;
+use lib::entity::voxel::Voxel;
 
 #[derive(Debug)]
 pub struct VoxelSequence<'a> {
@@ -49,7 +45,6 @@ impl<'a> VoxelSequence<'a> {
 
         end_z == z
     }
-
 
     pub fn has_y_end_on(&self, y: f32) -> bool {
         let (.., end_y) = self.y_borders();

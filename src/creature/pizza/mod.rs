@@ -1,10 +1,10 @@
-use crate::creature::component::attack::Attack;
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::entity::component::hp::HP;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use lib::entity::level::creature::Creature;
+use crate::creature::component::attack::component::Attack;
 
 #[derive(Component, Debug)]
 pub struct Pizza {}

@@ -1,4 +1,3 @@
-use crate::creature::component::attack::{launch_bullets, Attack, make_damage_from_bullet, apply_damage};
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
@@ -8,20 +7,17 @@ use crate::player::entity::Player;
 use crate::{GamePhysicsLayer, GameState};
 use bevy::math::vec3;
 use bevy::prelude::*;
-use bevy_prototype_debug_lines::DebugLines;
 use heron::prelude::*;
 use heron::rapier_plugin::PhysicsWorld;
 use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
-use lib::entity::point::Point;
 use std::f32::consts::PI;
-use crate::creature::event::DamageEvent;
+use crate::creature::component::attack::component::Attack;
 
 pub mod component;
 pub mod dummy;
 pub mod pizza;
-pub mod event;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
@@ -29,14 +25,10 @@ pub struct CreaturePlugin;
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
-            .add_event::<DamageEvent>()
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creatures_execute_move_strategies)
-                    .with_system(creatures_attack_player)
-                    .with_system(launch_bullets)
-                    .with_system(apply_damage)
-                    .with_system(make_damage_from_bullet),
+                    .with_system(creatures_attack_player),
             );
     }
 }

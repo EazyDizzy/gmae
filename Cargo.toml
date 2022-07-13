@@ -3,9 +3,6 @@ name = "gmae"
 version = "0.1.0"
 edition = "2021"
 
-[profile.release.package.heron]
-debug = true
-
 [dependencies]
 # TODO remove dynamic before release
 bevy = { version = "0.7.0", features = ["dynamic"] }

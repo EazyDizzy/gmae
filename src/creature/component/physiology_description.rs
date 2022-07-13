@@ -1,6 +1,5 @@
 use bevy::math::vec3;
 use bevy::prelude::*;
-use lib::entity::point::Point;
 
 #[derive(Component, Debug)]
 pub struct PhysiologyDescription {

@@ -5,16 +5,10 @@ use lib::entity::level::Level;
 use lib::entity::point::Point;
 use lib::util::math::round_based;
 
-#[derive(Copy, Clone, Debug)]
-enum MovementState {
-    Falling,
-    Jumping(u8),
-}
 
 #[derive(Component, Debug)]
 pub struct Locomotivity {
     position: Point,
-    movement_state: Option<MovementState>,
 }
 
 impl From<&Creature> for Locomotivity {
@@ -32,18 +26,11 @@ impl Locomotivity {
     pub fn new(position: Point) -> Locomotivity {
         Locomotivity {
             position,
-            movement_state: None,
         }
     }
 
     pub fn position(&self) -> &Point {
         &self.position
-    }
-
-    pub fn jump(&mut self, lvl: &Res<Level>, phys: &PhysiologyDescription) {
-        if self.movement_state.is_none() && self.can_jump(lvl, phys) {
-            self.movement_state = Some(MovementState::Jumping(0));
-        }
     }
 
     pub fn move_to(
