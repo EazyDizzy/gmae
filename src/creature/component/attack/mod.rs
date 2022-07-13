@@ -1,6 +1,6 @@
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::attack::system::{
-    apply_damage, launch_bullets, make_damage_from_bullet,
+    attack_apply_damage, attack_launch_bullets, attack_check_bullet_collisions,
 };
 use crate::GameState;
 use bevy::prelude::*;
@@ -10,15 +10,15 @@ pub mod event;
 pub mod shooting;
 mod system;
 
-pub struct DamagePlugin;
+pub struct AttackPlugin;
 
-impl Plugin for DamagePlugin {
+impl Plugin for AttackPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DamageEvent>().add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(launch_bullets)
-                .with_system(apply_damage)
-                .with_system(make_damage_from_bullet),
+                .with_system(attack_launch_bullets)
+                .with_system(attack_apply_damage)
+                .with_system(attack_check_bullet_collisions),
         );
     }
 }

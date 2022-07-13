@@ -1,11 +1,11 @@
-use bevy::prelude::*;
-use heron::{CollisionEvent, CollisionLayers};
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::attack::shooting::bullet::Bullet;
 use crate::entity::component::hp::HP;
 use crate::GamePhysicsLayer;
+use bevy::prelude::*;
+use heron::{CollisionEvent, CollisionLayers};
 
-pub fn launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
+pub fn attack_launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
     for (mut transform, bullet) in bullets.iter_mut() {
         transform.translation.x += bullet.shift.x;
         transform.translation.y += bullet.shift.y;
@@ -13,7 +13,7 @@ pub fn launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
     }
 }
 
-pub fn apply_damage(mut ev_damage: EventReader<DamageEvent>, mut hps: Query<&mut HP>) {
+pub fn attack_apply_damage(mut ev_damage: EventReader<DamageEvent>, mut hps: Query<&mut HP>) {
     for ev in ev_damage.iter() {
         if let Ok(mut hp) = hps.get_mut(ev.target) {
             hp.sub(ev.amount);
@@ -21,7 +21,7 @@ pub fn apply_damage(mut ev_damage: EventReader<DamageEvent>, mut hps: Query<&mut
     }
 }
 
-pub fn make_damage_from_bullet(
+pub fn attack_check_bullet_collisions(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
     mut ev_damage: EventWriter<DamageEvent>,
@@ -33,9 +33,18 @@ pub fn make_damage_from_bullet(
         .filter_map(|event| {
             let (entity_1, entity_2) = event.rigid_body_entities();
             let (layers_1, layers_2) = event.collision_layers();
-            if (is_bullet(layers_1) || is_bullet(layers_2))
-                && (is_player(layers_1) || is_player(layers_2))
-            {
+            let with_bullet = is_bullet(layers_1) || is_bullet(layers_2);
+            let with_player = is_player(layers_1) || is_player(layers_2);
+
+            if with_bullet {
+                if is_bullet(layers_1) {
+                    commands.entity(entity_1).despawn();
+                } else {
+                    commands.entity(entity_2).despawn();
+                }
+            }
+
+            if with_bullet && with_player {
                 if is_player(layers_1) {
                     return Some((entity_1, entity_2));
                 }
@@ -50,7 +59,6 @@ pub fn make_damage_from_bullet(
                 target,
                 amount: damage,
             });
-            commands.entity(bullet).despawn();
         });
 }
 

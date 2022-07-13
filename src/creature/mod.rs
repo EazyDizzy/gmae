@@ -14,6 +14,7 @@ use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use std::f32::consts::PI;
 use crate::creature::component::attack::component::Attack;
+use crate::creature::component::attack::AttackPlugin;
 
 pub mod component;
 pub mod dummy;
@@ -24,7 +25,9 @@ pub struct CreaturePlugin;
 
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
+        app
+            .add_plugin(AttackPlugin)
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creatures_execute_move_strategies)

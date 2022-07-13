@@ -26,10 +26,11 @@ impl Default for PhysiologyDescription {
 
 impl PhysiologyDescription {
     pub fn get_eyes_position(&self, transform: &Transform) -> Vec3 {
+        let radius = self.model_radius + 0.1;
         let (_, y_rotation, _) = transform.rotation.to_euler(EulerRot::XYZ);
 
-        let start_x = transform.translation.x - self.model_radius * y_rotation.sin();
-        let start_z = transform.translation.z - self.model_radius * y_rotation.cos();
+        let start_x = transform.translation.x - radius * y_rotation.sin();
+        let start_z = transform.translation.z - radius * y_rotation.cos();
         let start_y = transform.translation.y + self.eyes_height;
 
         vec3(start_x, start_y, start_z)

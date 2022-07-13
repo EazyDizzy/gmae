@@ -41,7 +41,7 @@ impl Attack {
             commands
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.2,
+                        radius: 0.1,
                         ..Default::default()
                     })),
                     ..Default::default()
@@ -51,7 +51,7 @@ impl Attack {
                     Transform::from_translation(eyes_pos),
                     GlobalTransform::identity(),
                 ))
-                .insert(CollisionShape::Sphere { radius: 0.2 })
+                .insert(CollisionShape::Sphere { radius: 0.1 })
                 .insert(Velocity::from_linear(Vec3::default()))
                 .insert(Acceleration::from_linear(Vec3::default()))
                 .insert(RigidBody::Sensor)

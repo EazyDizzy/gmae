@@ -1,10 +1,10 @@
-use serde::{Deserialize, Serialize};
-
 use crate::entity::level::creature::Creature;
 use crate::entity::level::voxel_stack::VoxelStack;
 use crate::entity::point::Point;
 use crate::entity::voxel::Material;
 use crate::entity::voxel::Voxel;
+use cached::proc_macro::once;
+use serde::{Deserialize, Serialize};
 
 pub mod creature;
 pub mod voxel_plate;
@@ -40,12 +40,13 @@ impl Level {
         }
     }
 
+    #[once()]
     pub fn width(&self) -> usize {
-        // TODO cache return value to not calculate each time
         self.voxel_stack.width()
     }
+
+    #[once()]
     pub fn lights(&self) -> Vec<&Voxel> {
-        // TODO cache return value to not calculate each time
         self.voxel_stack
             .voxels_by_material(&[Material::BlueLight, Material::OrangeLight])
     }
