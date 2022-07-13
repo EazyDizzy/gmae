@@ -18,7 +18,6 @@ bevy_egui = "0.14.0"
 bevy_kira_audio = { version = "0.10.0", features = ["mp3"] }
 bevy_prototype_debug_lines = { version = "0.7", features = ["3d"] }
 heron = { version = "3.1.0", features = ["3d"] }
-cached = "0.36.0"
 
 [dependencies.lib]
 version = "0.0.0"

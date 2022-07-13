@@ -47,7 +47,7 @@ impl Attack {
                     ..Default::default()
                 })
                 .insert_bundle((
-                    Bullet::new(player_position - eyes_pos, 0.1, 3),
+                    Bullet::new(player_position - eyes_pos, 0.1, 55),
                     Transform::from_translation(eyes_pos),
                     GlobalTransform::identity(),
                 ))

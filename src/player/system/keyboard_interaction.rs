@@ -10,7 +10,11 @@ pub fn player_track_keyboard_interaction(
     keyboard_input: Res<Input<KeyCode>>,
     mut player_query: Query<(&mut Velocity, &PhysiologyDescription, With<Player>)>,
 ) {
-    let (mut velocity, phys, ..) = player_query.iter_mut().next().unwrap();
+    let (mut velocity, phys, ..) = if let Some(a) = player_query.iter_mut().next() {
+        a
+    } else {
+        return;
+    };
     // TODO move to game settings and allow rebinding
     let mut move_buttons = 0;
     let mut x_velocity = 0.;

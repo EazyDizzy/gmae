@@ -27,34 +27,35 @@ impl Default for PlayerCamera {
 
 fn camera_rotate_player_model(
     camera_query: Query<&PlayerCamera>,
-    mut player_query: Query<(&mut Transform, With<Player>)>,
+    mut player_query: Query<&mut Transform, With<Player>>,
 ) {
-    let (mut transform, ..) = player_query.iter_mut().next().unwrap();
-
-    for camera in camera_query.iter() {
-        transform.rotation =
-            Quat::from_euler(EulerRot::XYZ, 0.0, -camera.rotation_angle - PI / 2.0, 0.0);
+    if let Some(mut transform) = player_query.iter_mut().next() {
+        for camera in camera_query.iter() {
+            transform.rotation =
+                Quat::from_euler(EulerRot::XYZ, 0.0, -camera.rotation_angle - PI / 2.0, 0.0);
+        }
     }
 }
 
 fn camera_track_mouse_motion(
     mut query: Query<(&mut PlayerCamera, &mut Transform)>,
-    player_query: Query<(&Transform, With<Player>, Without<PlayerCamera>)>,
+    player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
 ) {
     for (options, mut transform) in query.iter_mut() {
         if !options.enabled {
             continue;
         }
 
-        let (player_transform, ..) = player_query.iter().next().unwrap();
-        let player_position = player_transform.translation;
-        let x = player_position.x + CAMERA_HEIGHT * options.rotation_angle.cos();
-        let z = player_position.z + CAMERA_HEIGHT * options.rotation_angle.sin();
-        transform.translation = vec3(x, player_position.y + CAMERA_HEIGHT, z);
+        if let Some(player_transform) = player_query.iter().next() {
+            let player_position = player_transform.translation;
+            let x = player_position.x + CAMERA_HEIGHT * options.rotation_angle.cos();
+            let z = player_position.z + CAMERA_HEIGHT * options.rotation_angle.sin();
+            transform.translation = vec3(x, player_position.y + CAMERA_HEIGHT, z);
 
-        // idk how it works, but big Y fixes the camera angle problem TODO normal way?
-        let up_target = Vec3::new(player_position.x, 10000.0, player_position.z);
-        transform.look_at(player_position, up_target);
+            // idk how it works, but big Y fixes the camera angle problem TODO normal way?
+            let up_target = Vec3::new(player_position.x, 10000.0, player_position.z);
+            transform.look_at(player_position, up_target);
+        }
     }
 }
 

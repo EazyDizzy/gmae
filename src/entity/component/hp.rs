@@ -20,6 +20,10 @@ impl HP {
     pub fn current(&self) -> u16 {
         self.current
     }
+    pub fn is_empty(&self) -> bool {
+        self.current == 0
+    }
+
     pub fn sub(&mut self, amount: u16) {
         if amount < self.current {
             self.current -= amount;

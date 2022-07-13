@@ -5,6 +5,14 @@ use crate::GamePhysicsLayer;
 use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionLayers};
 
+pub fn attack_despawn_killed_entities(mut commands: Commands, entities: Query<(Entity, &HP)>) {
+    for (entity, hp) in entities.iter() {
+        if hp.is_empty() {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
 pub fn attack_launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
     for (mut transform, bullet) in bullets.iter_mut() {
         transform.translation.x += bullet.shift.x;

@@ -40,12 +40,10 @@ impl Level {
         }
     }
 
-    #[once()]
     pub fn width(&self) -> usize {
         self.voxel_stack.width()
     }
 
-    #[once()]
     pub fn lights(&self) -> Vec<&Voxel> {
         self.voxel_stack
             .voxels_by_material(&[Material::BlueLight, Material::OrangeLight])
