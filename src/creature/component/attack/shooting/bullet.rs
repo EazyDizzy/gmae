@@ -4,10 +4,11 @@ use bevy::prelude::*;
 #[derive(Component, Debug)]
 pub struct Bullet {
     pub shift: Vec3,
+    pub damage: u16,
 }
 
 impl Bullet {
-    pub fn new(direction: Vec3, speed: f32) -> Bullet {
+    pub fn new(direction: Vec3, speed: f32, damage: u16) -> Bullet {
         let mut max = direction.x.abs();
         for a in direction.to_array() {
             if a.abs() > max {
@@ -20,6 +21,6 @@ impl Bullet {
 
         let shift = vec3(speed * x_shift, speed * y_shift, speed * z_shift);
 
-        Bullet { shift }
+        Bullet { shift, damage }
     }
 }

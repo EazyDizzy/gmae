@@ -20,4 +20,7 @@ impl HP {
     pub fn current(&self) -> u16 {
         self.current
     }
+    pub fn sub(&mut self, amount: u16) {
+        self.current -= amount;
+    }
 }

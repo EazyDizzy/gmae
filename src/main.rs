@@ -100,5 +100,6 @@ fn game_settings_save(game_settings: ResMut<GameSettings>) {
 pub enum GamePhysicsLayer {
     World,
     Player,
-    Enemy,
+    Creature,
+    Projectile,
 }

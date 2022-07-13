@@ -1,4 +1,4 @@
-use crate::creature::component::attack::{launch_bullets, Attack};
+use crate::creature::component::attack::{launch_bullets, Attack, make_damage_from_bullet, apply_damage};
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
@@ -16,10 +16,12 @@ use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
 use std::f32::consts::PI;
+use crate::creature::event::DamageEvent;
 
 pub mod component;
 pub mod dummy;
 pub mod pizza;
+pub mod event;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
@@ -27,11 +29,14 @@ pub struct CreaturePlugin;
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
+            .add_event::<DamageEvent>()
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creatures_execute_move_strategies)
                     .with_system(creatures_attack_player)
-                    .with_system(launch_bullets),
+                    .with_system(launch_bullets)
+                    .with_system(apply_damage)
+                    .with_system(make_damage_from_bullet),
             );
     }
 }
@@ -68,8 +73,8 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
         })
         .insert(
             CollisionLayers::none()
-                .with_group(GamePhysicsLayer::Player)
-                .with_mask(GamePhysicsLayer::World),
+                .with_group(GamePhysicsLayer::Creature)
+                .with_masks([GamePhysicsLayer::World, GamePhysicsLayer::Player]),
         );
 
         if creature.is_enemy() {

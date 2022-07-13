@@ -49,8 +49,12 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         .insert(RotationConstraints::lock())
         .insert(
             CollisionLayers::none()
-                .with_group(GamePhysicsLayer::Enemy)
-                .with_masks([GamePhysicsLayer::World, GamePhysicsLayer::Player]),
+                .with_group(GamePhysicsLayer::Player)
+                .with_masks([
+                    GamePhysicsLayer::World,
+                    GamePhysicsLayer::Creature,
+                    GamePhysicsLayer::Projectile,
+                ]),
         )
         .insert(PhysiologyDescription::default())
         // TODO read from save file

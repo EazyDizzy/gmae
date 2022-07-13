@@ -1,11 +1,14 @@
 use crate::creature::component::attack::shooting::bullet::Bullet;
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::physiology_description::PhysiologyDescription;
+use crate::creature::event::DamageEvent;
+use crate::entity::component::hp::HP;
+use crate::GamePhysicsLayer;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy::reflect::List;
 use heron::rapier_plugin::PhysicsWorld;
-use heron::{Acceleration, CollisionShape, RigidBody, Velocity};
+use heron::{Acceleration, CollisionEvent, CollisionLayers, CollisionShape, RigidBody, Velocity};
 use lib::entity::level::Level;
 use lib::entity::point::Point;
 use std::cmp;
@@ -54,14 +57,23 @@ impl Attack {
                     ..Default::default()
                 })
                 .insert_bundle((
-                    Bullet::new(player_position - eyes_pos, 0.1),
+                    Bullet::new(player_position - eyes_pos, 0.1, 3),
                     Transform::from_translation(eyes_pos),
                     GlobalTransform::identity(),
                 ))
                 .insert(CollisionShape::Sphere { radius: 0.2 })
                 .insert(Velocity::from_linear(Vec3::default()))
                 .insert(Acceleration::from_linear(Vec3::default()))
-                .insert(RigidBody::Sensor);
+                .insert(RigidBody::Sensor)
+                .insert(
+                    CollisionLayers::none()
+                        .with_group(GamePhysicsLayer::Projectile)
+                        .with_masks([
+                            GamePhysicsLayer::Creature,
+                            GamePhysicsLayer::Player,
+                            GamePhysicsLayer::World,
+                        ]),
+                );
         }
     }
 }
@@ -74,16 +86,56 @@ pub fn launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
     }
 }
 
-fn speed_from_vector(vector_diff: f32, speed: f32) -> f32 {
-    let mut min = if vector_diff.abs() < speed {
-        vector_diff.abs()
-    } else {
-        speed
-    };
-
-    if vector_diff < 0.0 {
-        min = -min;
+pub fn apply_damage(mut ev_damage: EventReader<DamageEvent>, mut hps: Query<&mut HP>) {
+    for ev in ev_damage.iter() {
+        if let Ok(mut hp) = hps.get_mut(ev.target) {
+            hp.sub(ev.amount);
+        }
     }
+}
 
-    min
+pub fn make_damage_from_bullet(
+    mut commands: Commands,
+    mut events: EventReader<CollisionEvent>,
+    mut ev_damage: EventWriter<DamageEvent>,
+    bullets: Query<&Bullet>,
+) {
+    events
+        .iter()
+        .filter(|e| e.is_started())
+        .filter_map(|event| {
+            let (entity_1, entity_2) = event.rigid_body_entities();
+            let (layers_1, layers_2) = event.collision_layers();
+            if (is_bullet(layers_1) || is_bullet(layers_2))
+                && (is_player(layers_1) || is_player(layers_2))
+            {
+                if is_player(layers_1) {
+                    return Some((entity_1, entity_2));
+                }
+                return Some((entity_2, entity_1));
+            }
+
+            None
+        })
+        .for_each(|(target, bullet)| {
+            let damage = bullets.get(bullet).expect("Bullet should exist").damage;
+            ev_damage.send(DamageEvent {
+                target,
+                amount: damage,
+            });
+            commands.entity(bullet).despawn();
+        });
+}
+
+fn is_bullet(layers: CollisionLayers) -> bool {
+    layers.contains_group(GamePhysicsLayer::Projectile)
+        && !layers.contains_group(GamePhysicsLayer::Player)
+        && !layers.contains_group(GamePhysicsLayer::World)
+        && !layers.contains_group(GamePhysicsLayer::Creature)
+}
+fn is_player(layers: CollisionLayers) -> bool {
+    layers.contains_group(GamePhysicsLayer::Player)
+        && !layers.contains_group(GamePhysicsLayer::Projectile)
+        && !layers.contains_group(GamePhysicsLayer::World)
+        && !layers.contains_group(GamePhysicsLayer::Creature)
 }
