@@ -1,7 +1,29 @@
 use bevy::prelude::*;
-use crate::creature::buffs::{BuffClock, BuffStorage, SprintBuff};
+use crate::creature::buffs::{BuffClock, BuffStorage, PhysiologyBuff};
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::player::entity::Player;
+
+#[derive(Debug)]
+pub struct SprintBuff {
+    speed_multiplier: f32
+}
+
+impl Default for SprintBuff {
+    fn default() -> Self {
+        SprintBuff {
+            speed_multiplier: 1.5
+        }
+    }
+}
+
+impl PhysiologyBuff for SprintBuff {
+    fn apply(&self, phys: &mut PhysiologyDescription) {
+        phys.movement_speed *= self.speed_multiplier;
+    }
+    fn remove(&self, phys: &mut PhysiologyDescription) {
+        phys.movement_speed = 0.1;
+    }
+}
 
 pub fn buffs_add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&mut BuffStorage, With<Player>>) {
     for mut buffs in query.iter_mut() {
@@ -14,17 +36,5 @@ pub fn buffs_add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&m
             };
 
         });
-    }
-}
-
-pub fn apply_buffs(mut query: Query<(&mut BuffStorage, &mut PhysiologyDescription), With<Player>>) {
-    for (mut buffs_component, mut phys) in query.iter_mut() {
-        buffs_component.apply(&mut phys);
-    }
-}
-
-pub fn clear_buffs(mut query: Query<(&mut BuffStorage, &mut PhysiologyDescription), With<Player>>) {
-    for (mut buffs_component, mut phys) in query.iter_mut() {
-        buffs_component.clean(&mut phys);
     }
 }
