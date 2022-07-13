@@ -92,9 +92,10 @@ fn read_level(lvl_name: &str) -> Level {
                             }
 
                             let material = match_name_to_material(block.name());
-                            let shape = detect_shape(block);
-
-                            voxels.push(Voxel::new(point, material, shape));
+                            if material != Material::Unknown {
+                                let shape = detect_shape(block);
+                                voxels.push(Voxel::new(point, material, shape));
+                            }
                         }
                     }
                 }
@@ -112,60 +113,58 @@ fn read_level(lvl_name: &str) -> Level {
 
 fn match_name_to_material(name: &str) -> Material {
     match name {
-        "minecraft:glass" | "minecraft:glass_pane" => Material::Glass,
-        "minecraft:hay_block" => Material::Hay,
-        "minecraft:pumpkin" => Material::Pumpkin,
-        "minecraft:white_terracotta" => Material::WhiteTerracotta,
-        "minecraft:water" => Material::Water,
+        "minecraft:glass" | "minecraft:glass_pane" |
+        "minecraft:hay_block" |
+        "minecraft:pumpkin" |
+        "minecraft:spruce_fence" |
+        "minecraft:iron_bars" |
+        "minecraft:white_terracotta" |
+        // Ground
+        "minecraft:dirt_path" |
+        "minecraft:coarse_dirt" | "minecraft:rooted_dirt" |
+        "minecraft:farmland" |
+        "minecraft:podzol" |
+        "minecraft:grass_block" |
+        "minecraft:dirt" |
+        // Stone
+        "minecraft:bedrock" |
+        "minecraft:stone" |
+        "minecraft:stone_bricks" | "minecraft:stone_brick_stairs" |
+        "minecraft:smooth_stone" |
+        "minecraft:mossy_cobblestone" |
+        "minecraft:mossy_stone_bricks" |
+        "minecraft:cracked_stone_bricks" |
+        "minecraft:chiseled_stone_bricks" |
+        "minecraft:cobblestone" | "minecraft:cobblestone_stairs" |
+        // Wood + Leaves
+        "minecraft:stripped_oak_wood" | "minecraft:stripped_oak_log" |
+        "minecraft:oak_planks" | "minecraft:oak_stairs" |
+        "minecraft:oak_log" |
+        "minecraft:stripped_spruce_wood" | "minecraft:stripped_spruce_log" |
+        "minecraft:spruce_log" | "minecraft:spruce_wood" |
+        "minecraft:spruce_planks" |
+        "minecraft:stripped_dark_oak_wood" | "minecraft:stripped_dark_oak_log" |
+        "minecraft:dark_oak_log" |
+        "minecraft:dark_oak_planks" |
+        "minecraft:stripped_birch_log" |
+        "minecraft:birch_log" |
+        "minecraft:birch_planks" |
+        "minecraft:stripped_acacia_log" |
+        "minecraft:acacia_log" |
+        "minecraft:acacia_planks" |
+        "minecraft:stripped_jungle_log" |
+        "minecraft:jungle_log" |
+        "minecraft:jungle_planks"  => Material::Solid,
+        "minecraft:oak_leaves" |
+        "minecraft:spruce_leaves" |
+        "minecraft:dark_oak_leaves" |
+        "minecraft:birch_leaves" |
+        "minecraft:acacia_leaves" |
+        "minecraft:jungle_leaves"  => Material::Passable,
         // Light
         "minecraft:glowstone" => Material::OrangeLight,
         "minecraft:sea_lantern" => Material::BlueLight,
-        // Ground
-        "minecraft:dirt_path" => Material::DirtPath,
-        "minecraft:coarse_dirt" | "minecraft:rooted_dirt" => Material::CoarseDirt,
-        "minecraft:farmland" => Material::Farmland,
-        "minecraft:podzol" => Material::Podzol,
-        "minecraft:grass_block" => Material::Grass,
-        "minecraft:dirt" => Material::Dirt,
-        // Stone
-        "minecraft:bedrock" => Material::Bedrock,
-        "minecraft:stone" => Material::Stone,
-        "minecraft:stone_bricks" | "minecraft:stone_brick_stairs" => Material::StoneBricks,
-        "minecraft:smooth_stone" => Material::SmoothStone,
-        "minecraft:mossy_cobblestone" => Material::MossyCobblestone,
-        "minecraft:mossy_stone_bricks" => Material::MossyStoneBricks,
-        "minecraft:cracked_stone_bricks" => Material::CrackedStoneBricks,
-        "minecraft:chiseled_stone_bricks" => Material::ChiseledStoneBricks,
-        "minecraft:cobblestone" | "minecraft:cobblestone_stairs" => Material::Cobblestone,
-        // Wood + Leaves
-        "minecraft:stripped_oak_wood" | "minecraft:stripped_oak_log" => Material::StrippedOakLog,
-        "minecraft:oak_planks" | "minecraft:oak_stairs" => Material::OakPlanks,
-        "minecraft:oak_leaves" => Material::OakLeaves,
-        "minecraft:oak_log" => Material::OakLog,
-        "minecraft:stripped_spruce_wood" | "minecraft:stripped_spruce_log" => {
-            Material::StrippedSpruceLog
-        }
-        "minecraft:spruce_leaves" => Material::SpruceLeaves,
-        "minecraft:spruce_log" | "minecraft:spruce_wood" => Material::SpruceLog,
-        "minecraft:spruce_planks" => Material::SprucePlanks,
-        "minecraft:stripped_dark_oak_wood" | "minecraft:stripped_dark_oak_log" => {
-            Material::StrippedDarkOakLog
-        }
-        "minecraft:dark_oak_leaves" => Material::DarkOakLeaves,
-        "minecraft:dark_oak_log" => Material::DarkOakLog,
-        "minecraft:dark_oak_planks" => Material::DarkOakPlanks,
-        "minecraft:stripped_birch_log" => Material::StrippedBirchLog,
-        "minecraft:birch_leaves" => Material::BirchLeaves,
-        "minecraft:birch_log" => Material::BirchLog,
-        "minecraft:birch_planks" => Material::BirchPlanks,
-        "minecraft:stripped_acacia_log" => Material::StrippedAcaciaLog,
-        "minecraft:acacia_leaves" => Material::AcaciaLeaves,
-        "minecraft:acacia_log" => Material::AcaciaLog,
-        "minecraft:acacia_planks" => Material::AcaciaPlanks,
-        "minecraft:stripped_jungle_log" => Material::StrippedJungleLog,
-        "minecraft:jungle_leaves" => Material::JungleLeaves,
-        "minecraft:jungle_log" => Material::JungleLog,
-        "minecraft:jungle_planks" => Material::JunglePlanks,
+        "minecraft:water" => Material::Water,
         _ => {
             eprintln!("Unknown block name: {name}");
             Material::Unknown
@@ -174,7 +173,7 @@ fn match_name_to_material(name: &str) -> Material {
 }
 
 fn detect_shape(block: &Block) -> Shape {
-    // render everything as a cube until support for custom polygons added
+    // TODO implement stairs collisions
     if block.name().ends_with("_stairs") {
         let properties = TrianglePrismProperties::from_properties(block.properties());
         Shape::TrianglePrism(properties)

@@ -1,4 +1,4 @@
-use crate::creature::component::attack::Attack;
+use crate::creature::component::attack::{launch_bullets, Attack};
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
@@ -29,9 +29,10 @@ impl Plugin for CreaturePlugin {
         app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(creatures_execute_move_strategies),
-            )
-            .add_system(creatures_attack_player);
+                    .with_system(creatures_execute_move_strategies)
+                    .with_system(creatures_attack_player)
+                    .with_system(launch_bullets),
+            );
     }
 }
 
@@ -60,7 +61,7 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             parent.spawn_scene(mesh);
         })
         .insert(CreatureMarker {})
-        // .insert(RigidBody::Dynamic)
+        .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Cylinder {
             radius: 0.5,
             half_height: 1.0,
@@ -108,32 +109,29 @@ fn creatures_execute_move_strategies(
 }
 
 fn creatures_attack_player(
-    mut lines: ResMut<DebugLines>,
-    player_query: Query<&Transform, With<Player>>,
+    player_query: Query<(Entity, &Transform), With<Player>>,
     physics_world: PhysicsWorld,
-    mut enemy_query: Query<(
-        &Transform,
-        &PhysiologyDescription,
-        &mut Attack,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut enemy_query: Query<
+        (&Transform, &PhysiologyDescription, &mut Attack),
         With<EnemyCreatureMarker>,
-    )>,
+    >,
 ) {
-    if let Some(player_transform) = player_query.iter().next() {
+    if let Some((id, player_transform)) = player_query.iter().next() {
         let mut player_position = player_transform.translation;
         player_position.y += 0.5;
 
-        for (transform, phys, mut attack, ..) in enemy_query.iter_mut() {
-            let eyes_pos = phys.get_eyes_position(transform).into_vec3();
-            let ray_cast_result =
-                physics_world.ray_cast(eyes_pos, player_position - eyes_pos, true);
-
-            let can_see = if let Some(cast_info) = ray_cast_result {
-                lines.line_colored(eyes_pos, cast_info.collision_point, 0., Color::WHITE);
-                player_query.get(cast_info.entity).is_ok()
-            } else {
-                lines.line_colored(eyes_pos, player_position, 0., Color::WHITE);
-                true
-            };
+        for (transform, phys, mut attack) in enemy_query.iter_mut() {
+            attack.exec(
+                &physics_world,
+                phys,
+                transform,
+                player_position,
+                id,
+                &mut commands,
+                &mut meshes,
+            );
         }
     }
 }

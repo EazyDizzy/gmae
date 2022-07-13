@@ -1,1 +1,1 @@
-mod direct_bullet;
+pub mod bullet;
