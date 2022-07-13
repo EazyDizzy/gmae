@@ -1,9 +1,12 @@
 use core::fmt::Debug;
 use std::time::{Duration, Instant};
-use serde_json::Number;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::prelude::*;
+use crate::creature::buffs::sprint::{apply_buffs, buffs_add_sprint, clear_buffs};
 
+pub mod sprint;
+
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum BuffTimer {
     Period(Duration),
@@ -23,6 +26,7 @@ pub struct BuffClock {
     call_amount: Option<u8>
 }
 
+#[allow(dead_code)]
 impl BuffClock {
     pub fn frame(buff: Box<dyn PhysiologyBuff>, frames: u8) -> BuffClock {
         BuffClock {
@@ -43,11 +47,8 @@ impl BuffClock {
     }
 
     fn apply(&mut self, phys: &mut PhysiologyDescription) {
-        self.call_amount = match self.call_amount {
-            Some(val) => Some(val + 1),
-            None => None
-        };
-        self.buff.apply(phys)
+        self.call_amount = self.call_amount.map(|val| val + 1);
+        self.buff.apply(phys);
     }
 
     fn should_remove(&self) -> bool {
@@ -62,7 +63,7 @@ impl BuffClock {
     }
 
     fn remove(&self, phys: &mut PhysiologyDescription) {
-        self.buff.remove(phys)
+        self.buff.remove(phys);
     }
 }
 
@@ -101,7 +102,7 @@ impl BuffStorage {
         }
     }
     pub fn apply(&mut self, phys: &mut PhysiologyDescription) {
-        for buff in self.physiology_buffs.iter_mut() {
+        for buff in &mut self.physiology_buffs.iter_mut() {
             buff.apply(phys);
         }
     }
@@ -114,5 +115,16 @@ impl BuffStorage {
             }
             true
         });
+    }
+}
+
+#[allow(clippy::module_name_repetitions)]
+pub struct BuffsPlugin;
+
+impl Plugin for BuffsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_to_stage(CoreStage::Update, buffs_add_sprint)
+            .add_system_to_stage(CoreStage::PreUpdate, apply_buffs)
+            .add_system_to_stage(CoreStage::PostUpdate, clear_buffs);
     }
 }

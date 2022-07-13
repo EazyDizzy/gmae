@@ -1,6 +1,5 @@
-use std::time::Duration;
 use bevy::prelude::*;
-use crate::creature::buffs::{BuffClock, BuffStorage, PhysiologyBuff, BuffTimer, SprintBuff};
+use crate::creature::buffs::{BuffClock, BuffStorage, SprintBuff};
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::player::entity::Player;
 

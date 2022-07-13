@@ -9,7 +9,6 @@ use lib::entity::point::Point;
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
-use crate::player::system::sprint::{buffs_add_sprint, apply_buffs, clear_buffs};
 use crate::GameState;
 use crate::creature::buffs::{BuffStorage};
 
@@ -23,9 +22,6 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(CameraPlugin)
             .add_startup_system(setup)
-            .add_system_to_stage(CoreStage::Update, buffs_add_sprint)
-            .add_system_to_stage(CoreStage::PreUpdate, apply_buffs)
-            .add_system_to_stage(CoreStage::PostUpdate, clear_buffs)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(player_track_keyboard_interaction)
