@@ -83,7 +83,7 @@ impl<Target: Component> BuffClock<Target> {
 
 #[derive(Component, Debug)]
 pub struct BuffStorage<Target: Component>  {
-    pub buffs: Vec<BuffClock<Target>>
+    buffs: Vec<BuffClock<Target>>
 }
 
 impl<Target: Component> BuffStorage<Target> {
@@ -92,6 +92,11 @@ impl<Target: Component> BuffStorage<Target> {
             buffs: Vec::new()
         }
     }
+
+    pub fn add(&mut self, new_buff: BuffClock<Target>) {
+        self.buffs.push(new_buff);
+    }
+
     pub fn apply(&mut self, target: &mut Target) {
         for buff in &mut self.buffs.iter_mut() {
             buff.apply(target);

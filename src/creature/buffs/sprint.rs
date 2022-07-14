@@ -21,7 +21,7 @@ impl Buff<PhysiologyDescription> for SprintBuff {
         phys.movement_speed *= self.speed_multiplier;
     }
     fn remove(&self, phys: &mut PhysiologyDescription) {
-        phys.movement_speed = 0.1;
+        phys.movement_speed /= self.speed_multiplier;
     }
 }
 
@@ -30,7 +30,7 @@ pub fn buffs_add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&m
         keyboard_input.get_pressed().for_each(|k| {
             match k {
                 KeyCode::LShift | KeyCode::RShift => {
-                    buffs_component.buffs.push(BuffClock::frame(Box::new(SprintBuff::default()), 1));
+                    buffs_component.add(BuffClock::frame(Box::new(SprintBuff::default()), 1));
                 },
                 _ => {},
             };
