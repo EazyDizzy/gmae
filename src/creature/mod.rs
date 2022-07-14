@@ -8,9 +8,11 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
+use crate::creature::buffs::BuffsPlugin;
 
 pub mod component;
 pub mod dummy;
+pub mod buffs;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
@@ -23,7 +25,8 @@ impl Plugin for CreaturePlugin {
                     .with_system(creatures_execute_move_strategies)
                     .label(CREATURE_MOVED_LABEL),
             )
-            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL));
+            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
+            .add_plugin(BuffsPlugin);
     }
 }
 

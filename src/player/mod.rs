@@ -10,6 +10,7 @@ use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
 use crate::GameState;
+use crate::creature::buffs::{BuffStorage};
 
 pub mod entity;
 mod system;
@@ -42,6 +43,7 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
             parent.spawn_scene(mesh);
         })
         .insert(Player::new())
+        .insert(BuffStorage::<PhysiologyDescription>::new())
         .insert(PhysiologyDescription::default())
         // TODO read from save file
         .insert(Locomotivity::new(Point::new(9.5, 1.0, 3.0)))
