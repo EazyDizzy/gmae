@@ -1,80 +1,51 @@
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::prelude::*;
-use lib::entity::level::creature::Creature;
 use lib::entity::level::Level;
 use lib::entity::point::Point;
 use lib::util::math::round_based;
 
-#[derive(Component, Debug)]
-pub struct Locomotivity;
-impl Locomotivity {
-    pub fn new() -> Locomotivity {
-        Locomotivity {}
-    }
-}
+pub fn creature_not_inside_blocks(
+    x: f32,
+    y: f32,
+    z: f32,
+    lvl: &Res<Level>,
+    phys: &PhysiologyDescription,
+) -> bool {
+    let mut obstacles: Vec<Point> = get_touched_points(x, y, z, phys);
 
-// obstacles checks
-impl Locomotivity {
-    pub fn has_fundament(
-        &self,
-        x: f32,
-        y: f32,
-        z: f32,
-        lvl: &Res<Level>,
-        phys: &PhysiologyDescription,
-    ) -> bool {
-        !self.no_y_obstacles(x, y, z, lvl, phys)
-    }
+    obstacles = obstacles
+        .iter()
+        .map(|p| Point::new(p.x, p.y + 1.0, p.z))
+        .collect();
 
-    pub fn creature_not_inside_blocks(
-        &self,
-        x: f32,
-        y: f32,
-        z: f32,
-        lvl: &Res<Level>,
-        phys: &PhysiologyDescription,
-    ) -> bool {
-        let mut obstacles: Vec<Point> = get_touched_points(x, y, z, phys);
-
-        obstacles = obstacles
+    obstacles.extend(
+        obstacles
             .iter()
             .map(|p| Point::new(p.x, p.y + 1.0, p.z))
-            .collect();
+            .collect::<Vec<Point>>(),
+    );
 
-        obstacles.extend(
-            obstacles
-                .iter()
-                .map(|p| Point::new(p.x, p.y + 1.0, p.z))
-                .collect::<Vec<Point>>(),
-        );
+    lvl.points_are_empty(&obstacles)
+}
 
-        lvl.points_are_empty(&obstacles)
-    }
+#[allow(dead_code)]
+fn no_y_obstacles(x: f32, y: f32, z: f32, lvl: &Res<Level>, phys: &PhysiologyDescription) -> bool {
+    let obstacles: Vec<Point> = get_touched_points(x, y, z, phys);
 
-    fn no_y_obstacles(
-        &self,
-        x: f32,
-        y: f32,
-        z: f32,
-        lvl: &Res<Level>,
-        phys: &PhysiologyDescription,
-    ) -> bool {
-        let obstacles: Vec<Point> = get_touched_points(x, y, z, phys);
+    lvl.points_are_empty(&obstacles)
+}
 
-        lvl.points_are_empty(&obstacles)
-    }
-    pub fn has_y_obstacles_on_point(
-        &self,
-        x: f32,
-        y: f32,
-        z: f32,
-        lvl: &Res<Level>,
-        phys: &PhysiologyDescription,
-    ) -> bool {
-        let obstacles: Vec<Point> = get_touched_points(x, y, z, phys);
+#[allow(dead_code)]
+pub fn has_y_obstacles_on_point(
+    x: f32,
+    y: f32,
+    z: f32,
+    lvl: &Res<Level>,
+    phys: &PhysiologyDescription,
+) -> bool {
+    let obstacles: Vec<Point> = get_touched_points(x, y, z, phys);
 
-        !lvl.points_are_empty(&obstacles)
-    }
+    !lvl.points_are_empty(&obstacles)
 }
 
 fn get_touched_points(x: f32, y: f32, z: f32, phys: &PhysiologyDescription) -> Vec<Point> {

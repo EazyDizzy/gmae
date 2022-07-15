@@ -26,8 +26,8 @@ impl Attack {
         transform: &Transform,
         player_position: Vec3,
         player_entity: Entity,
-        mut commands: &mut Commands,
-        mut meshes: &mut ResMut<Assets<Mesh>>,
+        commands: &mut Commands,
+        meshes: &mut ResMut<Assets<Mesh>>,
     ) {
         if self.time_of_last_attack.elapsed().as_secs() < 1 {
             return;

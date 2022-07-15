@@ -1,4 +1,4 @@
-use crate::creature::component::movement::locomotivity::Locomotivity;
+use crate::creature::component::movement::locomotivity;
 use crate::creature::component::movement::MoveYourBody;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::math::vec3;
@@ -22,7 +22,6 @@ impl RandomMovementStrategy {
 impl MoveYourBody for RandomMovementStrategy {
     fn update(
         &mut self,
-        locomotivity: &mut Locomotivity,
         phys: &PhysiologyDescription,
         lvl: &Res<Level>,
         transform: &Transform,
@@ -46,8 +45,8 @@ impl MoveYourBody for RandomMovementStrategy {
         let valid_positions: Vec<(f32, f32)> = potential_positions
             .into_iter()
             .filter(|(x, z)| {
-                locomotivity.creature_not_inside_blocks(*x, y, *z, lvl, phys)
-                    // && locomotivity.has_y_obstacles_on_point(*x, y, *z, lvl, phys)
+                locomotivity::creature_not_inside_blocks(*x, y, *z, lvl, phys)
+                    // && locomotivity::has_y_obstacles_on_point(*x, y, *z, lvl, phys)
             })
             .collect();
 

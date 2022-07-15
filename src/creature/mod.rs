@@ -1,10 +1,12 @@
 use crate::creature::component::attack::component::Attack;
 use crate::creature::component::attack::AttackPlugin;
-use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
-use crate::creature::dummy::Dummy;
-use crate::creature::pizza::Pizza;
+
+use crate::creature::buffs::BuffsPlugin;
+use crate::creature::mob::dummy::Dummy;
+use crate::creature::mob::pizza::Pizza;
+use crate::creature::mob::{dummy, pizza};
 use crate::player::entity::Player;
 use crate::{GamePhysicsLayer, GameState};
 use bevy::math::vec3;
@@ -15,13 +17,10 @@ use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use std::f32::consts::PI;
-use lib::entity::point::Point;
-use crate::creature::buffs::BuffsPlugin;
 
-pub mod component;
-pub mod dummy;
 pub mod buffs;
-pub mod pizza;
+pub mod component;
+pub mod mob;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
@@ -83,11 +82,11 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
         match creature.name {
             CreatureName::Dummy => {
                 ec.insert(Dummy::new());
-                dummy::insert(&mut ec, creature);
+                dummy::insert(&mut ec);
             }
             CreatureName::Pizza => {
                 ec.insert(Pizza::new());
-                pizza::insert(&mut ec, creature);
+                pizza::insert(&mut ec);
             }
         }
     }
@@ -102,7 +101,6 @@ fn creatures_execute_move_strategies(
     lvl: Res<Level>,
     mut query: Query<
         (
-            &mut Locomotivity,
             &PhysiologyDescription,
             &mut MovementStrategy,
             &Transform,
@@ -111,8 +109,8 @@ fn creatures_execute_move_strategies(
         With<CreatureMarker>,
     >,
 ) {
-    for (mut locomotivity, phys, mut move_strat, transform, mut velocity) in query.iter_mut() {
-        move_strat.update(&mut locomotivity, phys, &lvl, transform, &mut velocity);
+    for (phys, mut move_strat, transform, mut velocity) in query.iter_mut() {
+        move_strat.update(phys, &lvl, transform, &mut velocity);
     }
 }
 

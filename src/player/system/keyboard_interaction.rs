@@ -1,7 +1,6 @@
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::math::vec3;
 use bevy::prelude::*;
-use heron::AxisAngle;
 
 use crate::player::entity::Player;
 use crate::Velocity;

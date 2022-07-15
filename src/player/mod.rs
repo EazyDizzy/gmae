@@ -60,6 +60,5 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         )
         .insert(PhysiologyDescription::default())
         // TODO read from save file
-        .insert(Locomotivity::new(Point::new(9.5, 1.0, 3.0)))
         .insert(HP::full(100));
 }
