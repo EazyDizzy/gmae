@@ -15,9 +15,7 @@ pub fn attack_despawn_killed_entities(mut commands: Commands, entities: Query<(E
 
 pub fn attack_launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
     for (mut transform, bullet) in bullets.iter_mut() {
-        transform.translation.x += bullet.shift.x;
-        transform.translation.y += bullet.shift.y;
-        transform.translation.z += bullet.shift.z;
+        transform.translation += bullet.shift;
     }
 }
 
