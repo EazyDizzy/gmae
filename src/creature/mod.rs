@@ -1,3 +1,5 @@
+use crate::creature::component::attack::component::Attack;
+use crate::creature::component::attack::AttackPlugin;
 use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
@@ -13,8 +15,6 @@ use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use std::f32::consts::PI;
-use crate::creature::component::attack::component::Attack;
-use crate::creature::component::attack::AttackPlugin;
 
 pub mod component;
 pub mod dummy;
@@ -25,8 +25,7 @@ pub struct CreaturePlugin;
 
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_plugin(AttackPlugin)
+        app.add_plugin(AttackPlugin)
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
@@ -62,6 +61,7 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
         })
         .insert(CreatureMarker {})
         .insert(RigidBody::Dynamic)
+        .insert(RotationConstraints::lock())
         .insert(CollisionShape::Cylinder {
             radius: 0.5,
             half_height: 1.0,
@@ -96,15 +96,19 @@ pub struct EnemyCreatureMarker {}
 
 fn creatures_execute_move_strategies(
     lvl: Res<Level>,
-    mut query: Query<(
-        &mut Locomotivity,
-        &PhysiologyDescription,
-        &mut MovementStrategy,
+    mut query: Query<
+        (
+            &mut Locomotivity,
+            &PhysiologyDescription,
+            &mut MovementStrategy,
+            &Transform,
+            &mut Velocity,
+        ),
         With<CreatureMarker>,
-    )>,
+    >,
 ) {
-    for (mut locomotivity, phys, mut move_strat, ..) in query.iter_mut() {
-        move_strat.update(&mut locomotivity, phys, &lvl);
+    for (mut locomotivity, phys, mut move_strat, transform, mut velocity) in query.iter_mut() {
+        move_strat.update(&mut locomotivity, phys, &lvl, transform, &mut velocity);
     }
 }
 

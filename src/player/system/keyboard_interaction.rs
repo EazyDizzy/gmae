@@ -52,7 +52,7 @@ pub fn player_track_keyboard_interaction(
             KeyCode::Left,
         ])
     {
-        *velocity = velocity.with_angular(AxisAngle::from(vec3(0., 0., 0.)));
+        *velocity = velocity.with_linear(vec3(0., 0., 0.));
     }
 
     if keyboard_input.just_pressed(KeyCode::Space) {}

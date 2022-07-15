@@ -18,6 +18,7 @@ impl Attack {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn exec(
         &mut self,
         physics_world: &PhysicsWorld,
@@ -38,7 +39,7 @@ impl Attack {
 
         if can_see {
             self.time_of_last_attack = Instant::now();
-            spawn_bullet(&mut commands, &mut meshes, player_position, eyes_pos);
+            spawn_bullet(commands, meshes, player_position, eyes_pos);
         }
     }
 }
@@ -58,7 +59,7 @@ fn spawn_bullet(
             ..Default::default()
         })
         .insert_bundle((
-            Bullet::new(player_position - eyes_pos, 0.1, 55),
+            Bullet::new(player_position - eyes_pos, 0.1, 3),
             Transform::from_translation(eyes_pos),
             GlobalTransform::identity(),
         ))

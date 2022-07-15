@@ -3,7 +3,6 @@ use crate::entity::level::voxel_stack::VoxelStack;
 use crate::entity::point::Point;
 use crate::entity::voxel::Material;
 use crate::entity::voxel::Voxel;
-use cached::proc_macro::once;
 use serde::{Deserialize, Serialize};
 
 pub mod creature;

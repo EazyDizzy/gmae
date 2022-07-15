@@ -2,6 +2,7 @@ use crate::creature::component::movement::locomotivity::Locomotivity;
 use crate::creature::component::movement::random_movement::RandomMovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::prelude::*;
+use heron::Velocity;
 use lib::entity::level::Level;
 use std::fmt::Debug;
 
@@ -14,6 +15,8 @@ pub trait MoveYourBody: Send + Sync + Debug {
         locomotivity: &mut Locomotivity,
         phys: &PhysiologyDescription,
         lvl: &Res<Level>,
+        transform: &Transform,
+        velocity: &mut Velocity,
     );
 }
 
@@ -34,7 +37,10 @@ impl MovementStrategy {
         locomotivity: &mut Locomotivity,
         phys: &PhysiologyDescription,
         lvl: &Res<Level>,
+        transform: &Transform,
+        velocity: &mut Velocity,
     ) {
-        self.strategy.update(locomotivity, phys, lvl);
+        self.strategy
+            .update(locomotivity, phys, lvl, transform, velocity);
     }
 }

@@ -1,3 +1,3 @@
-pub mod physiology_description;
-pub mod movement;
 pub mod attack;
+pub mod movement;
+pub mod physiology_description;
