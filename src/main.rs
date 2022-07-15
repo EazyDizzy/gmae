@@ -1,3 +1,4 @@
+#![feature(test)]
 #![deny(clippy::all, clippy::pedantic, clippy::cognitive_complexity)]
 #![allow(
     clippy::expect_fun_call,
@@ -10,16 +11,18 @@
     clippy::needless_pass_by_value,
     clippy::module_name_repetitions
 )]
-
 extern crate core;
+#[cfg(test)]
+extern crate test;
 
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
-use bevy::diagnostic::LogDiagnosticsPlugin;
-use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
+use heron::prelude::*;
 use lib::entity::voxel::Material;
 use lib::util::debug_settings::DebugSettings;
 use lib::util::game_settings::GameSettings;
@@ -48,7 +51,8 @@ fn main() {
     let game_settings = GameSettings::from_file("game_settings.json");
 
     let mut app = App::new();
-    app.add_state(GameState::Playing)
+    app.insert_resource(Msaa { samples: 4 })
+        .add_state(GameState::Playing)
         .insert_resource(ClearColor(Color::rgb(0.5, 0.5, 0.9)))
         .add_plugins(DefaultPlugins)
         // .add_plugins_with(DefaultPlugins, |plugins| {
@@ -56,6 +60,9 @@ fn main() {
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(PhysicsPlugin::default()) // Add the plugin
+        .insert_resource(Gravity::from(Vec3::new(0.0, -9.81, 0.0)))
+        // .add_plugin(DebugLinesPlugin::default())
         .add_plugin(AudioPlugin)
         .add_plugin(EguiPlugin)
         .add_plugin(LevelPlugin)
@@ -86,4 +93,13 @@ fn game_settings_save(game_settings: ResMut<GameSettings>) {
     if game_settings.is_changed() {
         game_settings.save();
     }
+}
+
+#[derive(PhysicsLayer)]
+pub enum GamePhysicsLayer {
+    World,
+    Player,
+    Creature,
+    Projectile,
+    Sensor,
 }

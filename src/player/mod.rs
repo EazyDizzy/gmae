@@ -1,16 +1,14 @@
-use crate::creature::component::movement::locomotivity::Locomotivity;
-use crate::creature::component::movement::CREATURE_MOVED_LABEL;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::entity::component::hp::HP;
 use bevy::math::vec3;
 use bevy::prelude::*;
-use lib::entity::point::Point;
+use heron::prelude::*;
 
+use crate::creature::buffs::BuffStorage;
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
-use crate::GameState;
-use crate::creature::buffs::{BuffStorage};
+use crate::{GamePhysicsLayer, GameState};
 
 pub mod entity;
 mod system;
@@ -24,8 +22,7 @@ impl Plugin for PlayerPlugin {
             .add_startup_system(setup)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(player_track_keyboard_interaction)
-                    .label(CREATURE_MOVED_LABEL),
+                    .with_system(player_track_keyboard_interaction),
             );
     }
 }
@@ -36,7 +33,7 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
     commands
         .spawn_bundle((
             // TODO take spawn point from world file/save file
-            Transform::default().with_scale(vec3(0.5, 0.5, 0.5)),
+            Transform::from_xyz(3., 2., 3.).with_scale(vec3(0.5, 0.5, 0.5)),
             GlobalTransform::identity(),
         ))
         .with_children(|parent| {
@@ -44,8 +41,18 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         })
         .insert(Player::new())
         .insert(BuffStorage::<PhysiologyDescription>::new())
+        .insert(RigidBody::Dynamic)
+        .insert(CollisionShape::Cylinder {
+            radius: 0.5,
+            half_height: 1.0,
+        })
+        .insert(Velocity::from_linear(vec3(0., 0., 0.)))
+        .insert(Acceleration::from_linear(Vec3::X * 1.0))
+        .insert(RotationConstraints::lock())
+        .insert(
+            CollisionLayers::all_masks::<GamePhysicsLayer>().with_group(GamePhysicsLayer::Player),
+        )
         .insert(PhysiologyDescription::default())
         // TODO read from save file
-        .insert(Locomotivity::new(Point::new(9.5, 1.0, 3.0)))
         .insert(HP::full(100));
 }

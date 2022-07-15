@@ -1,63 +1,19 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-
 use crate::entity::point::Point;
+use crate::entity::WorldSide;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
 pub enum Material {
     Unknown,
-
-    Glass,
-    Hay,
-    Pumpkin,
-    WhiteTerracotta,
+    Solid,
+    // TODO creatures can walk through such blocks
+    Passable,
     Water,
-    // Light
+
     OrangeLight,
     BlueLight,
-    // Stone
-    Bedrock,
-    Stone,
-    Cobblestone,
-    MossyCobblestone,
-    MossyStoneBricks,
-    CrackedStoneBricks,
-    ChiseledStoneBricks,
-    SmoothStone,
-    StoneBricks,
-    // Ground
-    Grass,
-    Dirt,
-    DirtPath,
-    Podzol,
-    CoarseDirt,
-    Farmland,
-    // Wood + Leaves
-    OakLeaves,
-    OakLog,
-    OakPlanks,
-    StrippedOakLog,
-    AcaciaLeaves,
-    AcaciaLog,
-    AcaciaPlanks,
-    StrippedAcaciaLog,
-    BirchLeaves,
-    BirchLog,
-    BirchPlanks,
-    StrippedBirchLog,
-    JungleLeaves,
-    JungleLog,
-    JunglePlanks,
-    StrippedJungleLog,
-    DarkOakLeaves,
-    DarkOakLog,
-    DarkOakPlanks,
-    StrippedDarkOakLog,
-    SpruceLeaves,
-    SpruceLog,
-    SprucePlanks,
-    StrippedSpruceLog,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -102,26 +58,6 @@ impl Fastening {
             "bottom" => Fastening::Bottom,
             "top" => Fastening::Top,
             v => panic!("Unknown fastening value {v}"),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
-pub enum WorldSide {
-    North,
-    South,
-    East,
-    West,
-}
-
-impl WorldSide {
-    fn from_property(value: &str) -> WorldSide {
-        match value {
-            "north" => WorldSide::North,
-            "south" => WorldSide::South,
-            "east" => WorldSide::East,
-            "west" => WorldSide::West,
-            v => panic!("Unknown world_side value {v}"),
         }
     }
 }

@@ -4,8 +4,8 @@ mod settings;
 
 use crate::GameState;
 use bevy::prelude::*;
-use bevy_egui::egui::{vec2, Color32, Rgba};
 use bevy_egui::egui::style::Margin;
+use bevy_egui::egui::{vec2, Color32, Rgba};
 use bevy_egui::EguiContext;
 
 pub struct UIPlugin;

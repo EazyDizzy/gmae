@@ -1,10 +1,10 @@
 use crate::entity::point::Point;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Creature {
     relation: CreatureRelation,
-    name: CreatureName,
+    pub name: CreatureName,
     pub position: Point,
 }
 
@@ -16,16 +16,28 @@ impl Creature {
             position,
         }
     }
+    pub fn enemy(name: CreatureName, position: Point) -> Creature {
+        Creature {
+            relation: CreatureRelation::Enemy,
+            name,
+            position,
+        }
+    }
+
+    pub fn is_enemy(&self) -> bool {
+        self.relation == CreatureRelation::Enemy
+    }
 }
 
-#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum CreatureRelation {
     Neutral,
     Friend,
     Enemy,
 }
 
-#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum CreatureName {
     Dummy,
+    Pizza,
 }
