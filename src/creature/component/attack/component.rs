@@ -33,6 +33,11 @@ impl Attack {
             return;
         }
         let eyes_pos = phys.get_eyes_position(transform);
+        let distance = eyes_pos.distance_squared(player_position);
+        if distance > 150.0 {
+            return;
+        }
+
         let can_see = physics_world
             .ray_cast(eyes_pos, player_position - eyes_pos, true)
             .map_or(true, |cast| cast.entity == player_entity);
