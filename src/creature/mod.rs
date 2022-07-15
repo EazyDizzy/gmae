@@ -15,9 +15,12 @@ use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use std::f32::consts::PI;
+use lib::entity::point::Point;
+use crate::creature::buffs::BuffsPlugin;
 
 pub mod component;
 pub mod dummy;
+pub mod buffs;
 pub mod pizza;
 
 #[allow(clippy::module_name_repetitions)]
@@ -31,7 +34,8 @@ impl Plugin for CreaturePlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creatures_execute_move_strategies)
                     .with_system(creatures_attack_player),
-            );
+            )
+            .add_plugin(BuffsPlugin);
     }
 }
 

@@ -7,6 +7,7 @@ use heron::prelude::*;
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
+use crate::creature::buffs::{BuffStorage};
 use crate::{GamePhysicsLayer, GameState};
 
 pub mod entity;
@@ -39,6 +40,7 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
             parent.spawn_scene(mesh);
         })
         .insert(Player::new())
+        .insert(BuffStorage::<PhysiologyDescription>::new())
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Cylinder {
             radius: 0.5,
@@ -58,5 +60,6 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         )
         .insert(PhysiologyDescription::default())
         // TODO read from save file
+        .insert(Locomotivity::new(Point::new(9.5, 1.0, 3.0)))
         .insert(HP::full(100));
 }
