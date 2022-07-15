@@ -101,4 +101,5 @@ pub enum GamePhysicsLayer {
     Player,
     Creature,
     Projectile,
+    Sensor,
 }

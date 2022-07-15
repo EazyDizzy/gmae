@@ -68,12 +68,7 @@ fn spawn_bullet(
         .insert(Acceleration::from_linear(Vec3::default()))
         .insert(RigidBody::Sensor)
         .insert(
-            CollisionLayers::none()
-                .with_group(GamePhysicsLayer::Projectile)
-                .with_masks([
-                    GamePhysicsLayer::Creature,
-                    GamePhysicsLayer::Player,
-                    GamePhysicsLayer::World,
-                ]),
+            CollisionLayers::all_masks::<GamePhysicsLayer>()
+                .with_group(GamePhysicsLayer::Projectile),
         );
 }

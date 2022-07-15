@@ -10,8 +10,8 @@ use crate::Material;
 mod merge;
 mod voxel_sequence;
 
-#[allow(clippy::needless_pass_by_value, clippy::too_many_arguments)]
-pub fn init_world(mut commands: Commands, asset_server: Res<AssetServer>, level: Res<Level>) {
+#[allow(clippy::needless_pass_by_value)]
+pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level: Res<Level>) {
     let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
     let lvl_width = level.width() as f32;
 

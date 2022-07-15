@@ -70,9 +70,8 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             half_height: 1.0,
         })
         .insert(
-            CollisionLayers::none()
-                .with_group(GamePhysicsLayer::Creature)
-                .with_masks([GamePhysicsLayer::World, GamePhysicsLayer::Player]),
+            CollisionLayers::all_masks::<GamePhysicsLayer>()
+                .with_group(GamePhysicsLayer::Creature),
         );
 
         if creature.is_enemy() {

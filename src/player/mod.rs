@@ -4,10 +4,10 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use heron::prelude::*;
 
+use crate::creature::buffs::BuffStorage;
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
-use crate::creature::buffs::{BuffStorage};
 use crate::{GamePhysicsLayer, GameState};
 
 pub mod entity;
@@ -50,13 +50,7 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         .insert(Acceleration::from_linear(Vec3::X * 1.0))
         .insert(RotationConstraints::lock())
         .insert(
-            CollisionLayers::none()
-                .with_group(GamePhysicsLayer::Player)
-                .with_masks([
-                    GamePhysicsLayer::World,
-                    GamePhysicsLayer::Creature,
-                    GamePhysicsLayer::Projectile,
-                ]),
+            CollisionLayers::all_masks::<GamePhysicsLayer>().with_group(GamePhysicsLayer::Player),
         )
         .insert(PhysiologyDescription::default())
         // TODO read from save file
