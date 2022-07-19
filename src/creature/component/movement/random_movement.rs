@@ -1,7 +1,9 @@
-use crate::creature::component::movement::locomotivity::Locomotivity;
+use crate::creature::component::movement::locomotivity;
 use crate::creature::component::movement::MoveYourBody;
 use crate::creature::component::physiology_description::PhysiologyDescription;
+use bevy::math::vec3;
 use bevy::prelude::*;
+use heron::Velocity;
 use lib::entity::level::Level;
 use rand::Rng;
 
@@ -20,29 +22,37 @@ impl RandomMovementStrategy {
 impl MoveYourBody for RandomMovementStrategy {
     fn update(
         &mut self,
-        locomotivity: &mut Locomotivity,
         phys: &PhysiologyDescription,
         lvl: &Res<Level>,
+        transform: &Transform,
+        velocity: &mut Velocity,
     ) {
-        let position = locomotivity.position();
-        let x = position.x;
-        let z = position.z;
-        let speed = phys.movement_speed;
+        let x = transform.translation.x;
+        let y = transform.translation.y;
+        let z = transform.translation.z;
+        let distance = 0.5;
         let potential_positions = [
             (x, z),
-            (x + speed, z),
-            (x, z + speed),
-            (x + speed, z + speed),
-            (x - speed, z),
-            (x, z - speed),
-            (x - speed, z - speed),
-            (x - speed, z + speed),
-            (x + speed, z - speed),
+            (x + distance, z),
+            (x, z + distance),
+            (x + distance, z + distance),
+            (x - distance, z),
+            (x, z - distance),
+            (x - distance, z - distance),
+            (x - distance, z + distance),
+            (x + distance, z - distance),
         ];
         let valid_positions: Vec<(f32, f32)> = potential_positions
             .into_iter()
-            .filter(|(x, z)| locomotivity.can_stay_on(*x, *z, lvl, phys))
+            .filter(|(x, z)| {
+                locomotivity::creature_not_inside_blocks(*x, y, *z, lvl, phys)
+                    // && locomotivity::has_y_obstacles_on_point(*x, y, *z, lvl, phys)
+            })
             .collect();
+
+        if valid_positions.is_empty() {
+            return;
+        }
 
         let index = if self.i < 20 && valid_positions.get(self.direction).is_some() {
             self.direction
@@ -56,7 +66,13 @@ impl MoveYourBody for RandomMovementStrategy {
         // dbg!(potential_positions);
 
         let (new_x, new_z) = potential_positions[index];
-        locomotivity.move_to(new_x, new_z, lvl, phys);
+        let diff_x = transform.translation.x - new_x;
+        let diff_z = transform.translation.z - new_z;
+        *velocity = velocity.with_linear(vec3(
+            diff_x * phys.movement_speed,
+            velocity.linear.y,
+            diff_z * phys.movement_speed,
+        ));
 
         self.i += 1;
     }

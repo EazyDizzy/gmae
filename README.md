@@ -17,3 +17,6 @@ https://onlinepngtools.com/generate-random-png
   - `inspector` - show a list of all entities and their properties
 - game_settings.json - player settings
   - `background_music_volume` - float, 0.0 - 1.0
+
+### Additional tools
+- Mineways - a tool to convert minecraft world to .gltf [Download](https://www.realtimerendering.com/erich/minecraft/public/mineways/downloads.html#downloadImgs)

@@ -1,35 +1,40 @@
-use crate::creature::component::movement::locomotivity::Locomotivity;
-use crate::creature::component::movement::{MovementStrategy, CREATURE_MOVED_LABEL};
+use crate::creature::component::attack::component::Attack;
+use crate::creature::component::attack::AttackPlugin;
+use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
-use crate::creature::dummy::Dummy;
-use crate::creature::pizza::Pizza;
-use crate::GameState;
+
+use crate::creature::buffs::BuffsPlugin;
+use crate::creature::mob::dummy::Dummy;
+use crate::creature::mob::pizza::Pizza;
+use crate::creature::mob::{dummy, pizza};
+use crate::player::entity::Player;
+use crate::{GamePhysicsLayer, GameState};
 use bevy::math::vec3;
 use bevy::prelude::*;
+use heron::prelude::*;
+use heron::rapier_plugin::PhysicsWorld;
+use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
+use std::f32::consts::PI;
 
+pub mod buffs;
 pub mod component;
-pub mod dummy;
-pub mod pizza;
+pub mod mob;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
 
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
+        app.add_plugin(AttackPlugin)
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creatures_execute_move_strategies)
-                    .label(CREATURE_MOVED_LABEL),
+                    .with_system(creatures_attack_player),
             )
-            .add_system(creatures_apply_gravity
-                .after(CREATURE_MOVED_LABEL)
-                .before(creature_move_model)
-            )
-            .add_system(creature_move_model.after(CREATURE_MOVED_LABEL))
-        ;
+            .add_plugin(BuffsPlugin);
     }
 }
 
@@ -43,7 +48,11 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
                 creature.position.x,
                 creature.position.y,
                 creature.position.z,
-            ),
+            )
+            //     TODO remove default rotation after debug
+            .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0))
+            //     TODO make sth to avoid this
+            .with_scale(vec3(0.5, 0.5, 0.5)),
             GlobalTransform::identity(),
         ));
         ec.with_children(|parent| {
@@ -53,16 +62,30 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             };
             parent.spawn_scene(mesh);
         })
-        .insert(CreatureMarker {});
+        .insert(CreatureMarker {})
+        .insert(RigidBody::Dynamic)
+        .insert(RotationConstraints::lock())
+        .insert(CollisionShape::Cylinder {
+            radius: 0.5,
+            half_height: 1.0,
+        })
+        .insert(
+            CollisionLayers::all_masks::<GamePhysicsLayer>()
+                .with_group(GamePhysicsLayer::Creature),
+        );
+
+        if creature.is_enemy() {
+            ec.insert(EnemyCreatureMarker {});
+        }
 
         match creature.name {
             CreatureName::Dummy => {
                 ec.insert(Dummy::new());
-                dummy::insert(&mut ec, creature);
+                dummy::insert(&mut ec);
             }
             CreatureName::Pizza => {
                 ec.insert(Pizza::new());
-                pizza::insert(&mut ec, creature);
+                pizza::insert(&mut ec);
             }
         }
     }
@@ -70,36 +93,50 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
 
 #[derive(Component, Debug)]
 pub struct CreatureMarker {}
+#[derive(Component, Debug)]
+pub struct EnemyCreatureMarker {}
 
 fn creatures_execute_move_strategies(
     lvl: Res<Level>,
-    mut query: Query<(
-        &mut Locomotivity,
-        &PhysiologyDescription,
-        &mut MovementStrategy,
+    mut query: Query<
+        (
+            &PhysiologyDescription,
+            &mut MovementStrategy,
+            &Transform,
+            &mut Velocity,
+        ),
         With<CreatureMarker>,
-    )>,
+    >,
 ) {
-    for (mut locomotivity, phys, mut move_strat, ..) in query.iter_mut() {
-        move_strat.update(&mut locomotivity, phys, &lvl);
+    for (phys, mut move_strat, transform, mut velocity) in query.iter_mut() {
+        move_strat.update(phys, &lvl, transform, &mut velocity);
     }
 }
 
-fn creature_move_model(mut query: Query<(&mut Transform, &Locomotivity)>) {
-    for (mut transform, locomotivity) in query.iter_mut() {
-        transform.translation = vec3(
-            locomotivity.position().x,
-            locomotivity.position().y,
-            locomotivity.position().z,
-        );
-    }
-}
-
-fn creatures_apply_gravity(
-    lvl: Res<Level>,
-    mut query: Query<(&mut Locomotivity, &PhysiologyDescription)>,
+fn creatures_attack_player(
+    player_query: Query<(Entity, &Transform), With<Player>>,
+    physics_world: PhysicsWorld,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut enemy_query: Query<
+        (&Transform, &PhysiologyDescription, &mut Attack),
+        With<EnemyCreatureMarker>,
+    >,
 ) {
-    for (mut locomotivity, phys) in query.iter_mut() {
-        locomotivity.gravity_move(&lvl, phys);
+    if let Some((id, player_transform)) = player_query.iter().next() {
+        let mut player_position = player_transform.translation;
+        player_position.y += 0.5;
+
+        for (transform, phys, mut attack) in enemy_query.iter_mut() {
+            attack.exec(
+                &physics_world,
+                phys,
+                transform,
+                player_position,
+                id,
+                &mut commands,
+                &mut meshes,
+            );
+        }
     }
 }

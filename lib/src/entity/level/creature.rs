@@ -23,6 +23,10 @@ impl Creature {
             position,
         }
     }
+
+    pub fn is_enemy(&self) -> bool {
+        self.relation == CreatureRelation::Enemy
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize, Debug)]

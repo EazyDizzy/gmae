@@ -1,4 +1,4 @@
-use crate::ui::MenuState;
+use crate::ui::{settings, MenuState};
 use bevy::prelude::*;
 use bevy_egui::egui::{vec2, Ui};
 use bevy_egui::{egui, EguiContext};
@@ -39,17 +39,20 @@ fn render_game_settings_menu(
     mut menu_state: ResMut<State<MenuState>>,
     mut game_settings: ResMut<GameSettings>,
 ) {
-    let update_volume = |new_value: Option<f64>| -> f64 {
-        match new_value {
-            None => {}
-            Some(new_value) => {
-                game_settings.update_background_music_volume(new_value);
-            }
-        }
-
-        game_settings.get_background_music_volume()
-    };
-    ui.add(egui::Slider::from_get_set(0.0..=1.0, update_volume).text("Background music volume"));
+    ui.add(
+        egui::Slider::from_get_set(
+            0.0..=1.0,
+            settings::update_background_music(&mut game_settings),
+        )
+        .text("Background music volume"),
+    );
+    ui.add(
+        egui::Slider::from_get_set(
+            0.01..=1.0,
+            settings::update_mouse_sensitivity(&mut game_settings),
+        )
+        .text("Mouse sensitivity"),
+    );
 
     let back_button = ui.button("Back");
     if back_button.clicked() {

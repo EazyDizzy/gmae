@@ -68,7 +68,7 @@ fn forward_vector(rotation: &Quat) -> Vec3 {
 
 fn forward_walk_vector(rotation: &Quat) -> Vec3 {
     let f = forward_vector(rotation);
-    
+
     Vec3::new(f.x, 0.0, f.z).normalize()
 }
 

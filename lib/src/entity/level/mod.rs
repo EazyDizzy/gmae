@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
-
 use crate::entity::level::creature::Creature;
 use crate::entity::level::voxel_stack::VoxelStack;
 use crate::entity::point::Point;
+use crate::entity::voxel::Material;
 use crate::entity::voxel::Voxel;
+use serde::{Deserialize, Serialize};
 
 pub mod creature;
 pub mod voxel_plate;
@@ -11,6 +11,7 @@ pub mod voxel_stack;
 
 #[derive(Serialize, Deserialize)]
 pub struct Level {
+    pub name: String,
     day_part: DayPart,
 
     voxel_stack: VoxelStack,
@@ -24,12 +25,27 @@ pub enum DayPart {
 }
 
 impl Level {
-    pub fn new(voxels: Vec<Voxel>, day_part: DayPart, creatures: Vec<Creature>) -> Level {
+    pub fn new(
+        name: String,
+        voxels: Vec<Voxel>,
+        day_part: DayPart,
+        creatures: Vec<Creature>,
+    ) -> Level {
         Level {
+            name,
             day_part,
             voxel_stack: VoxelStack::from(voxels),
             creatures,
         }
+    }
+
+    pub fn width(&self) -> usize {
+        self.voxel_stack.width()
+    }
+
+    pub fn lights(&self) -> Vec<&Voxel> {
+        self.voxel_stack
+            .voxels_by_material(&[Material::BlueLight, Material::OrangeLight])
     }
 
     pub fn is_day(&self) -> bool {
