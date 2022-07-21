@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 pub mod level;
-pub mod point;
 pub mod voxel;
 
 #[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]

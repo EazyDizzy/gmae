@@ -19,3 +19,11 @@ pub fn read_level(lvl_name: &str) -> Level {
 
     serde_json::from_str(&json).expect("Failed to parse lvl")
 }
+
+#[cfg(test)]
+#[bench]
+fn bench_lvl_deserialize(b: &mut test::Bencher) {
+    b.iter(|| {
+        read_level("debug");
+    });
+}

@@ -8,9 +8,8 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use lib::entity::level::creature::{Creature, CreatureName};
 use lib::entity::level::{DayPart, Level};
-use lib::entity::point::Point;
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
-use lib::util::game_settings::GameSettings;
+use bevy_internal::math::vec3;
 
 const EXPORT_DIAPASON: usize = 8;
 const LVL_DIR: &str = "./assets/lvl/";
@@ -30,7 +29,7 @@ fn main() {
             let converted_metadata = fs::metadata(&converted_lvl_path);
             let should_rebuild = if let Ok(converted) = converted_metadata {
                 original_metadata.modified().unwrap() > converted.modified().unwrap()
-                // || lvl_name == "debug"
+                    || lvl_name == "debug"
             } else {
                 true
             };
@@ -79,7 +78,7 @@ fn read_level(lvl_name: &str) -> Level {
                             let voxel_x = (chunk_x * CHUNK_SIZE) + x;
                             let voxel_z = (chunk_z * CHUNK_SIZE) + z;
                             let voxel_y = y as f32 + MAX_NEGATIVE_HEIGHT;
-                            let point = Point::new(voxel_x as f32, voxel_y, voxel_z as f32);
+                            let point = vec3(voxel_x as f32, voxel_y, voxel_z as f32);
                             match block.name() {
                                 "minecraft:oak_sign" => {
                                     creatures.push(Creature::neytral(CreatureName::Dummy, point));
