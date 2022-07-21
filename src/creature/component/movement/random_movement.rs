@@ -63,6 +63,7 @@ impl MoveYourBody for RandomMovementStrategy {
             self.direction = index;
             index
         };
+        // dbg!(potential_positions);
 
         let (new_x, new_z) = potential_positions[index];
         let diff_x = transform.translation.x - new_x;

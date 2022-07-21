@@ -1,4 +1,4 @@
-use lib::entity::point::Point;
+use bevy::math::Vec3;
 use lib::entity::voxel::Voxel;
 
 #[derive(Debug)]
@@ -23,11 +23,11 @@ impl<'a> VoxelSequence<'a> {
         self.end = other.end;
     }
 
-    pub fn start_position(&self) -> &Point {
+    pub fn start_position(&self) -> &Vec3 {
         &self.start.position
     }
 
-    pub fn end_position(&self) -> &Point {
+    pub fn end_position(&self) -> &Vec3 {
         &self.end.position
     }
 

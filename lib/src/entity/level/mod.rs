@@ -1,8 +1,8 @@
 use crate::entity::level::creature::Creature;
 use crate::entity::level::voxel_stack::VoxelStack;
-use crate::entity::point::Point;
 use crate::entity::voxel::Material;
 use crate::entity::voxel::Voxel;
+use bevy::math::Vec3;
 use serde::{Deserialize, Serialize};
 
 pub mod creature;
@@ -56,11 +56,11 @@ impl Level {
         &self.voxel_stack
     }
 
-    pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
+    pub fn get_voxel_by_point(&self, point: &Vec3) -> Option<&Voxel> {
         self.voxel_stack.get_voxel_by_point(point)
     }
 
-    pub fn points_are_empty(&self, points: &[Point]) -> bool {
+    pub fn points_are_empty(&self, points: &[Vec3]) -> bool {
         points.iter().all(|p| self.get_voxel_by_point(p).is_none())
     }
 
