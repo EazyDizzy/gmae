@@ -5,11 +5,13 @@ use bevy::prelude::*;
 use heron::prelude::*;
 
 use crate::creature::buffs::BuffStorage;
+use crate::player::animation::{animation_run_on_move, animation_setup};
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
 use crate::{GamePhysicsLayer, GameState};
 
+mod animation;
 pub mod entity;
 mod system;
 
@@ -20,11 +22,11 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(CameraPlugin)
             .add_startup_system(setup)
-            // .add_startup_system(setup_animations)
+            .add_startup_system(animation_setup)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(player_track_keyboard_interaction)
-                    // .with_system(play_on_load),
+                    .with_system(animation_run_on_move),
             );
     }
 }
@@ -57,22 +59,4 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         .insert(PhysiologyDescription::default())
         // TODO read from save file
         .insert(HP::full(100));
-}
-
-#[derive(Component)]
-struct PlayerAnimations {
-    run: Handle<AnimationClip>,
-}
-fn setup_animations(asset_server: Res<AssetServer>, mut commands: Commands) {
-    commands.insert_resource(PlayerAnimations {
-        run: asset_server.load("mesh/player.glb#Animation0"),
-    });
-}
-fn play_on_load(
-    animations: Res<PlayerAnimations>,
-    mut players: Query<&mut AnimationPlayer, Added<AnimationPlayer>>,
-) {
-    for mut player in players.iter_mut() {
-        player.play(animations.run.clone()).repeat();
-    }
 }
