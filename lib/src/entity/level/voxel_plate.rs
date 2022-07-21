@@ -1,9 +1,9 @@
 use std::collections::HashMap;
+use bevy::math::Vec3;
 
 use serde::{Deserialize, Serialize};
 
 use crate::entity::level::Voxel;
-use crate::entity::point::Point;
 use crate::entity::voxel::Material;
 
 #[derive(Default, Serialize, Deserialize)]
@@ -39,7 +39,7 @@ impl VoxelPlate {
             .collect()
     }
 
-    pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
+    pub fn get_voxel_by_point(&self, point: &Vec3) -> Option<&Voxel> {
         self.internal
             .get(&(point.z as usize))
             .and_then(|row| row.iter().find(|v| v.position.x == point.x))

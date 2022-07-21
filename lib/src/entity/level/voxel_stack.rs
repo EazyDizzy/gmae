@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-
 use crate::entity::level::voxel_plate::VoxelPlate;
-use crate::entity::level::Point;
 use crate::entity::voxel::Material;
 use crate::entity::voxel::Voxel;
+use bevy::math::Vec3;
+use serde::{Deserialize, Serialize};
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct VoxelStack {
@@ -48,7 +47,7 @@ impl VoxelStack {
             .collect()
     }
 
-    pub fn get_voxel_by_point(&self, point: &Point) -> Option<&Voxel> {
+    pub fn get_voxel_by_point(&self, point: &Vec3) -> Option<&Voxel> {
         self.internal
             .get(&(point.y as usize))
             .and_then(|plate| plate.get_voxel_by_point(point))
