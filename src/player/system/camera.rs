@@ -1,4 +1,4 @@
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4};
 
 use crate::system::fly_camera::FlyCamera;
 use crate::GameState;
@@ -21,18 +21,6 @@ impl Default for PlayerCamera {
         Self {
             rotation_angle: -FRAC_PI_2 - FRAC_PI_4,
             enabled: true,
-        }
-    }
-}
-
-fn camera_rotate_player_model(
-    camera_query: Query<&PlayerCamera>,
-    mut player_query: Query<&mut Transform, With<Player>>,
-) {
-    if let Some(mut transform) = player_query.iter_mut().next() {
-        for camera in camera_query.iter() {
-            transform.rotation =
-                Quat::from_euler(EulerRot::XYZ, 0.0, -camera.rotation_angle - PI / 2.0, 0.0);
         }
     }
 }
@@ -110,7 +98,6 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_player_camera)
             .add_system(camera_track_mouse_motion)
-            .add_system(camera_rotate_player_model)
             .add_system_set(
                 SystemSet::on_update(GameState::Pause).with_system(ui_disable_all_cameras),
             )

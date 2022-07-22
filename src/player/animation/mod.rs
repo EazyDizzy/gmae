@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use heron::Velocity;
+use std::f32::consts::TAU;
 
 #[derive(Component)]
 pub struct PlayerAnimations {
@@ -30,4 +32,33 @@ pub fn animation_run_on_move(
             player.pause();
         }
     }
+}
+
+pub fn animation_rotate_model_on_move(
+    mut player: Query<(&Velocity, &mut Transform)>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    //  TODO remove keyboard check to make it generic for all creatures
+    let is_moving =
+        keyboard_input.any_pressed([KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right]);
+
+    if is_moving {
+        player.iter_mut().for_each(|(velocity, mut transform)| {
+            let current_rotation: Quat = transform.rotation;
+            let (_, y, _) = current_rotation.to_euler(EulerRot::XYZ);
+            let future_y: f32 = velocity.linear.x.atan2(velocity.linear.z);
+
+            if round(future_y, 2) != round(y, 2) {
+                // TODO make smooth rotation
+                // let y_step = (future_y - y).clamp(-0.2, 0.2);
+                // println!("{} -> {} ({:?})", y, future_y, (x_velocity, z_velocity));
+                transform.rotation = Quat::from_euler(EulerRot::XYZ, 0., future_y, 0.);
+            }
+        });
+    }
+}
+
+fn round(x: f32, decimals: u32) -> f32 {
+    let y = 10i32.pow(decimals) as f32;
+    (x * y).round() / y
 }

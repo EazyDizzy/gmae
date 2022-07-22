@@ -5,7 +5,9 @@ use bevy::prelude::*;
 use heron::prelude::*;
 
 use crate::creature::buffs::BuffStorage;
-use crate::player::animation::{animation_run_on_move, animation_setup};
+use crate::player::animation::{
+    animation_rotate_model_on_move, animation_run_on_move, animation_setup,
+};
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
@@ -26,7 +28,8 @@ impl Plugin for PlayerPlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(player_track_keyboard_interaction)
-                    .with_system(animation_run_on_move),
+                    .with_system(animation_run_on_move)
+                    .with_system(animation_rotate_model_on_move),
             );
     }
 }
@@ -43,7 +46,7 @@ pub fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         .with_children(|parent| {
             parent.spawn_scene(mesh);
         })
-        .insert(Player::new())
+        .insert(Player)
         .insert(BuffStorage::<PhysiologyDescription>::new())
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Cylinder {

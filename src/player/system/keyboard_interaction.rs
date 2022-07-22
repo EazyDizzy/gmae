@@ -7,9 +7,9 @@ use crate::Velocity;
 
 pub fn player_track_keyboard_interaction(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<(&mut Velocity, &PhysiologyDescription, With<Player>)>,
+    mut player_query: Query<(&mut Velocity, &PhysiologyDescription), With<Player>>,
 ) {
-    let (mut velocity, phys, ..) = if let Some(a) = player_query.iter_mut().next() {
+    let (mut velocity, phys) = if let Some(a) = player_query.iter_mut().next() {
         a
     } else {
         return;
