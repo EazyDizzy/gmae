@@ -19,8 +19,7 @@ use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
-use bevy_inspector_egui::bevy_egui::EguiPlugin;
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_egui::EguiPlugin;
 use bevy_kira_audio::AudioPlugin;
 use heron::prelude::*;
 use lib::entity::voxel::Material;
@@ -75,9 +74,6 @@ fn main() {
 
     if debug_settings.fly_camera {
         app.add_plugin(FlyCameraPlugin);
-    }
-    if debug_settings.inspector {
-        app.add_plugin(WorldInspectorPlugin::new());
     }
 
     app.insert_resource(debug_settings)

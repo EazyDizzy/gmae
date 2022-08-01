@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DebugSettings {
     pub fly_camera: bool,
-    pub inspector: bool,
 }
 
 impl DebugSettings {

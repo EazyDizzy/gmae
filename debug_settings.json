@@ -1,4 +1,3 @@
 {
-  "fly_camera": true,
-  "inspector": false
+  "fly_camera": false
 }
