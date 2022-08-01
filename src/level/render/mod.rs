@@ -1,18 +1,16 @@
+use crate::level::reader::read_level_collisions;
 use bevy::prelude::*;
 use heron::prelude::*;
 use lib::entity::level::Level;
 use lib::entity::voxel::Voxel;
 
-use crate::level::render::merge::merge_voxels;
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::Material;
-
-mod merge;
-mod voxel_sequence;
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level: Res<Level>) {
     let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
+    let collisions = read_level_collisions(&level.name);
     let lvl_width = level.width() as f32;
 
     commands
@@ -25,18 +23,17 @@ pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level:
             parent.spawn_scene(mesh);
         });
 
-    let merged_voxels = merge_voxels(level.voxel_stack());
-    for shape in merged_voxels {
-        let x_width = shape.end_position().x - shape.start_position().x + 1.0;
-        let z_width = shape.end_position().z - shape.start_position().z + 1.0;
-        let y_height = shape.end_position().y - shape.start_position().y + 1.0;
+    for shape in collisions {
+        let x_width = shape.end.x as f32 - shape.start.x as f32 + 1.0;
+        let z_width = shape.end.z as f32 - shape.start.z as f32 + 1.0;
+        let y_height = shape.end.y as f32 - shape.start.y as f32 + 1.0;
 
         commands
             .spawn_bundle((
                 Transform::from_xyz(
-                    shape.end_position().x - x_width / 2.0 + 0.5,
-                    shape.end_position().y - y_height / 2.0 + 0.5,
-                    shape.end_position().z - z_width / 2.0 + 0.5,
+                    shape.end.x as f32 - x_width / 2.0 + 0.5,
+                    shape.end.y as f32 - y_height / 2.0 + 0.5,
+                    shape.end.z as f32 - z_width / 2.0 + 0.5,
                 ),
                 GlobalTransform::identity(),
             ))

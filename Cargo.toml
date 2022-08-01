@@ -3,6 +3,10 @@ name = "gmae"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+lto = true
+codegen-units = 1
+
 [dependencies]
 # TODO remove dynamic before release
 bevy = { version = "0.7.0", features = ["dynamic"] }
@@ -15,6 +19,7 @@ bevy_egui = "0.14.0"
 bevy_kira_audio = { version = "0.10.0", features = ["mp3"] }
 bevy_prototype_debug_lines = { version = "0.7", features = ["3d"] }
 heron = { version = "3.1.0", features = ["3d"] }
+mca-cuboids = "0.1.0"
 
 [dependencies.lib]
 version = "0.0.0"
@@ -26,6 +31,7 @@ fastanvil = "0.26.0" #for reading mc world
 serde_json = "1.0.79" #for serializing lvls
 flate2 = "1.0" #for archiving lvls
 bevy_internal = "0.7.0"
+mca-cuboids = "0.1.0"
 
 [build-dependencies.lib]
 version = "0.0.0"

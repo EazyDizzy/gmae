@@ -61,7 +61,7 @@ fn main() {
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PhysicsPlugin::default()) // Add the plugin
-        .insert_resource(Gravity::from(Vec3::new(0.0, -9.81, 0.0)))
+        .insert_resource(Gravity::from(Vec3::new(0.0, -10., 0.0)))
         // .add_plugin(DebugLinesPlugin::default())
         .add_plugin(AudioPlugin)
         .add_plugin(EguiPlugin)

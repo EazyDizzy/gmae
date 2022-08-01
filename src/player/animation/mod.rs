@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use heron::Velocity;
-use std::f32::consts::TAU;
+use std::f32::consts::FRAC_PI_2;
 
 #[derive(Component)]
 pub struct PlayerAnimations {
@@ -49,10 +49,22 @@ pub fn animation_rotate_model_on_move(
             let future_y: f32 = velocity.linear.x.atan2(velocity.linear.z);
 
             if round(future_y, 2) != round(y, 2) {
-                // TODO make smooth rotation
-                // let y_step = (future_y - y).clamp(-0.2, 0.2);
-                // println!("{} -> {} ({:?})", y, future_y, (x_velocity, z_velocity));
-                transform.rotation = Quat::from_euler(EulerRot::XYZ, 0., future_y, 0.);
+                let step_size = 0.1;
+
+                let mut y_step = if y < -FRAC_PI_2 && future_y > FRAC_PI_2 {
+                    -step_size
+                } else if future_y < -FRAC_PI_2 && y > FRAC_PI_2 {
+                    step_size
+                } else {
+                    (future_y - y).clamp(-step_size, step_size)
+                };
+                // TODO catch bug & make smooth rotation
+                if future_y > FRAC_PI_2 || future_y < -FRAC_PI_2 {
+                    // println!("old {} -> {} ({})", y, future_y, y_step);
+                    y_step = future_y - y;
+                }
+                // println!("{} -> {} ({})", y, future_y, y_step);
+                transform.rotation = Quat::from_euler(EulerRot::XYZ, 0., y + y_step, 0.);
             }
         });
     }
