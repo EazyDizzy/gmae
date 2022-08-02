@@ -17,6 +17,9 @@ extern crate test;
 
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
+use crate::level::LevelPlugin;
+use crate::player::PlayerPlugin;
+use crate::ui::UIPlugin;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
@@ -25,16 +28,14 @@ use heron::prelude::*;
 use lib::entity::voxel::Material;
 use lib::util::debug_settings::DebugSettings;
 use lib::util::game_settings::GameSettings;
+pub use physic_layers::*;
 use system::fly_camera::FlyCameraPlugin;
-
-use crate::level::LevelPlugin;
-use crate::player::PlayerPlugin;
-use crate::ui::UIPlugin;
 
 mod audio;
 mod creature;
 mod entity;
 mod level;
+mod physic_layers;
 mod player;
 mod system;
 mod ui;
@@ -57,7 +58,7 @@ fn main() {
         // .add_plugins_with(DefaultPlugins, |plugins| {
         //     plugins.disable::<bevy::log::LogPlugin>()
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        // .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PhysicsPlugin::default()) // Add the plugin
         .insert_resource(Gravity::from(Vec3::new(0.0, -10., 0.0)))
@@ -85,17 +86,9 @@ fn main() {
     app.run();
 }
 
+// TODO move out
 fn game_settings_save(game_settings: ResMut<GameSettings>) {
     if game_settings.is_changed() {
         game_settings.save();
     }
-}
-
-#[derive(PhysicsLayer)]
-pub enum GamePhysicsLayer {
-    World,
-    Player,
-    Creature,
-    Projectile,
-    Sensor,
 }

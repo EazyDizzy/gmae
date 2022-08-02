@@ -53,7 +53,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
             .spawn()
             // spawn remove hardcode, relatively to Player position
             .insert_bundle(PerspectiveCameraBundle {
-                transform: Transform::from_xyz(5.0, 8.0, 20.0),
+                transform: Transform::from_xyz(22.0, 8.0, 22.0),
                 ..Default::default()
             })
             // TODO move sensitivity to game settings

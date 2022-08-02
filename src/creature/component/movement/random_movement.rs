@@ -14,7 +14,7 @@ pub struct RandomMovementStrategy {
 }
 
 impl RandomMovementStrategy {
-    pub fn new() -> RandomMovementStrategy {
+    pub fn new() -> Self {
         RandomMovementStrategy { i: 0, direction: 0 }
     }
 }

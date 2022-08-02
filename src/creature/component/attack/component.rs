@@ -12,7 +12,7 @@ pub struct Attack {
 }
 
 impl Attack {
-    pub fn new() -> Attack {
+    pub fn new() -> Self {
         Attack {
             time_of_last_attack: Instant::now(),
         }

@@ -9,7 +9,7 @@ use crate::Material;
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level: Res<Level>) {
-    let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
+    // let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
     let collisions = read_level_collisions(&level.name);
     let lvl_width = level.width() as f32;
 
@@ -20,7 +20,7 @@ pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level:
         ))
         .insert(RigidBody::Static)
         .with_children(|parent| {
-            parent.spawn_scene(mesh);
+            // parent.spawn_scene(mesh);
         });
 
     for shape in collisions {
