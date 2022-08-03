@@ -9,7 +9,9 @@ use crate::creature::component::CombatParameters;
 use crate::player::animation::{
     animation_rotate_model_on_move, animation_run_on_move, player_animation_setup,
 };
-use crate::player::attack::{player_attack_move_sensor, player_attack_setup_sensors};
+use crate::player::attack::{
+    player_attack_thrust, player_attack_thrust_check_collisions, ThrustAttackSensor,
+};
 use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
@@ -27,29 +29,47 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(CameraPlugin)
             .add_startup_system(player_setup)
-            .add_startup_system_to_stage(StartupStage::PostStartup, player_attack_setup_sensors)
             .add_startup_system(player_animation_setup)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(player_track_keyboard_interaction)
                     .with_system(animation_run_on_move)
                     .with_system(animation_rotate_model_on_move)
-                    .with_system(player_attack_move_sensor),
+                    .with_system(player_attack_thrust)
+                    .with_system(player_attack_thrust_check_collisions),
             );
     }
 }
 
 pub fn player_setup(asset_server: Res<AssetServer>, mut commands: Commands) {
     let mesh = asset_server.load("mesh/player.glb#Scene0");
+    let comb = CombatParameters::default();
+    let phys = PhysiologyDescription::default();
 
     commands
         .spawn_bundle((
             // TODO take spawn point from world file/save file
-            Transform::from_xyz(22., 2., 22.),
+            Transform::from_xyz(4., 2., 7.),
             GlobalTransform::identity(),
         ))
         .with_children(|parent| {
             parent.spawn_scene(mesh);
+
+            parent
+                .spawn_bundle((
+                    Transform::from_xyz(0., 0., comb.attack_length / 2. + phys.model_radius),
+                    GlobalTransform::identity(),
+                ))
+                .insert(RigidBody::Sensor)
+                .insert(ThrustAttackSensor)
+                .insert(CollisionShape::Cuboid {
+                    half_extends: Vec3::new(0.25, 0.5, comb.attack_length / 2.),
+                    border_radius: None,
+                })
+                .insert(
+                    CollisionLayers::all_masks::<GamePhysicsLayer>()
+                        .with_group(GamePhysicsLayer::Sensor),
+                );
         })
         .insert(Player)
         .insert(BuffStorage::<PhysiologyDescription>::new())
@@ -64,8 +84,8 @@ pub fn player_setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         .insert(
             CollisionLayers::all_masks::<GamePhysicsLayer>().with_group(GamePhysicsLayer::Player),
         )
-        .insert(PhysiologyDescription::default())
-        .insert(CombatParameters::default())
+        .insert(phys)
+        .insert(comb)
         // TODO read from save file
         .insert(HP::full(100));
 }

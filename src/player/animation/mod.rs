@@ -1,3 +1,4 @@
+use crate::util::round;
 use bevy::prelude::*;
 use heron::Velocity;
 use std::f32::consts::FRAC_PI_2;
@@ -71,9 +72,4 @@ pub fn animation_rotate_model_on_move(
             transform.rotation = Quat::from_euler(EulerRot::XYZ, 0., y + y_step, 0.);
         }
     });
-}
-
-fn round(x: f32, decimals: u32) -> f32 {
-    let y = 10i32.pow(decimals) as f32;
-    (x * y).round() / y
 }

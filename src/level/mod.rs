@@ -1,4 +1,4 @@
-use crate::{GamePhysicsLayer, is_sensor};
+use crate::{is_sensor, GamePhysicsLayer};
 use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionLayers, CollisionShape, RigidBody};
 use lib::entity::level::Level;

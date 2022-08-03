@@ -62,7 +62,7 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             };
             parent.spawn_scene(mesh);
         })
-        .insert(CreatureMarker {})
+        .insert(CreatureMarker)
         .insert(RigidBody::Dynamic)
         .insert(RotationConstraints::lock())
         .insert(CollisionShape::Cylinder {
@@ -70,13 +70,9 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             half_height: 1.0,
         })
         .insert(
-            CollisionLayers::all_masks::<GamePhysicsLayer>()
-                .with_group(GamePhysicsLayer::Creature),
-        );
-
-        if creature.is_enemy() {
-            ec.insert(EnemyCreatureMarker {});
-        }
+            CollisionLayers::all_masks::<GamePhysicsLayer>().with_group(GamePhysicsLayer::Creature),
+        )
+        .insert(EnemyCreatureMarker);
 
         match creature.name {
             CreatureName::Dummy => {
@@ -92,9 +88,9 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
 }
 
 #[derive(Component, Debug)]
-pub struct CreatureMarker {}
+pub struct CreatureMarker;
 #[derive(Component, Debug)]
-pub struct EnemyCreatureMarker {}
+pub struct EnemyCreatureMarker;
 
 fn creatures_execute_move_strategies(
     lvl: Res<Level>,

@@ -1,6 +1,7 @@
+use std::cmp;
 use bevy::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct HP {
     max: u16,
     current: u16,
@@ -30,5 +31,9 @@ impl HP {
         } else {
             self.current = 0;
         }
+    }
+
+    pub fn make_damage(&mut self, damage: u16) {
+        self.current -= cmp::min(self.current, damage);
     }
 }
