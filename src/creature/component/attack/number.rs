@@ -1,3 +1,4 @@
+use bevy::math::vec3;
 use bevy::prelude::*;
 use rand::Rng;
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8, PI};
@@ -30,15 +31,22 @@ pub fn spawn(
 ) {
     let mut p = position.clone();
     p.translation.y += 2.5;
+    let mut rng = rand::thread_rng();
+    let x_bonus = rng.gen_range(-5..5);
+    p.translation.x += x_bonus as f32 / 10.;
+    let z_bonus = rng.gen_range(-5..5);
+    p.translation.z += z_bonus as f32 / 10.;
+
     p.rotation = Quat::from_euler(EulerRot::XYZ, -FRAC_PI_6, -(PI - FRAC_PI_6), 0.);
 
+    let scale = rng.gen_range(75..125) as f32 / 100.;
     commands
         .spawn_bundle((p, GlobalTransform::identity()))
         .insert(DamageNumber {
             spawned_at: Instant::now(),
         })
         .with_children(|builder| {
-            spawn_number(builder, materials, &asset_server, number);
+            spawn_number(builder, materials, &asset_server, number, scale);
         });
 }
 
@@ -47,26 +55,24 @@ fn spawn_number(
     materials: &mut Assets<StandardMaterial>,
     asset_server: &Res<AssetServer>,
     number: u16,
+    scale: f32,
 ) {
     let colors = [
-        Color::rgb(0.8, 0.3, 0.3),
-        Color::rgb(0.81, 0.3, 0.3),
-        Color::rgb(0.82, 0.3, 0.3),
-        Color::rgb(0.83, 0.3, 0.3),
-        Color::rgb(0.84, 0.3, 0.3),
-        Color::rgb(0.85, 0.3, 0.3),
-        Color::rgb(0.86, 0.3, 0.3),
-        Color::rgb(0.87, 0.3, 0.3),
-        Color::rgb(0.88, 0.3, 0.3),
-        Color::rgb(0.89, 0.3, 0.3),
-        Color::rgb(0.90, 0.3, 0.3),
+        Color::CRIMSON,
+        Color::FUCHSIA,
+        Color::MAROON,
+        Color::ORANGE_RED,
+        Color::ORANGE,
+        Color::PINK,
+        Color::PURPLE,
+        Color::TOMATO,
     ];
     let mut rng = rand::thread_rng();
     let index = rng.gen_range(0..colors.len());
-
     let color = colors[index];
+
     if number <= 9 {
-        spawn_single_number(builder, materials, asset_server, number, 0.0, color);
+        spawn_single_number(builder, materials, asset_server, number, 0.0, color, scale);
     } else {
         let n = number
             .to_string()
@@ -75,8 +81,8 @@ fn spawn_number(
             .flatten()
             .collect::<Vec<u16>>();
 
-        spawn_single_number(builder, materials, asset_server, n[0], -0.25, color);
-        spawn_single_number(builder, materials, asset_server, n[1], 0.25, color);
+        spawn_single_number(builder, materials, asset_server, n[0], -0.25, color, scale);
+        spawn_single_number(builder, materials, asset_server, n[1], 0.25, color, scale);
     };
 }
 
@@ -87,15 +93,17 @@ fn spawn_single_number(
     number: u16,
     x_bonus: f32,
     color: Color,
+    scale: f32,
 ) -> Entity {
     let path = ["mesh/numbers.gltf#Mesh", &number.to_string(), "/Primitive0"].concat();
     let scene = asset_server.load(path.as_str());
     let material = StandardMaterial {
         base_color: color,
+        unlit: true,
         ..Default::default()
     };
     let material_handle = materials.add(material);
-    let mut t = Transform::from_xyz(0. + x_bonus, 0., 0.);
+    let mut t = Transform::from_xyz(0. + x_bonus, 0., 0.).with_scale(vec3(scale, scale, scale));
 
     let entity = builder
         .spawn_bundle(PbrBundle {
