@@ -1,5 +1,6 @@
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::attack::number;
+use crate::creature::component::attack::number::DamageNumbers;
 use crate::creature::component::attack::shooting::bullet::Bullet;
 use crate::entity::component::hp::HP;
 use crate::player::system::camera::PlayerCamera;
@@ -26,19 +27,12 @@ pub fn attack_apply_damage(
     mut commands: Commands,
     mut ev_damage: EventReader<DamageEvent>,
     mut entities: Query<(&mut HP, &Transform)>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
+    numbers: Res<DamageNumbers>,
 ) {
     for ev in ev_damage.iter() {
         if let Ok((mut hp, transform)) = entities.get_mut(ev.target) {
             hp.sub(ev.amount);
-            number::spawn(
-                &mut commands,
-                &mut materials,
-                &asset_server,
-                &transform,
-                ev.amount,
-            )
+            number::spawn(&mut commands, &numbers, &transform, ev.amount)
         }
     }
 }

@@ -9,6 +9,52 @@ pub struct DamageNumber {
     spawned_at: Instant,
 }
 
+pub struct DamageNumbers {
+    materials: Vec<Handle<StandardMaterial>>,
+    meshes: Vec<Handle<Mesh>>,
+}
+
+pub fn attack_setup_damage_numbers_assets(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+    mut commands: Commands,
+) {
+    let colors = [
+        Color::CRIMSON,
+        Color::FUCHSIA,
+        Color::MAROON,
+        Color::ORANGE_RED,
+        Color::ORANGE,
+        Color::PINK,
+        Color::PURPLE,
+        Color::TOMATO,
+    ];
+
+    let mut mat = vec![];
+    for color in colors {
+        let material = StandardMaterial {
+            base_color: color,
+            unlit: true,
+            ..Default::default()
+        };
+
+        let id = materials.add(material);
+        mat.push(id);
+    }
+
+    let mut meshes = vec![];
+    for number in 0..=9 {
+        let path = ["mesh/numbers.gltf#Mesh", &number.to_string(), "/Primitive0"].concat();
+        let scene: Handle<Mesh> = asset_server.load(path.as_str());
+        meshes.push(scene);
+    }
+
+    commands.insert_resource(DamageNumbers {
+        materials: mat,
+        meshes,
+    });
+}
+
 pub fn attack_animate_damage_numbers(
     mut numbers: Query<(&mut Transform, &DamageNumber, Entity)>,
     mut commands: Commands,
@@ -22,13 +68,7 @@ pub fn attack_animate_damage_numbers(
     }
 }
 
-pub fn spawn(
-    commands: &mut Commands,
-    materials: &mut Assets<StandardMaterial>,
-    asset_server: &Res<AssetServer>,
-    position: &Transform,
-    number: u16,
-) {
+pub fn spawn(commands: &mut Commands, numbers: &DamageNumbers, position: &Transform, number: u16) {
     let mut p = position.clone();
     p.translation.y += 2.5;
     let mut rng = rand::thread_rng();
@@ -37,6 +77,7 @@ pub fn spawn(
     let z_bonus = rng.gen_range(-5..5);
     p.translation.z += z_bonus as f32 / 10.;
 
+    // TODO more accurate rotation to the camera
     p.rotation = Quat::from_euler(EulerRot::XYZ, -FRAC_PI_6, -(PI - FRAC_PI_6), 0.);
 
     let scale = rng.gen_range(75..125) as f32 / 100.;
@@ -46,33 +87,17 @@ pub fn spawn(
             spawned_at: Instant::now(),
         })
         .with_children(|builder| {
-            spawn_number(builder, materials, &asset_server, number, scale);
+            spawn_number(builder, numbers, number, scale);
         });
 }
 
-fn spawn_number(
-    builder: &mut ChildBuilder,
-    materials: &mut Assets<StandardMaterial>,
-    asset_server: &Res<AssetServer>,
-    number: u16,
-    scale: f32,
-) {
-    let colors = [
-        Color::CRIMSON,
-        Color::FUCHSIA,
-        Color::MAROON,
-        Color::ORANGE_RED,
-        Color::ORANGE,
-        Color::PINK,
-        Color::PURPLE,
-        Color::TOMATO,
-    ];
+fn spawn_number(builder: &mut ChildBuilder, numbers: &DamageNumbers, number: u16, scale: f32) {
     let mut rng = rand::thread_rng();
-    let index = rng.gen_range(0..colors.len());
-    let color = colors[index];
+    let index = rng.gen_range(0..numbers.materials.len());
+    let material = numbers.materials[index].clone();
 
     if number <= 9 {
-        spawn_single_number(builder, materials, asset_server, number, 0.0, color, scale);
+        spawn_single_number(builder, number, 0.0, material, scale, numbers);
     } else {
         let n = number
             .to_string()
@@ -81,34 +106,26 @@ fn spawn_number(
             .flatten()
             .collect::<Vec<u16>>();
 
-        spawn_single_number(builder, materials, asset_server, n[0], -0.25, color, scale);
-        spawn_single_number(builder, materials, asset_server, n[1], 0.25, color, scale);
+        spawn_single_number(builder, n[0], -0.25, material.clone(), scale, numbers);
+        spawn_single_number(builder, n[1], 0.25, material, scale, numbers);
     };
 }
 
 fn spawn_single_number(
     builder: &mut ChildBuilder,
-    materials: &mut Assets<StandardMaterial>,
-    asset_server: &Res<AssetServer>,
     number: u16,
     x_bonus: f32,
-    color: Color,
+    material: Handle<StandardMaterial>,
     scale: f32,
+    numbers: &DamageNumbers,
 ) -> Entity {
-    let path = ["mesh/numbers.gltf#Mesh", &number.to_string(), "/Primitive0"].concat();
-    let scene = asset_server.load(path.as_str());
-    let material = StandardMaterial {
-        base_color: color,
-        unlit: true,
-        ..Default::default()
-    };
-    let material_handle = materials.add(material);
+    let mesh = numbers.meshes[number as usize].clone();
     let mut t = Transform::from_xyz(0. + x_bonus, 0., 0.).with_scale(vec3(scale, scale, scale));
 
     let entity = builder
         .spawn_bundle(PbrBundle {
-            mesh: scene,
-            material: material_handle,
+            mesh,
+            material,
             transform: t,
             ..Default::default()
         })
