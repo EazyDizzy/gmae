@@ -20,7 +20,7 @@ use crate::{GamePhysicsLayer, GameState};
 mod animation;
 mod attack;
 pub mod entity;
-mod system;
+pub mod system;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct PlayerPlugin;

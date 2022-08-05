@@ -1,9 +1,12 @@
 use crate::creature::component::attack::event::DamageEvent;
+use crate::creature::component::attack::number;
 use crate::creature::component::attack::shooting::bullet::Bullet;
 use crate::entity::component::hp::HP;
+use crate::player::system::camera::PlayerCamera;
 use crate::GamePhysicsLayer;
 use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionLayers};
+use rand::Rng;
 
 pub fn attack_despawn_killed_entities(mut commands: Commands, entities: Query<(Entity, &HP)>) {
     for (entity, hp) in entities.iter() {
@@ -19,10 +22,23 @@ pub fn attack_launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
     }
 }
 
-pub fn attack_apply_damage(mut ev_damage: EventReader<DamageEvent>, mut hps: Query<&mut HP>) {
+pub fn attack_apply_damage(
+    mut commands: Commands,
+    mut ev_damage: EventReader<DamageEvent>,
+    mut entities: Query<(&mut HP, &Transform)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+) {
     for ev in ev_damage.iter() {
-        if let Ok(mut hp) = hps.get_mut(ev.target) {
+        if let Ok((mut hp, transform)) = entities.get_mut(ev.target) {
             hp.sub(ev.amount);
+            number::spawn(
+                &mut commands,
+                &mut materials,
+                &asset_server,
+                &transform,
+                ev.amount,
+            )
         }
     }
 }
@@ -33,6 +49,8 @@ pub fn attack_check_bullet_collisions(
     mut ev_damage: EventWriter<DamageEvent>,
     bullets: Query<&Bullet>,
 ) {
+    let mut rng = rand::thread_rng();
+
     events
         .iter()
         .filter(|e| e.is_started())
@@ -60,7 +78,9 @@ pub fn attack_check_bullet_collisions(
             None
         })
         .for_each(|(target, bullet)| {
-            let damage = bullets.get(bullet).expect("Bullet should exist").damage;
+            let base_damage = bullets.get(bullet).expect("Bullet should exist").damage;
+            let damage =
+                rng.gen_range(base_damage - (base_damage / 10)..base_damage + (base_damage / 10));
             ev_damage.send(DamageEvent {
                 target,
                 amount: damage,

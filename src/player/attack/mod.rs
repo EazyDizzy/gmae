@@ -1,3 +1,4 @@
+use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::component::CombatParameters;
 use crate::creature::EnemyCreatureMarker;
@@ -7,6 +8,7 @@ use crate::util::round;
 use crate::{entity, is_sensor, GamePhysicsLayer};
 use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionLayers, CollisionShape, RigidBody};
+use rand::Rng;
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
 use std::ops::Deref;
 
@@ -48,9 +50,9 @@ pub fn player_attack_thrust(
 pub fn player_attack_thrust_check_collisions(
     mut collision_events: EventReader<CollisionEvent>,
     thrust_sensors: Query<Entity, With<ThrustAttackSensor>>,
-    mut enemies: Query<&mut HP, With<EnemyCreatureMarker>>,
     player: Query<&CombatParameters, With<Player>>,
     mut commands: Commands,
+    mut ev_damage: EventWriter<DamageEvent>,
 ) {
     let sensor = if let Ok(s) = thrust_sensors.get_single() {
         s
@@ -62,6 +64,7 @@ pub fn player_attack_thrust_check_collisions(
     } else {
         return;
     };
+    let mut rng = rand::thread_rng();
 
     collision_events
         .iter()
@@ -80,10 +83,15 @@ pub fn player_attack_thrust_check_collisions(
 
             None
         })
-        .for_each(|entity| {
-            if let Ok(mut hp) = enemies.get_mut(entity) {
-                hp.make_damage(combat.base_damage);
-            }
+        .for_each(|target| {
+            let damage = rng.gen_range(
+                combat.base_damage - (combat.base_damage / 10)
+                    ..=combat.base_damage + (combat.base_damage / 10),
+            );
+            ev_damage.send(DamageEvent {
+                target,
+                amount: damage,
+            });
         });
 
     commands.entity(sensor).despawn();

@@ -1,5 +1,5 @@
-use std::cmp;
 use bevy::prelude::*;
+use std::cmp;
 
 #[derive(Component, Debug)]
 pub struct HP {
@@ -26,14 +26,6 @@ impl HP {
     }
 
     pub fn sub(&mut self, amount: u16) {
-        if amount < self.current {
-            self.current -= amount;
-        } else {
-            self.current = 0;
-        }
-    }
-
-    pub fn make_damage(&mut self, damage: u16) {
-        self.current -= cmp::min(self.current, damage);
+        self.current -= cmp::min(self.current, amount);
     }
 }

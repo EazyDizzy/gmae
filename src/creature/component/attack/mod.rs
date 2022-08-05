@@ -5,11 +5,13 @@ use crate::creature::component::attack::system::{
 };
 use crate::GameState;
 use bevy::prelude::*;
+use crate::creature::component::attack::number::attack_animate_damage_numbers;
 
 pub mod component;
 pub mod event;
 pub mod shooting;
 mod system;
+mod number;
 
 pub struct AttackPlugin;
 
@@ -20,6 +22,7 @@ impl Plugin for AttackPlugin {
                 .with_system(attack_despawn_killed_entities)
                 .with_system(attack_launch_bullets)
                 .with_system(attack_apply_damage)
+                .with_system(attack_animate_damage_numbers)
                 .with_system(attack_check_bullet_collisions),
         );
     }
