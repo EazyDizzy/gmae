@@ -1,7 +1,7 @@
 use bevy::math::vec3;
 use bevy::prelude::*;
 use rand::Rng;
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8, PI};
+use std::f32::consts::{FRAC_PI_6, PI};
 use std::time::Instant;
 
 #[derive(Component)]
@@ -44,7 +44,7 @@ pub fn attack_setup_damage_numbers_assets(
 
     let mut meshes = vec![];
     for number in 0..=9 {
-        let path = ["mesh/numbers.gltf#Mesh", &number.to_string(), "/Primitive0"].concat();
+        let path = ["mesh/numbers.glb#Mesh", &number.to_string(), "/Primitive0"].concat();
         let scene: Handle<Mesh> = asset_server.load(path.as_str());
         meshes.push(scene);
     }
@@ -120,7 +120,7 @@ fn spawn_single_number(
     numbers: &DamageNumbers,
 ) -> Entity {
     let mesh = numbers.meshes[number as usize].clone();
-    let mut t = Transform::from_xyz(0. + x_bonus, 0., 0.).with_scale(vec3(scale, scale, scale));
+    let t = Transform::from_xyz(0. + x_bonus, 0., 0.).with_scale(vec3(scale, scale, scale));
 
     let entity = builder
         .spawn_bundle(PbrBundle {

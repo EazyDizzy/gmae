@@ -35,7 +35,8 @@ impl Plugin for GameAudioPlugin {
             .add_system(audio_adjust_volume_from_settings)
             .add_system(audio_play_sound_events)
             .add_startup_system(audio_setup_sounds)
-            .add_startup_system(start_background_audio);
+            // .add_startup_system(start_background_audio)
+        ;
     }
 }
 

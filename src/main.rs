@@ -20,7 +20,7 @@ use crate::creature::CreaturePlugin;
 use crate::level::LevelPlugin;
 use crate::player::PlayerPlugin;
 use crate::ui::UIPlugin;
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_kira_audio::AudioPlugin;

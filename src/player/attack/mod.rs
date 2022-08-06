@@ -2,18 +2,11 @@ use crate::audio::DamageSoundType;
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::component::CombatParameters;
-use crate::creature::EnemyCreatureMarker;
-use crate::entity::component::hp::HP;
 use crate::player::entity::Player;
-use crate::util::round;
-use crate::{entity, is_sensor, GamePhysicsLayer};
+use crate::{is_sensor, GamePhysicsLayer};
 use bevy::prelude::*;
-use bevy_kira_audio::Audio;
 use heron::{CollisionEvent, CollisionLayers, CollisionShape, RigidBody};
 use rand::Rng;
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI, TAU};
-use std::fmt::format;
-use std::ops::Deref;
 
 #[derive(Component)]
 pub struct ThrustAttackSensor;
@@ -56,8 +49,6 @@ pub fn player_attack_thrust_check_collisions(
     player: Query<&CombatParameters, With<Player>>,
     mut commands: Commands,
     mut ev_damage: EventWriter<DamageEvent>,
-    audio: Res<Audio>,
-    asset_server: Res<AssetServer>,
 ) {
     let sensor = if let Ok(s) = thrust_sensors.get_single() {
         s
@@ -93,9 +84,7 @@ pub fn player_attack_thrust_check_collisions(
                 combat.base_damage - (combat.base_damage / 10)
                     ..=combat.base_damage + (combat.base_damage / 10),
             );
-            // let mut rng = rand::thread_rng();
-            // let hit_sound = rng.gen_range(0..=5);
-            // audio.play(asset_server.load(&format!("audio/foreground/damage/punch/{}.mp3", hit_sound)));
+
             ev_damage.send(DamageEvent {
                 target,
                 amount: damage,

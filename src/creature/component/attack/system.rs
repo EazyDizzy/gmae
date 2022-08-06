@@ -4,7 +4,6 @@ use crate::creature::component::attack::number;
 use crate::creature::component::attack::number::DamageNumbers;
 use crate::creature::component::attack::shooting::bullet::Bullet;
 use crate::entity::component::hp::HP;
-use crate::player::system::camera::PlayerCamera;
 use crate::GamePhysicsLayer;
 use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionLayers};
