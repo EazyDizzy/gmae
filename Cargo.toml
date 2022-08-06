@@ -41,7 +41,6 @@ path = "./lib"
 # https://github.com/MinerSebas/bevy_lint
 # https://github.com/NiklasEi/bevy_asset_loader for music f.e.
 # https://github.com/IyesGames/iyes_loopless
-# https://github.com/NiklasEi/bevy_kira_audio
 # https://github.com/BlackPhlox/bevy_midi
 # https://github.com/zkat/big-brain ai
 # https://github.com/lightsoutgames/bevy_input_actionmap controls

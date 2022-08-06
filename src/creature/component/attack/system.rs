@@ -1,3 +1,4 @@
+use crate::audio::{DamageSoundType, SoundEvent, SoundLayer, SoundType};
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::attack::number;
 use crate::creature::component::attack::number::DamageNumbers;
@@ -8,6 +9,7 @@ use crate::GamePhysicsLayer;
 use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionLayers};
 use rand::Rng;
+use std::cmp;
 
 pub fn attack_despawn_killed_entities(mut commands: Commands, entities: Query<(Entity, &HP)>) {
     for (entity, hp) in entities.iter() {
@@ -25,14 +27,20 @@ pub fn attack_launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
 
 pub fn attack_apply_damage(
     mut commands: Commands,
-    mut ev_damage: EventReader<DamageEvent>,
+    mut damage_events: EventReader<DamageEvent>,
+    mut sound_events: EventWriter<SoundEvent>,
     mut entities: Query<(&mut HP, &Transform)>,
     numbers: Res<DamageNumbers>,
 ) {
-    for ev in ev_damage.iter() {
+    for ev in damage_events.iter() {
         if let Ok((mut hp, transform)) = entities.get_mut(ev.target) {
             hp.sub(ev.amount);
-            number::spawn(&mut commands, &numbers, &transform, ev.amount)
+            sound_events.send(SoundEvent {
+                sound_layer: SoundLayer::ForeGround,
+                sound_type: SoundType::Damage(ev.sound_type),
+            });
+
+            number::spawn(&mut commands, &numbers, &transform, ev.amount);
         }
     }
 }
@@ -73,11 +81,14 @@ pub fn attack_check_bullet_collisions(
         })
         .for_each(|(target, bullet)| {
             let base_damage = bullets.get(bullet).expect("Bullet should exist").damage;
-            let damage =
-                rng.gen_range(base_damage - (base_damage / 10)..base_damage + (base_damage / 10));
+            let damage = rng.gen_range(
+                cmp::min(base_damage - (base_damage / 10), base_damage - 1)
+                    ..cmp::max(base_damage + (base_damage / 10), base_damage + 1),
+            );
             ev_damage.send(DamageEvent {
                 target,
                 amount: damage,
+                sound_type: DamageSoundType::Bullet,
             });
         });
 }
