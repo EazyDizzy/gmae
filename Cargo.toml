@@ -12,6 +12,7 @@ opt-level = 3
 codegen-units = 1
 
 [dependencies]
+lib = { version = "0.0.0", path = "./lib" }
 # TODO remove dynamic before release
 bevy = { version = "0.7.0", features = ["dynamic"] }
 bevy_mod_debugdump = "0.4.0"
@@ -21,9 +22,9 @@ serde_json = "1.0.79" #for reading lvls
 bevy_egui = "0.14.0"
 bevy_kira_audio = { version = "0.10.0", features = ["mp3"] }
 bevy_prototype_debug_lines = { version = "0.7", features = ["3d"] }
-heron = { version = "3.1.0", features = ["debug-3d"] }
+heron = { version = "3.1.0", features = ["debug-3d"] } # physics engine
 mca-cuboids = "0.2.0"
-lib = { version = "0.0.0", path = "./lib" }
+bevy_hanabi = { git = "https://github.com/djeedai/bevy_hanabi", rev = "64f8ac346bbeafcc5c18129cdc6f9215101f4f22" } #particles system
 
 [build-dependencies]
 fastnbt = "2" #for reading mc world

@@ -18,11 +18,13 @@ extern crate test;
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
 use crate::level::LevelPlugin;
+use crate::particle::ParticlePlugin;
 use crate::player::PlayerPlugin;
 use crate::ui::UIPlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_hanabi::*;
 use bevy_kira_audio::AudioPlugin;
 use heron::prelude::*;
 use lib::entity::voxel::Material;
@@ -35,6 +37,7 @@ mod audio;
 mod creature;
 mod entity;
 mod level;
+mod particle;
 mod physic_layers;
 mod player;
 mod system;
@@ -60,6 +63,7 @@ fn main() {
         //     plugins.disable::<bevy::log::LogPlugin>()
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
         // .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(HanabiPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PhysicsPlugin::default()) // Add the plugin
         .insert_resource(Gravity::from(Vec3::new(0.0, -10., 0.0)))
@@ -71,6 +75,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(UIPlugin)
         .add_plugin(GameAudioPlugin)
+        .add_plugin(ParticlePlugin)
         .add_startup_system(system::light::setup)
         .add_system(game_settings_save);
 

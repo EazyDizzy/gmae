@@ -4,11 +4,14 @@ use crate::creature::component::attack::number;
 use crate::creature::component::attack::number::DamageNumbers;
 use crate::creature::component::attack::shooting::bullet::Bullet;
 use crate::entity::component::hp::HP;
+use crate::particle::PunchEffect;
 use crate::GamePhysicsLayer;
 use bevy::prelude::*;
+use bevy_hanabi::ParticleEffect;
 use heron::{CollisionEvent, CollisionLayers};
 use rand::Rng;
 use std::cmp;
+use std::f32::consts::{FRAC_PI_6, PI};
 
 pub fn attack_despawn_killed_entities(mut commands: Commands, entities: Query<(Entity, &HP)>) {
     for (entity, hp) in entities.iter() {
@@ -30,7 +33,10 @@ pub fn attack_apply_damage(
     mut sound_events: EventWriter<SoundEvent>,
     mut entities: Query<(&mut HP, &Transform)>,
     numbers: Res<DamageNumbers>,
+    mut hit_effects: Query<(&mut ParticleEffect, &mut Transform), (With<PunchEffect>, Without<HP>)>,
 ) {
+    let (mut effect, mut effect_transform) = hit_effects.single_mut();
+
     for ev in damage_events.iter() {
         if let Ok((mut hp, transform)) = entities.get_mut(ev.target) {
             hp.sub(ev.amount);
@@ -40,6 +46,11 @@ pub fn attack_apply_damage(
             });
 
             number::spawn(&mut commands, &numbers, &transform, ev.amount);
+
+            effect_transform.translation = transform.translation;
+            effect_transform.rotation =
+                Quat::from_euler(EulerRot::XYZ, -FRAC_PI_6, -(PI - FRAC_PI_6), 0.);
+            effect.maybe_spawner().unwrap().reset();
         }
     }
 }

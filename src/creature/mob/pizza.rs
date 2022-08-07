@@ -16,6 +16,6 @@ impl Pizza {
 pub fn insert(entity_commands: &mut EntityCommands) {
     entity_commands
         .insert(PhysiologyDescription::default())
-        .insert(Attack::new())
+        // .insert(Attack::new())
         .insert(HP::full(100));
 }
