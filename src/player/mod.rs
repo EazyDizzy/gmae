@@ -1,5 +1,5 @@
-use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::component::hp::HP;
+use crate::creature::component::physiology_description::PhysiologyDescription;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use heron::prelude::*;
@@ -12,15 +12,16 @@ use crate::player::animation::{
 use crate::player::attack::{
     player_attack_thrust, player_attack_thrust_check_collisions, ThrustAttackSensor,
 };
-use crate::player::entity::Player;
 use crate::player::system::camera::CameraPlugin;
 use crate::player::system::keyboard_interaction::player_track_keyboard_interaction;
 use crate::{GamePhysicsLayer, GameState};
 
 mod animation;
 mod attack;
-pub mod entity;
 pub mod system;
+
+#[derive(Component, Debug)]
+pub struct PlayerMarker;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct PlayerPlugin;
@@ -71,7 +72,7 @@ pub fn player_setup(asset_server: Res<AssetServer>, mut commands: Commands) {
                         .with_group(GamePhysicsLayer::Sensor),
                 );
         })
-        .insert(Player)
+        .insert(PlayerMarker)
         .insert(BuffStorage::<PhysiologyDescription>::new())
         .insert(RigidBody::Dynamic)
         .insert(CollisionShape::Cylinder {

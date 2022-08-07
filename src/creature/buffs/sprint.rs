@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::creature::buffs::{Buff, BuffClock, BuffStorage};
 use crate::creature::component::physiology_description::PhysiologyDescription;
-use crate::player::entity::Player;
+use crate::player::PlayerMarker;
 
 #[derive(Debug)]
 pub struct SprintBuff {
@@ -25,7 +25,7 @@ impl Buff<PhysiologyDescription> for SprintBuff {
     }
 }
 
-pub fn buffs_add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&mut BuffStorage<PhysiologyDescription>, With<Player>>) {
+pub fn buffs_add_sprint(keyboard_input: Res<Input<KeyCode>>, mut query: Query<&mut BuffStorage<PhysiologyDescription>, With<PlayerMarker>>) {
     for mut buffs_component in query.iter_mut() {
         keyboard_input.get_pressed().for_each(|k| {
             match k {

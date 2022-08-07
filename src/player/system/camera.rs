@@ -6,7 +6,7 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::util::debug_settings::DebugSettings;
 
-use crate::player::entity::Player;
+use crate::player::PlayerMarker;
 
 const CAMERA_HEIGHT: f32 = 15.0;
 
@@ -27,7 +27,7 @@ impl Default for PlayerCamera {
 
 fn camera_track_mouse_motion(
     mut query: Query<(&mut PlayerCamera, &mut Transform)>,
-    player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
+    player_query: Query<&Transform, (With<PlayerMarker>, Without<PlayerCamera>)>,
 ) {
     for (options, mut transform) in query.iter_mut() {
         if !options.enabled {

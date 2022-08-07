@@ -7,7 +7,7 @@ use crate::creature::buffs::BuffsPlugin;
 use crate::creature::mob::dummy::Dummy;
 use crate::creature::mob::pizza::Pizza;
 use crate::creature::mob::{dummy, pizza};
-use crate::player::entity::Player;
+use crate::player::PlayerMarker;
 use crate::{GamePhysicsLayer, GameState};
 use bevy::math::vec3;
 use bevy::prelude::*;
@@ -21,6 +21,11 @@ use std::f32::consts::PI;
 pub mod buffs;
 pub mod component;
 pub mod mob;
+
+#[derive(Component, Debug)]
+pub struct CreatureMarker;
+#[derive(Component, Debug)]
+pub struct EnemyCreatureMarker;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
@@ -87,11 +92,6 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
     }
 }
 
-#[derive(Component, Debug)]
-pub struct CreatureMarker;
-#[derive(Component, Debug)]
-pub struct EnemyCreatureMarker;
-
 fn creatures_execute_move_strategies(
     lvl: Res<Level>,
     mut query: Query<
@@ -110,7 +110,7 @@ fn creatures_execute_move_strategies(
 }
 
 fn creatures_attack_player(
-    player_query: Query<(Entity, &Transform), With<Player>>,
+    player_query: Query<(Entity, &Transform), With<PlayerMarker>>,
     physics_world: PhysicsWorld,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

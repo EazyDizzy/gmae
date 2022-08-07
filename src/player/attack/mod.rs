@@ -2,7 +2,7 @@ use crate::audio::DamageSoundType;
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::component::CombatParameters;
-use crate::player::entity::Player;
+use crate::player::PlayerMarker;
 use crate::{is_sensor, GamePhysicsLayer};
 use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionLayers, CollisionShape, RigidBody};
@@ -13,7 +13,7 @@ pub struct ThrustAttackSensor;
 
 pub fn player_attack_thrust(
     keyboard_input: Res<Input<KeyCode>>,
-    player: Query<(Entity, &CombatParameters, &PhysiologyDescription), With<Player>>,
+    player: Query<(Entity, &CombatParameters, &PhysiologyDescription), With<PlayerMarker>>,
     mut commands: Commands,
 ) {
     if !keyboard_input.just_pressed(KeyCode::O) {
@@ -46,7 +46,7 @@ pub fn player_attack_thrust(
 pub fn player_attack_thrust_check_collisions(
     mut collision_events: EventReader<CollisionEvent>,
     thrust_sensors: Query<Entity, With<ThrustAttackSensor>>,
-    player: Query<&CombatParameters, With<Player>>,
+    player: Query<&CombatParameters, With<PlayerMarker>>,
     mut commands: Commands,
     mut ev_damage: EventWriter<DamageEvent>,
 ) {

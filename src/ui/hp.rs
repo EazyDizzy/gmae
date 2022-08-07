@@ -1,5 +1,5 @@
 use crate::creature::component::hp::HP;
-use crate::player::entity::Player;
+use crate::player::PlayerMarker;
 use bevy::prelude::*;
 use bevy_egui::egui::{vec2, Pos2, ProgressBar};
 use bevy_egui::{egui, EguiContext};
@@ -7,7 +7,7 @@ use bevy_egui::{egui, EguiContext};
 pub fn ui_render_hp(
     mut egui_context: ResMut<EguiContext>,
     windows: Res<Windows>,
-    player_query: Query<(&HP, With<Player>)>,
+    player_query: Query<(&HP, With<PlayerMarker>)>,
 ) {
     let window = windows.get_primary().unwrap();
     let window_height = window.height();
