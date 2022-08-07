@@ -1,4 +1,4 @@
-use crate::entity::component::hp::HP;
+use crate::creature::component::hp::HP;
 use crate::player::entity::Player;
 use bevy::prelude::*;
 use bevy_egui::egui::{vec2, Pos2, ProgressBar};

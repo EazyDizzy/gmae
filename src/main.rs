@@ -35,7 +35,6 @@ use system::fly_camera::FlyCameraPlugin;
 
 mod audio;
 mod creature;
-mod entity;
 mod level;
 mod particle;
 mod physic_layers;

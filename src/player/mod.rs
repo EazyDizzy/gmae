@@ -1,5 +1,5 @@
 use crate::creature::component::physiology_description::PhysiologyDescription;
-use crate::entity::component::hp::HP;
+use crate::creature::component::hp::HP;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use heron::prelude::*;

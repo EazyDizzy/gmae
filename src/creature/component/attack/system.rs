@@ -3,7 +3,7 @@ use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::attack::number;
 use crate::creature::component::attack::number::DamageNumbers;
 use crate::creature::component::attack::shooting::bullet::Bullet;
-use crate::entity::component::hp::HP;
+use crate::creature::component::hp::HP;
 use crate::particle::PunchEffect;
 use crate::GamePhysicsLayer;
 use bevy::prelude::*;
