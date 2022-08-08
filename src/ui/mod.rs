@@ -1,12 +1,14 @@
 mod hp;
 pub mod menu;
 mod settings;
+mod dialog;
 
 use crate::GameState;
 use bevy::prelude::*;
 use bevy_egui::egui::style::Margin;
 use bevy_egui::egui::{vec2, Color32, Rgba};
 use bevy_egui::EguiContext;
+use crate::ui::dialog::Images;
 
 pub struct UIPlugin;
 
@@ -16,11 +18,20 @@ pub enum MenuState {
     GameSettings,
 }
 
+fn load_assets(mut commands: Commands, assets: Res<AssetServer>) {
+    commands.insert_resource(Images {
+        dart_icon: assets.load("images/example.gif"),
+        // dart_icon: assets.load("images/darth_maul.png")
+    });
+}
+
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
         // TODO make MenuState Local?
         app.add_state(MenuState::Main)
             .add_startup_system(ui_setup_theme)
+            .add_startup_system(load_assets)
+            .add_system(dialog::render)
             .add_system(hp::ui_render_hp)
             .add_system(ui_track_menu_keyboard_interaction)
             .add_system_set(
