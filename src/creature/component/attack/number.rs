@@ -118,18 +118,14 @@ fn spawn_single_number(
     material: Handle<StandardMaterial>,
     scale: f32,
     numbers: &DamageNumbers,
-) -> Entity {
+) {
     let mesh = numbers.meshes[number as usize].clone();
     let t = Transform::from_xyz(0. + x_bonus, 0., 0.).with_scale(vec3(scale, scale, scale));
 
-    let entity = builder
-        .spawn_bundle(PbrBundle {
-            mesh,
-            material,
-            transform: t,
-            ..Default::default()
-        })
-        .id();
-
-    entity
+    builder.spawn_bundle(PbrBundle {
+        mesh,
+        material,
+        transform: t,
+        ..Default::default()
+    });
 }

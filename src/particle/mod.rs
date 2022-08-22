@@ -14,9 +14,9 @@ pub struct PunchEffect;
 
 fn particle_setup(mut effects: ResMut<Assets<EffectAsset>>, mut commands: Commands) {
     let mut gradient = Gradient::new();
-    gradient.add_key(0.0, Vec4::new(1., 0., 0., 1.));
-    gradient.add_key(0.3, Vec4::new(0., 1., 0., 1.));
-    gradient.add_key(0.6, Vec4::new(0., 0., 1., 1.));
+    gradient.add_key(0.0, Vec4::new(0.7, 0., 0., 1.));
+    gradient.add_key(0.3, Vec4::new(0., 0.7, 0., 1.));
+    gradient.add_key(0.6, Vec4::new(0., 0., 0.7, 1.));
     gradient.add_key(1.0, Vec4::ZERO);
 
     let mut size_gradient = Gradient::new();
@@ -34,11 +34,11 @@ fn particle_setup(mut effects: ResMut<Assets<EffectAsset>>, mut commands: Comman
             center: Vec3::ZERO,
             radius: 2.0,
             dimension: ShapeDimension::Volume,
-            speed: 10.0.into(),
+            speed: 5.0.into(),
         })
-        .init(ParticleLifetimeModifier { lifetime: 0.2 })
+        .init(ParticleLifetimeModifier { lifetime: 0.4 })
         .update(AccelModifier {
-            accel: Vec3::new(0., 3., 0.),
+            accel: Vec3::new(1., 2., 1.),
         })
         .render(ColorOverLifetimeModifier { gradient })
         .render(SizeOverLifetimeModifier {

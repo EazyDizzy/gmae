@@ -4,8 +4,6 @@ use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 
 use crate::creature::buffs::BuffsPlugin;
-use crate::creature::mob::dummy::Dummy;
-use crate::creature::mob::pizza::Pizza;
 use crate::creature::mob::{dummy, pizza};
 use crate::player::PlayerMarker;
 use crate::{GamePhysicsLayer, GameState};
@@ -17,6 +15,8 @@ use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use std::f32::consts::PI;
+use std::process::id;
+use crate::creature::component::hp::{creature_hp_change_color, HPMeshMarker};
 
 pub mod buffs;
 pub mod component;
@@ -36,16 +36,31 @@ impl Plugin for CreaturePlugin {
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(creatures_execute_move_strategies)
-                    .with_system(creatures_attack_player),
+                    .with_system(creature_execute_move_strategies)
+                    .with_system(creature_attack_player)
+                    .with_system(creature_hp_change_color)
+                ,
             )
             .add_plugin(BuffsPlugin);
     }
 }
 
-fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<AssetServer>) {
-    let dummy_mesh = asset_server.load("mesh/dummy.glb#Scene0");
-    let pizza_mesh = asset_server.load("mesh/pizza.glb#Scene0");
+fn spawn_creatures(
+    mut commands: Commands,
+    level: Res<Level>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
+) {
+    let hp_material = materials.add(StandardMaterial {
+        base_color: Color::ORANGE_RED,
+        unlit: true,
+        ..Default::default()
+    });
+    let hp_mesh = meshes.add(Mesh::from(shape::Icosphere {
+        radius: 0.4,
+        ..Default::default()
+    }));
 
     for creature in level.creatures() {
         let mut ec = commands.spawn_bundle((
@@ -60,39 +75,45 @@ fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<
             .with_scale(vec3(0.5, 0.5, 0.5)),
             GlobalTransform::identity(),
         ));
-        ec.with_children(|parent| {
-            let mesh = match creature.name {
-                CreatureName::Dummy => dummy_mesh.clone(),
-                CreatureName::Pizza => pizza_mesh.clone(),
-            };
-            parent.spawn_scene(mesh);
-        })
-        .insert(CreatureMarker)
-        .insert(RigidBody::Dynamic)
-        .insert(RotationConstraints::lock())
-        .insert(CollisionShape::Cylinder {
-            radius: 0.5,
-            half_height: 1.0,
-        })
-        .insert(
-            CollisionLayers::all_masks::<GamePhysicsLayer>().with_group(GamePhysicsLayer::Creature),
-        )
-        .insert(EnemyCreatureMarker);
+        ec.insert(CreatureMarker)
+            .insert(RigidBody::Dynamic)
+            .insert(RotationConstraints::lock())
+            .insert(CollisionShape::Cylinder {
+                radius: 0.5,
+                half_height: 1.0,
+            })
+            .insert(
+                CollisionLayers::all_masks::<GamePhysicsLayer>()
+                    .with_group(GamePhysicsLayer::Creature),
+            )
+            .insert(EnemyCreatureMarker)
+            .with_children(|builder| {
+                builder
+                    .spawn_scene(match creature.name {
+                        CreatureName::Dummy => asset_server.load("mesh/dummy.glb#Scene0"),
+                        CreatureName::Pizza => asset_server.load("mesh/pizza.glb#Scene0"),
+                    })
+                    .spawn_bundle(PbrBundle {
+                        mesh: hp_mesh.clone(),
+                        material: hp_material.clone(),
+                        transform: Transform::from_xyz(0., 4.5, 0.),
+                        ..Default::default()
+                    })
+                    .insert(HPMeshMarker);
+            });
 
         match creature.name {
             CreatureName::Dummy => {
-                ec.insert(Dummy::new());
                 dummy::insert(&mut ec);
             }
             CreatureName::Pizza => {
-                ec.insert(Pizza::new());
                 pizza::insert(&mut ec);
             }
         }
     }
 }
 
-fn creatures_execute_move_strategies(
+fn creature_execute_move_strategies(
     lvl: Res<Level>,
     mut query: Query<
         (
@@ -109,7 +130,7 @@ fn creatures_execute_move_strategies(
     }
 }
 
-fn creatures_attack_player(
+fn creature_attack_player(
     player_query: Query<(Entity, &Transform), With<PlayerMarker>>,
     physics_world: PhysicsWorld,
     mut commands: Commands,

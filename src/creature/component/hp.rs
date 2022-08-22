@@ -1,11 +1,17 @@
 use bevy::prelude::*;
+use bevy::render::render_asset::RenderAsset;
 use std::cmp;
+
+#[derive(Component, Debug)]
+pub struct HPMeshMarker;
 
 #[derive(Component, Debug)]
 pub struct HP {
     max: u16,
     current: u16,
 }
+
+pub struct HPColors {}
 
 impl HP {
     pub fn full(max: u16) -> HP {
@@ -28,4 +34,21 @@ impl HP {
     pub fn sub(&mut self, amount: u16) {
         self.current -= cmp::min(self.current, amount);
     }
+}
+
+pub fn creature_hp_change_color(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut hp_materials: Query<(&mut Handle<StandardMaterial>, &Parent), With<HPMeshMarker>>,
+    hps: Query<&HP>,
+) {
+    for (mut material, parent) in hp_materials.iter_mut() {
+        if let Ok(hp) = hps.get(**parent) {
+            let p = hp.percent();
+            let mut a = materials.get(material.clone()).unwrap().extract_asset();
+            a.base_color = Color::rgb(0.5 * (p * 2.), a.base_color.g(), 0.3 * (1. - p));
+            let handle = materials.add(a);
+            *material = handle;
+        }
+    }
+    materials.set_changed();
 }

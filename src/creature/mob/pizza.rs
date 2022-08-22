@@ -4,15 +4,6 @@ use crate::creature::component::hp::HP;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
-#[derive(Component, Debug)]
-pub struct Pizza {}
-
-impl Pizza {
-    pub fn new() -> Self {
-        Pizza {}
-    }
-}
-
 pub fn insert(entity_commands: &mut EntityCommands) {
     entity_commands
         .insert(PhysiologyDescription::default())
