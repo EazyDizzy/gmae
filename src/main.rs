@@ -23,7 +23,7 @@ use crate::ui::UIPlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use bevy_hanabi::*;
+use bevy_hanabi::HanabiPlugin;
 use bevy_kira_audio::AudioPlugin;
 use heron::prelude::*;
 use lib::entity::voxel::Material;

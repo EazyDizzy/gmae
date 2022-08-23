@@ -3,26 +3,35 @@ use bevy::prelude::*;
 use heron::prelude::*;
 use lib::entity::level::Level;
 use lib::entity::voxel::Voxel;
+use lib::util::debug_settings::DebugSettings;
 
 use crate::system::light::{spawn_blue_light_source_inside, spawn_orange_light_source_inside};
 use crate::Material;
 
 #[allow(clippy::needless_pass_by_value)]
-pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level: Res<Level>) {
-    // let mesh = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
+pub fn level_init(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    level: Res<Level>,
+    debug_settings: Res<DebugSettings>,
+) {
     let collisions = read_level_collisions(&level.name);
     let lvl_width = level.width() as f32;
 
-    commands
-        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-            lvl_width / 2.0 - 1.,
-            -0.5,
-            lvl_width / 2.0 - 1.,
-        )))
-        .insert(RigidBody::Static)
-        .with_children(|parent| {
-            // parent.spawn_scene(mesh);
+    let mut builder = commands.spawn_bundle(VisibilityBundle::default());
+    builder.insert(RigidBody::Static);
+
+    let transform = Transform::from_xyz(lvl_width / 2.0 - 1., -0.5, lvl_width / 2.0 - 1.);
+    if !debug_settings.debug_render {
+        let scene = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
+        builder.insert_bundle(SceneBundle {
+            scene,
+            transform,
+            ..Default::default()
         });
+    } else {
+        builder.insert_bundle(TransformBundle::from_transform(transform));
+    }
 
     for shape in collisions {
         let x_width = shape.end.x as f32 - shape.start.x as f32 + 1.0;

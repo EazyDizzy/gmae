@@ -4,7 +4,7 @@ use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 
 use crate::creature::buffs::BuffsPlugin;
-use crate::creature::component::hp::{creature_hp_change_color, HPMeshMarker};
+use crate::creature::component::hp::{creature_hp_change_color, creature_hp_spawn_mesh, HPMeshMarker};
 use crate::creature::mob::{dummy, pizza};
 use crate::player::PlayerMarker;
 use crate::{GamePhysicsLayer, GameState};
@@ -16,7 +16,6 @@ use heron::{CollisionLayers, CollisionShape};
 use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use std::f32::consts::PI;
-use std::process::id;
 
 pub mod buffs;
 pub mod component;
@@ -38,7 +37,8 @@ impl Plugin for CreaturePlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creature_execute_move_strategies)
                     .with_system(creature_attack_player)
-                    .with_system(creature_hp_change_color),
+                    .with_system(creature_hp_change_color)
+                    .with_system(creature_hp_spawn_mesh),
             )
             .add_plugin(BuffsPlugin);
     }
@@ -47,20 +47,8 @@ impl Plugin for CreaturePlugin {
 fn spawn_creatures(
     mut commands: Commands,
     level: Res<Level>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
     asset_server: Res<AssetServer>,
 ) {
-    let hp_material = materials.add(StandardMaterial {
-        base_color: Color::ORANGE_RED,
-        unlit: true,
-        ..Default::default()
-    });
-    let hp_mesh = meshes.add(Mesh::from(shape::Icosphere {
-        radius: 0.4,
-        ..Default::default()
-    }));
-
     for creature in level.creatures() {
         let mut ec = commands.spawn_bundle(SceneBundle {
             scene: match creature.name {
@@ -89,17 +77,7 @@ fn spawn_creatures(
                 CollisionLayers::all_masks::<GamePhysicsLayer>()
                     .with_group(GamePhysicsLayer::Creature),
             )
-            .insert(EnemyCreatureMarker)
-            .with_children(|builder| {
-                builder
-                    .spawn_bundle(PbrBundle {
-                        mesh: hp_mesh.clone(),
-                        material: hp_material.clone(),
-                        transform: Transform::from_xyz(0., 4.5, 0.),
-                        ..Default::default()
-                    })
-                    .insert(HPMeshMarker);
-            });
+            .insert(EnemyCreatureMarker);
 
         match creature.name {
             CreatureName::Dummy => {

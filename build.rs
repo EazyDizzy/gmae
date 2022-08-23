@@ -40,7 +40,7 @@ fn main() {
 
                 {
                     let mut collisions = mca_cuboids::export_cuboids(
-                        &dir.path().to_str().unwrap(),
+                        dir.path().to_str().unwrap(),
                         ExportParams {
                             start: BlockCoordinates::new(0, -64, 0),
                             end: BlockCoordinates::new(64, 0, 64),

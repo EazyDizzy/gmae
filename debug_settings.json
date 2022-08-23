@@ -1,3 +1,4 @@
 {
-  "fly_camera": false
+  "fly_camera": false,
+  "debug_render": true
 }
