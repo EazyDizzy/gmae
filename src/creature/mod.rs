@@ -4,6 +4,7 @@ use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 
 use crate::creature::buffs::BuffsPlugin;
+use crate::creature::component::hp::{creature_hp_change_color, HPMeshMarker};
 use crate::creature::mob::{dummy, pizza};
 use crate::player::PlayerMarker;
 use crate::{GamePhysicsLayer, GameState};
@@ -16,7 +17,6 @@ use lib::entity::level::creature::CreatureName;
 use lib::entity::level::Level;
 use std::f32::consts::PI;
 use std::process::id;
-use crate::creature::component::hp::{creature_hp_change_color, HPMeshMarker};
 
 pub mod buffs;
 pub mod component;
@@ -38,8 +38,7 @@ impl Plugin for CreaturePlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creature_execute_move_strategies)
                     .with_system(creature_attack_player)
-                    .with_system(creature_hp_change_color)
-                ,
+                    .with_system(creature_hp_change_color),
             )
             .add_plugin(BuffsPlugin);
     }
@@ -63,18 +62,22 @@ fn spawn_creatures(
     }));
 
     for creature in level.creatures() {
-        let mut ec = commands.spawn_bundle((
-            Transform::from_xyz(
+        let mut ec = commands.spawn_bundle(SceneBundle {
+            scene: match creature.name {
+                CreatureName::Dummy => asset_server.load("mesh/dummy.glb#Scene0"),
+                CreatureName::Pizza => asset_server.load("mesh/pizza.glb#Scene0"),
+            },
+            transform: Transform::from_xyz(
                 creature.position.x,
-                creature.position.y,
+                creature.position.y + 0.5, // To prevent stucking in the ground
                 creature.position.z,
             )
-            //     TODO remove default rotation after debug
-            .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0))
-            //     TODO make sth to avoid this
-            .with_scale(vec3(0.5, 0.5, 0.5)),
-            GlobalTransform::identity(),
-        ));
+                //     TODO remove default rotation after debug
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0))
+                //     TODO make sth to avoid this
+                .with_scale(vec3(0.5, 0.5, 0.5)),
+            ..Default::default()
+        });
         ec.insert(CreatureMarker)
             .insert(RigidBody::Dynamic)
             .insert(RotationConstraints::lock())
@@ -89,10 +92,6 @@ fn spawn_creatures(
             .insert(EnemyCreatureMarker)
             .with_children(|builder| {
                 builder
-                    .spawn_scene(match creature.name {
-                        CreatureName::Dummy => asset_server.load("mesh/dummy.glb#Scene0"),
-                        CreatureName::Pizza => asset_server.load("mesh/pizza.glb#Scene0"),
-                    })
                     .spawn_bundle(PbrBundle {
                         mesh: hp_mesh.clone(),
                         material: hp_material.clone(),

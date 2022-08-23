@@ -14,7 +14,6 @@
 extern crate core;
 #[cfg(test)]
 extern crate test;
-
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
 use crate::level::LevelPlugin;

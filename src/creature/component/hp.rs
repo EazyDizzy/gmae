@@ -44,7 +44,7 @@ pub fn creature_hp_change_color(
     for (mut material, parent) in hp_materials.iter_mut() {
         if let Ok(hp) = hps.get(**parent) {
             let p = hp.percent();
-            let mut a = materials.get(material.clone()).unwrap().extract_asset();
+            let mut a = materials.get(&material).unwrap().clone();
             a.base_color = Color::rgb(0.5 * (p * 2.), a.base_color.g(), 0.3 * (1. - p));
             let handle = materials.add(a);
             *material = handle;

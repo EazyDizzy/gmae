@@ -9,7 +9,7 @@ pub struct DamageNumber {
     spawned_at: Instant,
 }
 
-pub struct DamageNumbers {
+pub struct DamageNumberAssets {
     materials: Vec<Handle<StandardMaterial>>,
     meshes: Vec<Handle<Mesh>>,
 }
@@ -49,7 +49,7 @@ pub fn attack_setup_damage_numbers_assets(
         meshes.push(scene);
     }
 
-    commands.insert_resource(DamageNumbers {
+    commands.insert_resource(DamageNumberAssets {
         materials: mat,
         meshes,
     });
@@ -68,21 +68,32 @@ pub fn attack_animate_damage_numbers(
     }
 }
 
-pub fn spawn(commands: &mut Commands, numbers: &DamageNumbers, position: &Transform, number: u16) {
-    let mut p = position.clone();
-    p.translation.y += 2.5;
+pub fn spawn(
+    commands: &mut Commands,
+    numbers: &DamageNumberAssets,
+    position: &Transform,
+    number: u16,
+) {
     let mut rng = rand::thread_rng();
     let x_bonus = rng.gen_range(-5..5);
-    p.translation.x += x_bonus as f32 / 10.;
     let z_bonus = rng.gen_range(-5..5);
-    p.translation.z += z_bonus as f32 / 10.;
-
+    let transform = Transform::from_xyz(
+        position.translation.x + x_bonus as f32 / 10.,
+        position.translation.y + 2.5,
+        position.translation.z + z_bonus as f32 / 10.,
+    )
     // TODO more accurate rotation to the camera
-    p.rotation = Quat::from_euler(EulerRot::XYZ, -FRAC_PI_6, -(PI - FRAC_PI_6), 0.);
+    .with_rotation(Quat::from_euler(
+        EulerRot::XYZ,
+        -FRAC_PI_6,
+        -(PI - FRAC_PI_6),
+        0.,
+    ));
 
-    let scale = rng.gen_range(75..125) as f32 / 100.;
+    let scale = rng.gen_range(45..100) as f32 / 100.;
     commands
-        .spawn_bundle((p, GlobalTransform::identity()))
+        .spawn_bundle(TransformBundle::from_transform(transform))
+        .insert_bundle(VisibilityBundle::default())
         .insert(DamageNumber {
             spawned_at: Instant::now(),
         })
@@ -91,7 +102,7 @@ pub fn spawn(commands: &mut Commands, numbers: &DamageNumbers, position: &Transf
         });
 }
 
-fn spawn_number(builder: &mut ChildBuilder, numbers: &DamageNumbers, number: u16, scale: f32) {
+fn spawn_number(builder: &mut ChildBuilder, numbers: &DamageNumberAssets, number: u16, scale: f32) {
     let mut rng = rand::thread_rng();
     let index = rng.gen_range(0..numbers.materials.len());
     let material = numbers.materials[index].clone();
@@ -117,15 +128,15 @@ fn spawn_single_number(
     x_bonus: f32,
     material: Handle<StandardMaterial>,
     scale: f32,
-    numbers: &DamageNumbers,
+    numbers: &DamageNumberAssets,
 ) {
     let mesh = numbers.meshes[number as usize].clone();
-    let t = Transform::from_xyz(0. + x_bonus, 0., 0.).with_scale(vec3(scale, scale, scale));
+    let transform = Transform::from_xyz(0. + x_bonus, 0., 0.).with_scale(vec3(scale, scale, scale));
 
     builder.spawn_bundle(PbrBundle {
         mesh,
         material,
-        transform: t,
+        transform,
         ..Default::default()
     });
 }

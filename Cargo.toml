@@ -14,24 +14,25 @@ codegen-units = 1
 [dependencies]
 lib = { version = "0.0.0", path = "./lib" }
 # TODO remove dynamic before release
-bevy = { version = "0.7.0", features = ["dynamic"] }
-bevy_mod_debugdump = "0.4.0"
+bevy = { version = "0.8.0", features = ["dynamic"] }
+bevy_mod_debugdump = "0.5.0"
 rand = "0.8.5"
 flate2 = "1.0" #for reading lvls
 serde_json = "1.0.79" #for reading lvls
-bevy_egui = "0.14.0"
-bevy_kira_audio = { version = "0.10.0", features = ["mp3"] }
-bevy_prototype_debug_lines = { version = "0.7", features = ["3d"] }
-heron = { version = "3.1.0", features = ["debug-3d"] } # physics engine
+bevy_egui = "0.15.0"
+bevy_kira_audio = { version = "0.12.0", features = ["mp3"] }
+bevy_prototype_debug_lines = { version = "0.8", features = ["3d"] }
+heron = { version = "4.0.0", features = ["debug-3d"] } # physics engine
 mca-cuboids = "0.2.0"
-bevy_hanabi = { git = "https://github.com/djeedai/bevy_hanabi", rev = "64f8ac346bbeafcc5c18129cdc6f9215101f4f22" } #particles system
+bevy_hanabi = "0.3.1" #particles system
+bevy-inspector-egui = "0.12.1"
 
 [build-dependencies]
 fastnbt = "2" #for reading mc world
 fastanvil = "0.26.0" #for reading mc world
 serde_json = "1.0.79" #for serializing lvls
 flate2 = "1.0" #for archiving lvls
-bevy_internal = "0.7.0"
+bevy_internal = "0.8.0"
 mca-cuboids = "0.2.0"
 
 [build-dependencies.lib]

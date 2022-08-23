@@ -27,10 +27,11 @@ pub fn player_attack_thrust(
 
     commands.entity(e).with_children(|parent| {
         parent
-            .spawn_bundle((
-                Transform::from_xyz(0., 0., combat.attack_length / 2. + phys.model_radius),
-                GlobalTransform::identity(),
-            ))
+            .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                0.,
+                0.,
+                combat.attack_length / 2. + phys.model_radius,
+            )))
             .insert(RigidBody::Sensor)
             .insert(ThrustAttackSensor)
             .insert(CollisionShape::Cuboid {

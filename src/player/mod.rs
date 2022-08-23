@@ -43,24 +43,24 @@ impl Plugin for PlayerPlugin {
 }
 
 pub fn player_setup(asset_server: Res<AssetServer>, mut commands: Commands) {
-    let mesh = asset_server.load("mesh/player.glb#Scene0");
+    let scene = asset_server.load("mesh/player.glb#Scene0");
     let comb = CombatParameters::default();
     let phys = PhysiologyDescription::default();
 
     commands
-        .spawn_bundle((
+        .spawn_bundle(SceneBundle {
+            scene,
             // TODO take spawn point from world file/save file
-            Transform::from_xyz(4., 2., 7.),
-            GlobalTransform::identity(),
-        ))
+            transform: Transform::from_xyz(4., 2., 7.),
+            ..Default::default()
+        })
         .with_children(|parent| {
-            parent.spawn_scene(mesh);
-
             parent
-                .spawn_bundle((
-                    Transform::from_xyz(0., 0., comb.attack_length / 2. + phys.model_radius),
-                    GlobalTransform::identity(),
-                ))
+                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                    0.,
+                    0.,
+                    comb.attack_length / 2. + phys.model_radius,
+                )))
                 .insert(RigidBody::Sensor)
                 .insert(ThrustAttackSensor)
                 .insert(CollisionShape::Cuboid {

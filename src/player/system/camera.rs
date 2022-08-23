@@ -52,7 +52,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
         commands
             .spawn()
             // spawn remove hardcode, relatively to Player position
-            .insert_bundle(PerspectiveCameraBundle {
+            .insert_bundle(Camera3dBundle {
                 transform: Transform::from_xyz(22.0, 8.0, 22.0),
                 ..Default::default()
             })
@@ -65,7 +65,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
     } else {
         commands
             .spawn()
-            .insert_bundle(PerspectiveCameraBundle {
+            .insert_bundle(Camera3dBundle {
                 ..Default::default()
             })
             .insert(PlayerCamera::default());

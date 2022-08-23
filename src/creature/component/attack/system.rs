@@ -1,7 +1,7 @@
 use crate::audio::{DamageSoundType, SoundEvent, SoundLayer, SoundType};
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::attack::number;
-use crate::creature::component::attack::number::DamageNumbers;
+use crate::creature::component::attack::number::DamageNumberAssets;
 use crate::creature::component::attack::shooting::bullet::Bullet;
 use crate::creature::component::hp::HP;
 use crate::particle::PunchEffect;
@@ -32,7 +32,7 @@ pub fn attack_apply_damage(
     mut damage_events: EventReader<DamageEvent>,
     mut sound_events: EventWriter<SoundEvent>,
     mut entities: Query<(&mut HP, &Transform)>,
-    numbers: Res<DamageNumbers>,
+    numbers: Res<DamageNumberAssets>,
     mut hit_effects: Query<(&mut ParticleEffect, &mut Transform), (With<PunchEffect>, Without<HP>)>,
 ) {
     let (mut effect, mut effect_transform) = hit_effects.single_mut();

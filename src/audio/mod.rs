@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_kira_audio::Audio;
+use bevy_kira_audio::{Audio, AudioControl};
 use bevy_kira_audio::AudioSource;
 use lib::util::game_settings::GameSettings;
 use rand::Rng;
@@ -74,12 +74,12 @@ fn audio_setup_sounds(asset_server: Res<AssetServer>, mut commands: Commands) {
 
 fn start_background_audio(asset_server: Res<AssetServer>, audio: Res<Audio>) {
     let b = asset_server.load("audio/background/forest-birds-chirping-nature-sounds.mp3");
-    audio.play_looped(b);
+    audio.play(b).looped();
 }
 
 fn audio_adjust_volume_from_settings(audio: Res<Audio>, game_settings: Res<GameSettings>) {
     if game_settings.is_changed() {
-        audio.set_volume(game_settings.get_background_music_volume() as f32);
+        audio.set_volume(game_settings.get_background_music_volume());
     }
 }
 

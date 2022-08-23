@@ -14,10 +14,11 @@ pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level:
     let lvl_width = level.width() as f32;
 
     commands
-        .spawn_bundle((
-            Transform::from_xyz(lvl_width / 2.0 - 1., -0.5, lvl_width / 2.0 - 1.),
-            GlobalTransform::identity(),
-        ))
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            lvl_width / 2.0 - 1.,
+            -0.5,
+            lvl_width / 2.0 - 1.,
+        )))
         .insert(RigidBody::Static)
         .with_children(|parent| {
             // parent.spawn_scene(mesh);
@@ -29,14 +30,11 @@ pub fn level_init(mut commands: Commands, asset_server: Res<AssetServer>, level:
         let y_height = shape.end.y as f32 - shape.start.y as f32 + 1.0;
 
         commands
-            .spawn_bundle((
-                Transform::from_xyz(
-                    shape.end.x as f32 - x_width / 2.0 + 0.5,
-                    shape.end.y as f32 - y_height / 2.0 + 0.5,
-                    shape.end.z as f32 - z_width / 2.0 + 0.5,
-                ),
-                GlobalTransform::identity(),
-            ))
+            .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                shape.end.x as f32 - x_width / 2.0 + 0.5,
+                shape.end.y as f32 - y_height / 2.0 + 0.5,
+                shape.end.z as f32 - z_width / 2.0 + 0.5,
+            )))
             .insert(RigidBody::Static)
             .insert(CollisionShape::Cuboid {
                 half_extends: Vec3::new(x_width / 2.0, y_height / 2.0, z_width / 2.0),

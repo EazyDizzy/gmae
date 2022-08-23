@@ -32,10 +32,9 @@ struct KillingSensor;
 
 fn level_spawn_killing_sensor(mut commands: Commands) {
     commands
-        .spawn_bundle((
-            Transform::from_xyz(0., -5., 0.),
-            GlobalTransform::identity(),
-        ))
+        .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            0., -5., 0.,
+        )))
         .insert(RigidBody::Sensor)
         .insert(KillingSensor)
         .insert(CollisionShape::Cuboid {

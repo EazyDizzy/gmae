@@ -61,13 +61,10 @@ fn spawn_bullet(
                 radius: 0.1,
                 ..Default::default()
             })),
+            transform: Transform::from_translation(eyes_pos),
             ..Default::default()
         })
-        .insert_bundle((
-            Bullet::new(player_position - eyes_pos, 0.1, 3),
-            Transform::from_translation(eyes_pos),
-            GlobalTransform::identity(),
-        ))
+        .insert(Bullet::new(player_position - eyes_pos, 0.1, 3))
         .insert(CollisionShape::Sphere { radius: 0.1 })
         .insert(Velocity::from_linear(Vec3::default()))
         .insert(Acceleration::from_linear(Vec3::default()))
