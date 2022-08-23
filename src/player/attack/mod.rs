@@ -1,7 +1,9 @@
 use crate::audio::DamageSoundType;
 use crate::creature::component::attack::event::DamageEvent;
+use crate::creature::component::hp::HP;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 use crate::creature::component::CombatParameters;
+use crate::creature::EnemyCreatureMarker;
 use crate::player::PlayerMarker;
 use crate::{is_sensor, GamePhysicsLayer};
 use bevy::prelude::*;
@@ -48,6 +50,7 @@ pub fn player_attack_thrust_check_collisions(
     mut collision_events: EventReader<CollisionEvent>,
     thrust_sensors: Query<Entity, With<ThrustAttackSensor>>,
     player: Query<&CombatParameters, With<PlayerMarker>>,
+    enemies: Query<&HP, With<EnemyCreatureMarker>>,
     mut commands: Commands,
     mut ev_damage: EventWriter<DamageEvent>,
 ) {
@@ -71,9 +74,9 @@ pub fn player_attack_thrust_check_collisions(
             let with_sensor = is_sensor(layers_1) || is_sensor(layers_2);
 
             if with_sensor {
-                if entity_1 == sensor {
+                if entity_1 == sensor && enemies.get(entity_2).is_ok() {
                     return Some(entity_2);
-                } else if entity_2 == sensor {
+                } else if entity_2 == sensor && enemies.get(entity_1).is_ok() {
                     return Some(entity_1);
                 };
             }
