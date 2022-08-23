@@ -1,6 +1,7 @@
 use crate::creature::EnemyCreatureMarker;
 use bevy::prelude::*;
 use std::cmp;
+use std::f32::consts::{FRAC_1_PI, FRAC_PI_2, FRAC_PI_3, FRAC_PI_6, FRAC_PI_8, PI};
 
 #[derive(Component, Debug)]
 pub struct HPMeshMarker;
@@ -40,56 +41,55 @@ pub fn creature_hp_spawn_mesh(
     mut commands: Commands,
     creatures: Query<Entity, (With<(EnemyCreatureMarker)>, Added<HP>)>,
 ) {
-    let hp_material = materials.add(StandardMaterial {
-        base_color: Color::ORANGE_RED,
+    let black_hp_material = materials.add(StandardMaterial {
+        base_color: Color::BLACK,
         unlit: true,
         ..Default::default()
     });
-    let hp_mesh = meshes.add(Mesh::from(shape::Icosphere {
-        radius: 0.4,
+    let red_hp_material = materials.add(StandardMaterial {
+        base_color: Color::RED,
+        unlit: true,
         ..Default::default()
-    }));
+    });
+    let red_hp_mesh = meshes.add(Mesh::from(shape::Box::new(2.01, 0.51, 0.51)));
+    let black_hp_mesh = meshes.add(Mesh::from(shape::Box::new(2.0, 0.5, 0.5)));
 
     for creature in creatures.iter() {
         commands.entity(creature).with_children(|builder| {
             builder
                 .spawn_bundle(PbrBundle {
-                    mesh: hp_mesh.clone(),
-                    material: hp_material.clone(),
-                    transform: Transform::from_xyz(0., 4.5, 0.),
+                    mesh: red_hp_mesh.clone(),
+                    material: red_hp_material.clone(),
+                    transform: Transform::from_xyz(0., 4.5, 0.), //     .with_rotation(Quat::from_euler(
+                    //     EulerRot::XYZ,
+                    //     0.,
+                    //     FRAC_PI_3 - FRAC_PI_8,
+                    //     -FRAC_PI_8,
+                    // ))
                     ..Default::default()
                 })
                 .insert(HPMeshMarker);
+            builder.spawn_bundle(PbrBundle {
+                mesh: black_hp_mesh.clone(),
+                material: black_hp_material.clone(),
+                transform: Transform::from_xyz(0., 4.5, 0.),
+                ..Default::default()
+            });
         });
     }
 }
 
 pub fn creature_hp_change_color(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut hp_materials: Query<(&mut Handle<StandardMaterial>, &Parent), With<HPMeshMarker>>,
+    mut hp_meshes: Query<(&Parent, &mut Transform), With<HPMeshMarker>>,
     hps: Query<&HP>,
 ) {
-    for (mut material, parent) in hp_materials.iter_mut() {
+    for (parent, mut transform) in hp_meshes.iter_mut() {
         if let Ok(hp) = hps.get(**parent) {
             let p = hp.percent();
-            let mut current_hp_material = materials.get(&material).unwrap().clone();
-            let new_color = Color::rgb(
-                0.5 * (p * 2.),
-                current_hp_material.base_color.g(),
-                0.3 * (1. - p),
-            );
-
-            if current_hp_material.base_color != new_color {
-                dbg!("changing color");
-                current_hp_material.base_color = Color::rgb(
-                    0.5 * (p * 2.),
-                    current_hp_material.base_color.g(),
-                    0.3 * (1. - p),
-                );
-                let handle = materials.add(current_hp_material);
-                *material = handle;
+            if transform.scale.x != p {
+                transform.scale.x = p;
+                transform.translation.x = 1. - p;
             }
         }
     }
-    materials.set_changed();
 }
