@@ -10,6 +10,7 @@ pub enum GamePhysicsLayer {
     Sensor,
 }
 
+#[must_use]
 pub fn is_sensor(layers: CollisionLayers) -> bool {
     layers.contains_group(GamePhysicsLayer::Sensor)
         && !layers.contains_group(GamePhysicsLayer::Player)

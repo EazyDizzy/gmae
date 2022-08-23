@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioControl};
 use bevy_kira_audio::AudioSource;
+use bevy_kira_audio::{Audio, AudioControl};
 use lib::util::game_settings::GameSettings;
 use rand::Rng;
 use std::collections::HashMap;
@@ -8,6 +8,7 @@ use std::collections::HashMap;
 pub struct GameAudioPlugin;
 pub struct Sounds {
     damage: HashMap<DamageSoundType, Vec<Handle<AudioSource>>>,
+    #[allow(dead_code)]
     background: Vec<Handle<AudioSource>>,
 }
 pub struct SoundEvent {
@@ -26,6 +27,7 @@ pub enum DamageSoundType {
 #[derive(Copy, Clone)]
 pub enum SoundLayer {
     ForeGround,
+    #[allow(dead_code)]
     Background,
 }
 
@@ -71,7 +73,7 @@ fn audio_setup_sounds(asset_server: Res<AssetServer>, mut commands: Commands) {
         )],
     });
 }
-
+#[allow(dead_code)]
 fn start_background_audio(asset_server: Res<AssetServer>, audio: Res<Audio>) {
     let b = asset_server.load("audio/background/forest-birds-chirping-nature-sounds.mp3");
     audio.play(b).looped();

@@ -4,7 +4,7 @@ use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 
 use crate::creature::buffs::BuffsPlugin;
-use crate::creature::component::hp::{creature_hp_change_color, creature_hp_spawn_mesh, HPMeshMarker};
+use crate::creature::component::hp::{creature_hp_mesh_change_percent, creature_hp_spawn_mesh};
 use crate::creature::mob::{dummy, pizza};
 use crate::player::PlayerMarker;
 use crate::{GamePhysicsLayer, GameState};
@@ -37,18 +37,14 @@ impl Plugin for CreaturePlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(creature_execute_move_strategies)
                     .with_system(creature_attack_player)
-                    .with_system(creature_hp_change_color)
+                    .with_system(creature_hp_mesh_change_percent)
                     .with_system(creature_hp_spawn_mesh),
             )
             .add_plugin(BuffsPlugin);
     }
 }
 
-fn spawn_creatures(
-    mut commands: Commands,
-    level: Res<Level>,
-    asset_server: Res<AssetServer>,
-) {
+fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<AssetServer>) {
     for creature in level.creatures() {
         let mut ec = commands.spawn_bundle(SceneBundle {
             scene: match creature.name {
@@ -60,10 +56,10 @@ fn spawn_creatures(
                 creature.position.y + 0.5, // To prevent stucking in the ground
                 creature.position.z,
             )
-                //     TODO remove default rotation after debug
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0))
-                //     TODO make sth to avoid this
-                .with_scale(vec3(0.5, 0.5, 0.5)),
+            //     TODO remove default rotation after debug
+            .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0))
+            //     TODO make sth to avoid this
+            .with_scale(vec3(0.5, 0.5, 0.5)),
             ..Default::default()
         });
         ec.insert(CreatureMarker)

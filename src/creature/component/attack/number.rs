@@ -113,12 +113,12 @@ fn spawn_number(builder: &mut ChildBuilder, numbers: &DamageNumberAssets, number
         let n = number
             .to_string()
             .chars()
-            .map(|v| v.to_string().parse::<u16>())
-            .flatten()
+            .flat_map(|v| v.to_string().parse::<u16>())
             .collect::<Vec<u16>>();
 
-        spawn_single_number(builder, n[0], -0.25, material.clone(), scale, numbers);
-        spawn_single_number(builder, n[1], 0.25, material, scale, numbers);
+        // TODO bigger numbers? like 123
+        spawn_single_number(builder, n[0], -0.2, material.clone(), scale, numbers);
+        spawn_single_number(builder, n[1], 0.2, material, scale, numbers);
     };
 }
 

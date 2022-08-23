@@ -63,7 +63,7 @@ pub fn animation_rotate_model_on_move(
                 (future_y - y).clamp(-step_size, step_size)
             };
             // TODO catch bug & make smooth rotation
-            if future_y > FRAC_PI_2 || future_y < -FRAC_PI_2 {
+            if !(-FRAC_PI_2..=FRAC_PI_2).contains(&future_y) {
                 // println!("old {} -> {} ({})", y, future_y, y_step);
                 y_step = future_y - y;
             }

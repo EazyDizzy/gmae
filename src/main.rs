@@ -9,7 +9,8 @@
     clippy::float_cmp,
     clippy::default_trait_access,
     clippy::needless_pass_by_value,
-    clippy::module_name_repetitions
+    clippy::module_name_repetitions,
+    clippy::type_complexity
 )]
 extern crate core;
 #[cfg(test)]

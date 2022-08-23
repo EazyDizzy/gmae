@@ -1,7 +1,6 @@
 use crate::creature::EnemyCreatureMarker;
 use bevy::prelude::*;
 use std::cmp;
-use std::f32::consts::{FRAC_1_PI, FRAC_PI_2, FRAC_PI_3, FRAC_PI_6, FRAC_PI_8, PI};
 
 #[derive(Component, Debug)]
 pub struct HPMeshMarker;
@@ -39,7 +38,7 @@ pub fn creature_hp_spawn_mesh(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut commands: Commands,
-    creatures: Query<Entity, (With<(EnemyCreatureMarker)>, Added<HP>)>,
+    creatures: Query<Entity, (With<EnemyCreatureMarker>, Added<HP>)>,
 ) {
     let black_hp_material = materials.add(StandardMaterial {
         base_color: Color::BLACK,
@@ -60,12 +59,7 @@ pub fn creature_hp_spawn_mesh(
                 .spawn_bundle(PbrBundle {
                     mesh: red_hp_mesh.clone(),
                     material: red_hp_material.clone(),
-                    transform: Transform::from_xyz(0., 4.5, 0.), //     .with_rotation(Quat::from_euler(
-                    //     EulerRot::XYZ,
-                    //     0.,
-                    //     FRAC_PI_3 - FRAC_PI_8,
-                    //     -FRAC_PI_8,
-                    // ))
+                    transform: Transform::from_xyz(0., 4.5, 0.),
                     ..Default::default()
                 })
                 .insert(HPMeshMarker);
@@ -79,7 +73,8 @@ pub fn creature_hp_spawn_mesh(
     }
 }
 
-pub fn creature_hp_change_color(
+// TODO lock hp rotation to camera
+pub fn creature_hp_mesh_change_percent(
     mut hp_meshes: Query<(&Parent, &mut Transform), With<HPMeshMarker>>,
     hps: Query<&HP>,
 ) {

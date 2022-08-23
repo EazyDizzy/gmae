@@ -25,16 +25,17 @@ impl Default for PlayerCamera {
     }
 }
 
+// TODO refactor
 fn camera_track_mouse_motion(
-    mut query: Query<(&mut PlayerCamera, &mut Transform)>,
-    player_query: Query<&Transform, (With<PlayerMarker>, Without<PlayerCamera>)>,
+    mut cameras: Query<(&mut PlayerCamera, &mut Transform)>,
+    player_position: Query<&Transform, (With<PlayerMarker>, Without<PlayerCamera>)>,
 ) {
-    for (options, mut transform) in query.iter_mut() {
+    for (options, mut transform) in cameras.iter_mut() {
         if !options.enabled {
             continue;
         }
 
-        if let Some(player_transform) = player_query.iter().next() {
+        if let Some(player_transform) = player_position.iter().next() {
             let player_position = player_transform.translation;
             let x = player_position.x + CAMERA_HEIGHT * options.rotation_angle.cos();
             let z = player_position.z + CAMERA_HEIGHT * options.rotation_angle.sin();

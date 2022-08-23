@@ -45,7 +45,7 @@ pub fn attack_apply_damage(
                 sound_type: SoundType::Damage(ev.sound_type),
             });
 
-            number::spawn(&mut commands, &numbers, &transform, ev.amount);
+            number::spawn(&mut commands, &numbers, transform, ev.amount);
 
             effect_transform.translation = transform.translation;
             effect_transform.rotation =

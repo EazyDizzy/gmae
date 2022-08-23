@@ -22,26 +22,26 @@ pub fn level_init(
     builder.insert(RigidBody::Static);
 
     let transform = Transform::from_xyz(lvl_width / 2.0 - 1., -0.5, lvl_width / 2.0 - 1.);
-    if !debug_settings.debug_render {
+    if debug_settings.debug_render {
+        builder.insert_bundle(TransformBundle::from_transform(transform));
+    } else {
         let scene = asset_server.load(&format!("lvl/{}/lvl.glb#Scene0", level.name));
         builder.insert_bundle(SceneBundle {
             scene,
             transform,
             ..Default::default()
         });
-    } else {
-        builder.insert_bundle(TransformBundle::from_transform(transform));
     }
 
     for shape in collisions {
         let x_width = shape.end.x as f32 - shape.start.x as f32 + 1.0;
         let z_width = shape.end.z as f32 - shape.start.z as f32 + 1.0;
-        let y_height = shape.end.y as f32 - shape.start.y as f32 + 1.0;
+        let y_height = f32::from(shape.end.y) - f32::from(shape.start.y) + 1.0;
 
         commands
             .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
                 shape.end.x as f32 - x_width / 2.0 + 0.5,
-                shape.end.y as f32 - y_height / 2.0 + 0.5,
+                f32::from(shape.end.y) - y_height / 2.0 + 0.5,
                 shape.end.z as f32 - z_width / 2.0 + 0.5,
             )))
             .insert(RigidBody::Static)

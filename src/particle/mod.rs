@@ -1,5 +1,9 @@
 use bevy::prelude::*;
-use bevy_hanabi::*;
+use bevy_hanabi::{
+    AccelModifier, ColorOverLifetimeModifier, EffectAsset, Gradient, ParticleEffectBundle,
+    ParticleLifetimeModifier, PositionSphereModifier, ShapeDimension, SizeOverLifetimeModifier,
+    Spawner,
+};
 
 #[allow(clippy::module_name_repetitions)]
 pub struct ParticlePlugin;
