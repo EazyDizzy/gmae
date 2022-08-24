@@ -31,14 +31,14 @@ pub fn attack_apply_damage(
     mut commands: Commands,
     mut damage_events: EventReader<DamageEvent>,
     mut sound_events: EventWriter<SoundEvent>,
-    mut entities: Query<(&mut HP, &Transform)>,
+    mut targets: Query<(&mut HP, &Transform)>,
     numbers: Res<DamageNumberAssets>,
     mut hit_effects: Query<(&mut ParticleEffect, &mut Transform), (With<PunchEffect>, Without<HP>)>,
 ) {
     let (mut effect, mut effect_transform) = hit_effects.single_mut();
 
     for ev in damage_events.iter() {
-        if let Ok((mut hp, transform)) = entities.get_mut(ev.target) {
+        if let Ok((mut hp, transform)) = targets.get_mut(ev.target) {
             hp.sub(ev.amount);
             sound_events.send(SoundEvent {
                 sound_layer: SoundLayer::ForeGround,

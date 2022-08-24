@@ -21,6 +21,7 @@ use crate::level::LevelPlugin;
 use crate::particle::ParticlePlugin;
 use crate::player::PlayerPlugin;
 use crate::ui::UIPlugin;
+use crate::util::component::despawn_outdated_entities;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
@@ -76,7 +77,8 @@ fn main() {
         .add_plugin(GameAudioPlugin)
         .add_plugin(ParticlePlugin)
         .add_startup_system(system::light::setup)
-        .add_system(game_settings_save);
+        .add_system(game_settings_save)
+        .add_system(despawn_outdated_entities);
 
     if debug_settings.fly_camera {
         app.add_plugin(FlyCameraPlugin);

@@ -6,7 +6,7 @@ use rand::Rng;
 use std::collections::HashMap;
 
 pub struct GameAudioPlugin;
-pub struct Sounds {
+pub struct SoundsAssets {
     damage: HashMap<DamageSoundType, Vec<Handle<AudioSource>>>,
     #[allow(dead_code)]
     background: Vec<Handle<AudioSource>>,
@@ -36,13 +36,13 @@ impl Plugin for GameAudioPlugin {
         app.add_event::<SoundEvent>()
             .add_system(audio_adjust_volume_from_settings)
             .add_system(audio_play_sound_events)
-            .add_startup_system(audio_setup_sounds)
+            .add_startup_system(audio_setup_sound_assets)
             // .add_startup_system(start_background_audio)
         ;
     }
 }
 
-fn audio_setup_sounds(asset_server: Res<AssetServer>, mut commands: Commands) {
+fn audio_setup_sound_assets(asset_server: Res<AssetServer>, mut commands: Commands) {
     let load = |path: &str| -> Handle<AudioSource> { asset_server.load(path) };
     let mut damage = HashMap::new();
 
@@ -65,7 +65,7 @@ fn audio_setup_sounds(asset_server: Res<AssetServer>, mut commands: Commands) {
         ],
     );
 
-    commands.insert_resource(Sounds {
+    commands.insert_resource(SoundsAssets {
         damage,
         // for future music switching according to location
         background: vec![load(
@@ -88,7 +88,7 @@ fn audio_adjust_volume_from_settings(audio: Res<Audio>, game_settings: Res<GameS
 fn audio_play_sound_events(
     mut sound_events: EventReader<SoundEvent>,
     audio: Res<Audio>,
-    sounds: Res<Sounds>,
+    sounds: Res<SoundsAssets>,
 ) {
     let mut rng = rand::thread_rng();
 

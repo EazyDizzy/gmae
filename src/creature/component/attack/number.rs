@@ -1,20 +1,19 @@
+use crate::util::component::ShortLife;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use rand::Rng;
 use std::f32::consts::{FRAC_PI_6, PI};
-use std::time::Instant;
+use std::time::Duration;
 
 #[derive(Component)]
-pub struct DamageNumber {
-    spawned_at: Instant,
-}
+pub struct DamageNumberMarker;
 
 pub struct DamageNumberAssets {
     materials: Vec<Handle<StandardMaterial>>,
     meshes: Vec<Handle<Mesh>>,
 }
 
-pub fn attack_setup_damage_numbers_assets(
+pub fn attack_setup_damage_number_assets(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
     mut commands: Commands,
@@ -55,16 +54,9 @@ pub fn attack_setup_damage_numbers_assets(
     });
 }
 
-pub fn attack_animate_damage_numbers(
-    mut numbers: Query<(&mut Transform, &DamageNumber, Entity)>,
-    mut commands: Commands,
-) {
-    for (mut t, number, e) in numbers.iter_mut() {
+pub fn attack_animate_damage_numbers(mut numbers: Query<&mut Transform, With<DamageNumberMarker>>) {
+    for mut t in numbers.iter_mut() {
         t.translation.y += 0.05;
-
-        if number.spawned_at.elapsed().as_secs() >= 1 {
-            commands.entity(e).despawn_recursive();
-        }
     }
 }
 
@@ -94,9 +86,8 @@ pub fn spawn(
     commands
         .spawn_bundle(TransformBundle::from_transform(transform))
         .insert_bundle(VisibilityBundle::default())
-        .insert(DamageNumber {
-            spawned_at: Instant::now(),
-        })
+        .insert(DamageNumberMarker)
+        .insert(ShortLife::new(Duration::from_millis(500)))
         .with_children(|builder| {
             spawn_number(builder, numbers, number, scale);
         });

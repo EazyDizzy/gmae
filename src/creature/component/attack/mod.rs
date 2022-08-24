@@ -1,6 +1,6 @@
 use crate::creature::component::attack::event::DamageEvent;
 use crate::creature::component::attack::number::{
-    attack_animate_damage_numbers, attack_setup_damage_numbers_assets,
+    attack_animate_damage_numbers, attack_setup_damage_number_assets,
 };
 use crate::creature::component::attack::system::{
     attack_apply_damage, attack_check_bullet_collisions, attack_despawn_killed_entities,
@@ -20,7 +20,7 @@ pub struct AttackPlugin;
 impl Plugin for AttackPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DamageEvent>()
-            .add_startup_system(attack_setup_damage_numbers_assets)
+            .add_startup_system(attack_setup_damage_number_assets)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(attack_despawn_killed_entities)
