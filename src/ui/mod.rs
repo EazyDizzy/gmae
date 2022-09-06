@@ -28,7 +28,8 @@ impl Plugin for UIPlugin {
                     .with_system(ui_show_cursor)
                     .with_system(menu::render),
             )
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(ui_hide_cursor));
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(ui_hide_cursor))
+        ;
     }
 }
 

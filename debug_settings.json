@@ -1,4 +1,4 @@
 {
   "fly_camera": false,
-  "inspector": false
+  "debug_render": true
 }

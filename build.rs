@@ -2,6 +2,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
+use bevy_internal::math::vec3;
 use fastanvil::{Block, Chunk, CurrentJavaChunk, Region};
 use fastnbt::from_bytes;
 use flate2::write::ZlibEncoder;
@@ -9,7 +10,7 @@ use flate2::Compression;
 use lib::entity::level::creature::{Creature, CreatureName};
 use lib::entity::level::{DayPart, Level};
 use lib::entity::voxel::{Material, Shape, TrianglePrismProperties, Voxel};
-use bevy_internal::math::vec3;
+use mca_cuboids::{BlockCoordinates, ExportParams};
 
 const EXPORT_DIAPASON: usize = 8;
 const LVL_DIR: &str = "./assets/lvl/";
@@ -36,15 +37,45 @@ fn main() {
 
             if should_rebuild {
                 println!("Converting {original_lvl_path}");
-                let lvl = read_level(lvl_name);
-                let serialized_lvl = serde_json::to_string(&lvl).expect("Cannot serialize lvl.");
 
-                let file =
-                    File::create(converted_lvl_path).expect("Cannot create file for lvl saving.");
-                let mut e = ZlibEncoder::new(file, Compression::best());
-                e.write_all(serialized_lvl.as_bytes())
-                    .expect("Cannot write lvl to file.");
-                e.finish().expect("Cannot finish writing lvl to file.");
+                {
+                    let mut collisions = mca_cuboids::export_cuboids(
+                        dir.path().to_str().unwrap(),
+                        ExportParams {
+                            start: BlockCoordinates::new(0, -64, 0),
+                            end: BlockCoordinates::new(64, 0, 64),
+                            skip_blocks: vec![
+                                "minecraft:flowering_azalea".to_owned(),
+                                "minecraft:grass".to_owned(),
+                                "minecraft:oxeye_daisy".to_owned(),
+                            ],
+                        },
+                    )
+                    .expect("Failed to build collisions");
+                    collisions.iter_mut().for_each(|seq| {
+                        seq.start.y += 64;
+                        seq.end.y += 64;
+                    });
+                    println!("collisions: {}", collisions.len());
+
+                    let serialized_collisions =
+                        serde_json::to_string(&collisions).expect("Cannot serialize collisions.");
+                    let mut file = File::create(format!("{LVL_DIR}{}/collisions.json", lvl_name))
+                        .expect("Cannot create file for lvl saving.");
+                    file.write_all(serialized_collisions.as_bytes())
+                        .expect("Cannot write collisions to file.");
+                }
+                {
+                    let lvl = read_level(lvl_name);
+                    let serialized_lvl =
+                        serde_json::to_string(&lvl).expect("Cannot serialize lvl.");
+                    let file = File::create(converted_lvl_path)
+                        .expect("Cannot create file for lvl saving.");
+                    let mut e = ZlibEncoder::new(file, Compression::best());
+                    e.write_all(serialized_lvl.as_bytes())
+                        .expect("Cannot write lvl to file.");
+                    e.finish().expect("Cannot finish writing lvl to file.");
+                }
             }
         } else {
             eprintln!("Cannot read metadata of {}", &original_lvl_path);

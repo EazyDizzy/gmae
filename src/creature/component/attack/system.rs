@@ -1,9 +1,17 @@
+use crate::audio::{DamageSoundType, SoundEvent, SoundLayer, SoundType};
 use crate::creature::component::attack::event::DamageEvent;
+use crate::creature::component::attack::number;
+use crate::creature::component::attack::number::DamageNumberAssets;
 use crate::creature::component::attack::shooting::bullet::Bullet;
-use crate::entity::component::hp::HP;
+use crate::creature::component::hp::HP;
+use crate::particle::PunchEffect;
 use crate::GamePhysicsLayer;
 use bevy::prelude::*;
+use bevy_hanabi::ParticleEffect;
 use heron::{CollisionEvent, CollisionLayers};
+use rand::Rng;
+use std::cmp;
+use std::f32::consts::{FRAC_PI_6, PI};
 
 pub fn attack_despawn_killed_entities(mut commands: Commands, entities: Query<(Entity, &HP)>) {
     for (entity, hp) in entities.iter() {
@@ -19,10 +27,30 @@ pub fn attack_launch_bullets(mut bullets: Query<(&mut Transform, &Bullet)>) {
     }
 }
 
-pub fn attack_apply_damage(mut ev_damage: EventReader<DamageEvent>, mut hps: Query<&mut HP>) {
-    for ev in ev_damage.iter() {
-        if let Ok(mut hp) = hps.get_mut(ev.target) {
+pub fn attack_apply_damage(
+    mut commands: Commands,
+    mut damage_events: EventReader<DamageEvent>,
+    mut sound_events: EventWriter<SoundEvent>,
+    mut targets: Query<(&mut HP, &Transform)>,
+    numbers: Res<DamageNumberAssets>,
+    mut hit_effects: Query<(&mut ParticleEffect, &mut Transform), (With<PunchEffect>, Without<HP>)>,
+) {
+    let (mut effect, mut effect_transform) = hit_effects.single_mut();
+
+    for ev in damage_events.iter() {
+        if let Ok((mut hp, transform)) = targets.get_mut(ev.target) {
             hp.sub(ev.amount);
+            sound_events.send(SoundEvent {
+                sound_layer: SoundLayer::ForeGround,
+                sound_type: SoundType::Damage(ev.sound_type),
+            });
+
+            number::spawn(&mut commands, &numbers, transform, ev.amount);
+
+            effect_transform.translation = transform.translation;
+            effect_transform.rotation =
+                Quat::from_euler(EulerRot::XYZ, -FRAC_PI_6, -(PI - FRAC_PI_6), 0.);
+            effect.maybe_spawner().unwrap().reset();
         }
     }
 }
@@ -33,6 +61,8 @@ pub fn attack_check_bullet_collisions(
     mut ev_damage: EventWriter<DamageEvent>,
     bullets: Query<&Bullet>,
 ) {
+    let mut rng = rand::thread_rng();
+
     events
         .iter()
         .filter(|e| e.is_started())
@@ -60,10 +90,15 @@ pub fn attack_check_bullet_collisions(
             None
         })
         .for_each(|(target, bullet)| {
-            let damage = bullets.get(bullet).expect("Bullet should exist").damage;
+            let base_damage = bullets.get(bullet).expect("Bullet should exist").damage;
+            let damage = rng.gen_range(
+                cmp::min(base_damage - (base_damage / 10), base_damage - 1)
+                    ..cmp::max(base_damage + (base_damage / 10), base_damage + 1),
+            );
             ev_damage.send(DamageEvent {
                 target,
                 amount: damage,
+                sound_type: DamageSoundType::Bullet,
             });
         });
 }

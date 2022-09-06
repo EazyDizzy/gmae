@@ -1,4 +1,4 @@
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4};
 
 use crate::system::fly_camera::FlyCamera;
 use crate::GameState;
@@ -6,7 +6,7 @@ use bevy::math::vec3;
 use bevy::prelude::*;
 use lib::util::debug_settings::DebugSettings;
 
-use crate::player::entity::Player;
+use crate::player::PlayerMarker;
 
 const CAMERA_HEIGHT: f32 = 15.0;
 
@@ -25,28 +25,17 @@ impl Default for PlayerCamera {
     }
 }
 
-fn camera_rotate_player_model(
-    camera_query: Query<&PlayerCamera>,
-    mut player_query: Query<&mut Transform, With<Player>>,
-) {
-    if let Some(mut transform) = player_query.iter_mut().next() {
-        for camera in camera_query.iter() {
-            transform.rotation =
-                Quat::from_euler(EulerRot::XYZ, 0.0, -camera.rotation_angle - PI / 2.0, 0.0);
-        }
-    }
-}
-
+// TODO refactor
 fn camera_track_mouse_motion(
-    mut query: Query<(&mut PlayerCamera, &mut Transform)>,
-    player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
+    mut cameras: Query<(&mut PlayerCamera, &mut Transform)>,
+    player_position: Query<&Transform, (With<PlayerMarker>, Without<PlayerCamera>)>,
 ) {
-    for (options, mut transform) in query.iter_mut() {
+    for (options, mut transform) in cameras.iter_mut() {
         if !options.enabled {
             continue;
         }
 
-        if let Some(player_transform) = player_query.iter().next() {
+        if let Some(player_transform) = player_position.iter().next() {
             let player_position = player_transform.translation;
             let x = player_position.x + CAMERA_HEIGHT * options.rotation_angle.cos();
             let z = player_position.z + CAMERA_HEIGHT * options.rotation_angle.sin();
@@ -64,8 +53,8 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
         commands
             .spawn()
             // spawn remove hardcode, relatively to Player position
-            .insert_bundle(PerspectiveCameraBundle {
-                transform: Transform::from_xyz(5.0, 8.0, 20.0),
+            .insert_bundle(Camera3dBundle {
+                transform: Transform::from_xyz(22.0, 8.0, 22.0),
                 ..Default::default()
             })
             // TODO move sensitivity to game settings
@@ -77,7 +66,7 @@ fn setup_player_camera(mut commands: Commands, settings: Res<DebugSettings>) {
     } else {
         commands
             .spawn()
-            .insert_bundle(PerspectiveCameraBundle {
+            .insert_bundle(Camera3dBundle {
                 ..Default::default()
             })
             .insert(PlayerCamera::default());
@@ -110,7 +99,6 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_player_camera)
             .add_system(camera_track_mouse_motion)
-            .add_system(camera_rotate_player_model)
             .add_system_set(
                 SystemSet::on_update(GameState::Pause).with_system(ui_disable_all_cameras),
             )

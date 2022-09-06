@@ -4,7 +4,6 @@ use bevy::prelude::*;
 use heron::Velocity;
 use lib::entity::level::Level;
 use std::fmt::Debug;
-
 pub mod locomotivity;
 pub mod random_movement;
 
@@ -24,6 +23,7 @@ pub struct MovementStrategy {
 }
 
 impl MovementStrategy {
+    #[allow(dead_code)]
     pub fn random() -> MovementStrategy {
         MovementStrategy {
             strategy: Box::new(RandomMovementStrategy::new()),

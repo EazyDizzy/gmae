@@ -4,10 +4,9 @@ use crate::creature::component::movement::MovementStrategy;
 use crate::creature::component::physiology_description::PhysiologyDescription;
 
 use crate::creature::buffs::BuffsPlugin;
-use crate::creature::mob::dummy::Dummy;
-use crate::creature::mob::pizza::Pizza;
+use crate::creature::component::hp::{creature_hp_mesh_change_percent, creature_hp_spawn_mesh};
 use crate::creature::mob::{dummy, pizza};
-use crate::player::entity::Player;
+use crate::player::PlayerMarker;
 use crate::{GamePhysicsLayer, GameState};
 use bevy::math::vec3;
 use bevy::prelude::*;
@@ -22,6 +21,11 @@ pub mod buffs;
 pub mod component;
 pub mod mob;
 
+#[derive(Component, Debug)]
+pub struct CreatureMarker;
+#[derive(Component, Debug)]
+pub struct EnemyCreatureMarker;
+
 #[allow(clippy::module_name_repetitions)]
 pub struct CreaturePlugin;
 
@@ -31,72 +35,58 @@ impl Plugin for CreaturePlugin {
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_creatures)
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(creatures_execute_move_strategies)
-                    .with_system(creatures_attack_player),
+                    .with_system(creature_execute_move_strategies)
+                    .with_system(creature_attack_player)
+                    .with_system(creature_hp_mesh_change_percent)
+                    .with_system(creature_hp_spawn_mesh),
             )
             .add_plugin(BuffsPlugin);
     }
 }
 
 fn spawn_creatures(mut commands: Commands, level: Res<Level>, asset_server: Res<AssetServer>) {
-    let dummy_mesh = asset_server.load("mesh/dummy.glb#Scene0");
-    let pizza_mesh = asset_server.load("mesh/pizza.glb#Scene0");
-
     for creature in level.creatures() {
-        let mut ec = commands.spawn_bundle((
-            Transform::from_xyz(
+        let mut ec = commands.spawn_bundle(SceneBundle {
+            scene: match creature.name {
+                CreatureName::Dummy => asset_server.load("mesh/dummy.glb#Scene0"),
+                CreatureName::Pizza => asset_server.load("mesh/pizza.glb#Scene0"),
+            },
+            transform: Transform::from_xyz(
                 creature.position.x,
-                creature.position.y,
+                creature.position.y + 0.5, // To prevent stucking in the ground
                 creature.position.z,
             )
             //     TODO remove default rotation after debug
             .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, PI / 2.0, 0.0))
             //     TODO make sth to avoid this
             .with_scale(vec3(0.5, 0.5, 0.5)),
-            GlobalTransform::identity(),
-        ));
-        ec.with_children(|parent| {
-            let mesh = match creature.name {
-                CreatureName::Dummy => dummy_mesh.clone(),
-                CreatureName::Pizza => pizza_mesh.clone(),
-            };
-            parent.spawn_scene(mesh);
-        })
-        .insert(CreatureMarker {})
-        .insert(RigidBody::Dynamic)
-        .insert(RotationConstraints::lock())
-        .insert(CollisionShape::Cylinder {
-            radius: 0.5,
-            half_height: 1.0,
-        })
-        .insert(
-            CollisionLayers::all_masks::<GamePhysicsLayer>()
-                .with_group(GamePhysicsLayer::Creature),
-        );
-
-        if creature.is_enemy() {
-            ec.insert(EnemyCreatureMarker {});
-        }
+            ..Default::default()
+        });
+        ec.insert(CreatureMarker)
+            .insert(RigidBody::Dynamic)
+            .insert(RotationConstraints::lock())
+            .insert(CollisionShape::Cylinder {
+                radius: 0.5,
+                half_height: 1.0,
+            })
+            .insert(
+                CollisionLayers::all_masks::<GamePhysicsLayer>()
+                    .with_group(GamePhysicsLayer::Creature),
+            )
+            .insert(EnemyCreatureMarker);
 
         match creature.name {
             CreatureName::Dummy => {
-                ec.insert(Dummy::new());
                 dummy::insert(&mut ec);
             }
             CreatureName::Pizza => {
-                ec.insert(Pizza::new());
                 pizza::insert(&mut ec);
             }
         }
     }
 }
 
-#[derive(Component, Debug)]
-pub struct CreatureMarker {}
-#[derive(Component, Debug)]
-pub struct EnemyCreatureMarker {}
-
-fn creatures_execute_move_strategies(
+fn creature_execute_move_strategies(
     lvl: Res<Level>,
     mut query: Query<
         (
@@ -113,8 +103,8 @@ fn creatures_execute_move_strategies(
     }
 }
 
-fn creatures_attack_player(
-    player_query: Query<(Entity, &Transform), With<Player>>,
+fn creature_attack_player(
+    player_query: Query<(Entity, &Transform), With<PlayerMarker>>,
     physics_world: PhysicsWorld,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

@@ -9,36 +9,40 @@
     clippy::float_cmp,
     clippy::default_trait_access,
     clippy::needless_pass_by_value,
-    clippy::module_name_repetitions
+    clippy::module_name_repetitions,
+    clippy::type_complexity
 )]
 extern crate core;
 #[cfg(test)]
 extern crate test;
-
 use crate::audio::GameAudioPlugin;
 use crate::creature::CreaturePlugin;
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use crate::level::LevelPlugin;
+use crate::particle::ParticlePlugin;
+use crate::player::PlayerPlugin;
+use crate::ui::UIPlugin;
+use crate::util::component::despawn_outdated_entities;
+use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::prelude::*;
-use bevy_inspector_egui::bevy_egui::EguiPlugin;
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_egui::EguiPlugin;
+use bevy_hanabi::HanabiPlugin;
 use bevy_kira_audio::AudioPlugin;
 use heron::prelude::*;
 use lib::entity::voxel::Material;
 use lib::util::debug_settings::DebugSettings;
 use lib::util::game_settings::GameSettings;
+pub use physic_layers::*;
 use system::fly_camera::FlyCameraPlugin;
-
-use crate::level::LevelPlugin;
-use crate::player::PlayerPlugin;
-use crate::ui::UIPlugin;
 
 mod audio;
 mod creature;
-mod entity;
 mod level;
+mod particle;
+mod physic_layers;
 mod player;
 mod system;
 mod ui;
+mod util;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
@@ -58,10 +62,11 @@ fn main() {
         // .add_plugins_with(DefaultPlugins, |plugins| {
         //     plugins.disable::<bevy::log::LogPlugin>()
         // }) // disable LogPlugin so that you can pipe the output directly into `dot -Tsvg`
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        // .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(HanabiPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PhysicsPlugin::default()) // Add the plugin
-        .insert_resource(Gravity::from(Vec3::new(0.0, -9.81, 0.0)))
+        .insert_resource(Gravity::from(Vec3::new(0.0, -10., 0.0)))
         // .add_plugin(DebugLinesPlugin::default())
         .add_plugin(AudioPlugin)
         .add_plugin(EguiPlugin)
@@ -70,14 +75,13 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(UIPlugin)
         .add_plugin(GameAudioPlugin)
+        .add_plugin(ParticlePlugin)
         .add_startup_system(system::light::setup)
-        .add_system(game_settings_save);
+        .add_system(game_settings_save)
+        .add_system(despawn_outdated_entities);
 
     if debug_settings.fly_camera {
         app.add_plugin(FlyCameraPlugin);
-    }
-    if debug_settings.inspector {
-        app.add_plugin(WorldInspectorPlugin::new());
     }
 
     app.insert_resource(debug_settings)
@@ -89,17 +93,9 @@ fn main() {
     app.run();
 }
 
+// TODO move out
 fn game_settings_save(game_settings: ResMut<GameSettings>) {
     if game_settings.is_changed() {
         game_settings.save();
     }
-}
-
-#[derive(PhysicsLayer)]
-pub enum GamePhysicsLayer {
-    World,
-    Player,
-    Creature,
-    Projectile,
-    Sensor,
 }

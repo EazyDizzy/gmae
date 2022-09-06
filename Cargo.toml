@@ -3,32 +3,37 @@ name = "gmae"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+codegen-units = 1
+
 [dependencies]
+lib = { version = "0.0.0", path = "./lib" }
 # TODO remove dynamic before release
-bevy = { version = "0.7.0", features = ["dynamic"] }
-bevy-inspector-egui = "0.11.0"
-bevy_mod_debugdump = "0.4.0"
-image = "0.24.2" # to generate textures in memory
-convert_case = "0.5.0" # to convert MaterialName to file_name
+bevy = { version = "0.8.0", features = ["dynamic"] }
+bevy_mod_debugdump = "0.5.0"
 rand = "0.8.5"
 flate2 = "1.0" #for reading lvls
 serde_json = "1.0.79" #for reading lvls
-once_cell = "1.10.0"
-bevy_egui = "0.14.0"
-bevy_kira_audio = { version = "0.10.0", features = ["mp3"] }
-bevy_prototype_debug_lines = { version = "0.7", features = ["3d"] }
-heron = { version = "3.1.0", features = ["3d"] }
-
-[dependencies.lib]
-version = "0.0.0"
-path = "./lib"
+bevy_egui = "0.15.0"
+bevy_kira_audio = { version = "0.12.0", features = ["mp3"] }
+bevy_prototype_debug_lines = { version = "0.8", features = ["3d"] }
+heron = { version = "4.0.0", features = ["debug-3d"] } # physics engine
+mca-cuboids = "0.2.0"
+bevy_hanabi = "0.3.1" #particles system
+bevy-inspector-egui = "0.12.1"
 
 [build-dependencies]
 fastnbt = "2" #for reading mc world
 fastanvil = "0.26.0" #for reading mc world
 serde_json = "1.0.79" #for serializing lvls
 flate2 = "1.0" #for archiving lvls
-bevy_internal = "0.7.0"
+bevy_internal = "0.8.0"
+mca-cuboids = "0.2.0"
 
 [build-dependencies.lib]
 version = "0.0.0"
@@ -38,7 +43,6 @@ path = "./lib"
 # https://github.com/MinerSebas/bevy_lint
 # https://github.com/NiklasEi/bevy_asset_loader for music f.e.
 # https://github.com/IyesGames/iyes_loopless
-# https://github.com/NiklasEi/bevy_kira_audio
 # https://github.com/BlackPhlox/bevy_midi
 # https://github.com/zkat/big-brain ai
 # https://github.com/lightsoutgames/bevy_input_actionmap controls
