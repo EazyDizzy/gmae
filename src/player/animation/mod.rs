@@ -35,18 +35,12 @@ pub fn animation_run_on_move(
     }
 }
 
-pub fn animation_rotate_model_on_move(
-    mut player: Query<(&Velocity, &mut Transform)>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
-    //  TODO remove keyboard check to make it generic for all creatures
-    let is_moving =
-        keyboard_input.any_pressed([KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right]);
-    if !is_moving {
-        return;
-    }
+pub fn animation_rotate_model_on_move(mut creatures: Query<(&Velocity, &mut Transform)>) {
+    creatures.iter_mut().for_each(|(velocity, mut transform)| {
+        if velocity.linear.x == 0. && velocity.linear.z == 0. {
+            return;
+        }
 
-    player.iter_mut().for_each(|(velocity, mut transform)| {
         let current_rotation: Quat = transform.rotation;
         let (_, mut y, _) = current_rotation.to_euler(EulerRot::XYZ);
         y = round(y, 2);
