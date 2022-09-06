@@ -53,23 +53,22 @@ pub fn animation_rotate_model_on_move(
         let future_y: f32 = round(velocity.linear.x.atan2(velocity.linear.z), 2);
 
         if future_y != y {
-            let step_size = 0.1;
-
-            let mut y_step = if y < -FRAC_PI_2 && future_y > FRAC_PI_2 {
-                -step_size
-            } else if future_y < -FRAC_PI_2 && y > FRAC_PI_2 {
-                step_size
-            } else {
-                (future_y - y).clamp(-step_size, step_size)
-            };
+            // let step_size = 0.1;
+            // let mut y_step = if y < -FRAC_PI_2 && future_y > FRAC_PI_2 {
+            //     -step_size
+            // } else if future_y < -FRAC_PI_2 && y > FRAC_PI_2 {
+            //     step_size
+            // } else {
+            //     (future_y - y).clamp(-step_size, step_size)
+            // };
             // TODO catch bug & make smooth rotation
-            if !(-FRAC_PI_2..=FRAC_PI_2).contains(&future_y) {
-                // println!("old {} -> {} ({})", y, future_y, y_step);
-                y_step = future_y - y;
-            }
+            // if !(-FRAC_PI_2..=FRAC_PI_2).contains(&future_y) {
+            //     // println!("old {} -> {} ({})", y, future_y, y_step);
+            //     y_step = future_y - y;
+            // }
             // y_step = future_y - y;
             // println!("{} -> {} ({})", y, future_y, y_step);
-            transform.rotation = Quat::from_euler(EulerRot::XYZ, 0., y + y_step, 0.);
+            transform.rotation = Quat::from_euler(EulerRot::XYZ, 0., future_y, 0.);
         }
     });
 }
