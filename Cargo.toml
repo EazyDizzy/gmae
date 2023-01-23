@@ -24,7 +24,7 @@ bevy_kira_audio = { version = "0.12.0", features = ["mp3"] }
 bevy_prototype_debug_lines = { version = "0.8", features = ["3d"] }
 heron = { version = "4.0.0", features = ["debug-3d"] } # physics engine
 mca-cuboids = "0.2.0"
-bevy_hanabi = "0.3.1" #particles system
+bevy_hanabi = "0.5.2" #particles system
 bevy-inspector-egui = "0.12.1"
 
 [build-dependencies]
